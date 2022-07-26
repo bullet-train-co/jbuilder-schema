@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require_relative "lib/rswag/schemas/version"
+require_relative "lib/jbuilder/schema/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "rswag-schemas"
-  spec.version = Rswag::Schemas::VERSION
+  spec.name = "jbuilder-schema"
+  spec.version = JbuilderSchema::VERSION
   spec.authors = ["Yuri Sidorov"]
   spec.email = ["hey@yurisidorov.com"]
 
-  spec.summary = "Easy JSON Schemas management for RSwag"
+  spec.summary = "Generate JSON Schema from Jbuilder files"
   spec.description = spec.summary
-  spec.homepage = "https://github.com/newstler/rswag-schemas"
+  spec.homepage = "https://github.com/newstler/jbuilder-schema"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 2.6.0"
 
@@ -32,8 +32,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Uncomment to register a new dependency of your gem
-  spec.add_dependency "rswag-api" #, "~> 1.0"
-  spec.add_dependency "rswag-ui"
   spec.add_dependency "jbuilder"
 
   # For more information and examples about making a new gem, check out our

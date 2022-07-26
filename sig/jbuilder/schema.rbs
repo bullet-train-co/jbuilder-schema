@@ -1,6 +1,4 @@
-module Rswag
-  module Schemas
-    VERSION: String
+module JbuilderSchema
+  VERSION: String
     # See the writing guide of rbs: https://github.com/ruby/rbs#guides
-  end
 end

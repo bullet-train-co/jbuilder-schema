@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-RSpec.describe Rswag::Schemas do
+RSpec.describe JbuilderSchema do
   it "has a version number" do
-    expect(Rswag::Schemas::VERSION).not_to be nil
+    expect(JbuilderSchema::VERSION).not_to be nil
   end
 
   it "does something useful" do

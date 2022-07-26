@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in rswag-schemas.gemspec
+# Specify your gem's dependencies in jbuilder-schema.gemspec
 gemspec
 
 gem "rake", "~> 13.0"

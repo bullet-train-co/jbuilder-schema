@@ -1,16 +1,20 @@
-# Rswag::Schemas
+# JbuilderSchema
 
-Easy JSON Schemas management for RSwag
+Generate JSON Schema from Jbuilder files
 
 ## Installation
 
-Install the gem and add to the application's Gemfile by executing:
+Add this line to your application's Gemfile:
 
-    $ bundle add rswag-schemas
+    gem 'jbuilder-schema', require: 'jbuilder/schema'
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+And then execute:
 
-    $ gem install rswag-schemas
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install jbuilder-schema
 
 ## Usage
 
@@ -24,7 +28,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/newstler/rswag-schemas.
+Bug reports and pull requests are welcome on GitHub at https://github.com/newstler/jbuilder-schema.
 
 ## License
 
