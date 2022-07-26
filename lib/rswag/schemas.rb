@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-require_relative "schemas/version"
+require "rswag/schemas/version"
+require "jbuilder/jbuilder"
 
 module Rswag
   module Schemas
-    class Error < StandardError; end
-    # Your code goes here...
   end
 end
