@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 require "jbuilder/schema/version"
-require "jbuilder/jbuilder"
+require "jbuilder/schema/helpers"
+require "jbuilder/schema/resolver"
 
-# module Jbuilder
-  module JbuilderSchema
-  end
-# end
+module JbuilderSchema
+end

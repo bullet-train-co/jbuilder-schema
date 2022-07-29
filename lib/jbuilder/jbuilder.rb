@@ -3,15 +3,6 @@ require 'jbuilder'
 class Jbuilder
   alias_method :original_method_missing, :method_missing
 
-  def initialize(options = {})
-    @attributes = {schema: 'test'}
-
-    @key_formatter = options.fetch(:key_formatter){ @@key_formatter ? @@key_formatter.clone : nil}
-    @ignore_nil = options.fetch(:ignore_nil, @@ignore_nil)
-    @deep_format_keys = options.fetch(:deep_format_keys, @@deep_format_keys)
-
-    yield self if ::Kernel.block_given?
-  end
 
   def method_missing(*args, &block)
     if args.present? && args.any? {  |e| e.is_a?(::Hash) && e.key?(:schema) }
@@ -22,3 +13,41 @@ class Jbuilder
     original_method_missing(*args, &block)
   end
 end
+#
+# class JbuilderTemplate < Jbuilder
+#   # class << self
+#   #   attr_accessor :template_lookup_options
+#   # end
+#   #
+#   # self.template_lookup_options = { handlers: [:jbuilder] }
+#
+#   def initialize(context, *args)
+#     @context = context
+#     @cached_root = nil
+#
+#     # ::Rails.logger.info(@context.inspect)
+#     ::Rails.logger.info(args)
+#
+#     super(*args)
+#   end
+# end
+#
+# class JbuilderHandler
+#   cattr_accessor :default_format
+#   self.default_format = :json
+#
+#   def self.call(template, source = nil)
+#     source ||= template.source
+#     ::Rails.logger.info(source)
+#     ::Rails.logger.info(self.inspect)
+#
+#     __already_defined = defined?(json)
+#     json ||= JbuilderTemplate.new(self)
+#     #{source}
+#     #
+#
+#     ::Rails.logger.info(json)
+#
+#     json.target! unless (__already_defined && __already_defined != "method")
+#   end
+# end
