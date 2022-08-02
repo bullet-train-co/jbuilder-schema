@@ -4,8 +4,8 @@ require "jbuilder/schema/template"
 module JbuilderSchema
   class Resolver < ::ActionView::FileSystemResolver
 
-    def initialize
-      super("app/views/api/v1")
+    def initialize(version = 1)
+      super("app/views/api/v#{version}")
     end
 
     def find_all(name, prefix = nil, partial = false)
@@ -34,11 +34,11 @@ module JbuilderSchema
     end
 
     def build_template(template)
-      parsed = @path_parser.parse(template.from(@path.size + 1))
-      details = parsed.details
       source = source_for_template(template)
 
-      JbuilderSchema::Template.new(JbuilderSchema::Handler)
+      JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+        eval(source.to_s)
+      end
     end
   end
 end

@@ -37,9 +37,9 @@ module JbuilderSchema
       }
     end
 
-    def _register_handler
-      ActionView::Template.register_template_handler(:jbuilder, JbuilderSchema::Handler)
-    end
+    # def _register_handler
+    #   ActionView::Template.register_template_handler(:jbuilder, JbuilderSchema::Handler)
+    # end
 
     def _resolve
       JbuilderSchema::Resolver.new.find_all('article', 'articles', true)
