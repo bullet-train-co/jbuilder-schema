@@ -1,11 +1,11 @@
-require "jbuilder/schema/handler"
+# require "jbuilder/schema/handler"
 require "jbuilder/schema/template"
+require "jbuilder/dependency_tracker"
 
 module JbuilderSchema
   class Resolver < ::ActionView::FileSystemResolver
-
-    def initialize(version = 1)
-      super("app/views/api/v#{version}")
+    def initialize(path)
+      super("app/views/#{path}")
     end
 
     def find_all(name, prefix = nil, partial = false)
@@ -16,7 +16,7 @@ module JbuilderSchema
 
     def _find_all(name, prefix, partial)
       path = ActionView::TemplatePath.build(name, prefix, partial)
-      templates_from_path(path)
+      templates_from_path(path).first
     end
 
     def templates_from_path(path)
@@ -36,7 +36,7 @@ module JbuilderSchema
     def build_template(template)
       source = source_for_template(template)
 
-      JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+      JbuilderSchema::Template.new do |json, *|
         eval(source.to_s)
       end
     end

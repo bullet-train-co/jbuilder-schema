@@ -1,23 +1,21 @@
-require 'jbuilder'
+require "jbuilder"
 
 class Jbuilder
   alias_method :original_method_missing, :method_missing
 
-
   def initialize(options = {})
-
-    ::Rails.logger.info('>> OPTIONS:')
+    ::Rails.logger.info(">> OPTIONS:")
     ::Rails.logger.info(options)
 
-    ::Rails.logger.info('>> SELF1:')
-    ::Rails.logger.info(self.inspect)
+    ::Rails.logger.info(">> SELF1:")
+    ::Rails.logger.info(inspect)
 
-    ::Rails.logger.info('>> CONTEXT:')
+    ::Rails.logger.info(">> CONTEXT:")
     ::Rails.logger.info(@context)
 
     @attributes = {}
 
-    @key_formatter = options.fetch(:key_formatter){ @@key_formatter ? @@key_formatter.clone : nil}
+    @key_formatter = options.fetch(:key_formatter) { @@key_formatter ? @@key_formatter.clone : nil }
     @ignore_nil = options.fetch(:ignore_nil, @@ignore_nil)
     @deep_format_keys = options.fetch(:deep_format_keys, @@deep_format_keys)
 
@@ -25,14 +23,14 @@ class Jbuilder
   end
 
   def method_missing(*args, &block)
-    if args.present? && args.any? {  |e| e.is_a?(::Hash) && e.key?(:schema) }
+    if args.present? && args.any? { |e| e.is_a?(::Hash) && e.key?(:schema) }
       schema = args.extract! { |h| h.is_a?(::Hash) && h.key?(:schema) }.first[:schema]
 
-      ::Rails.logger.info('>> SELF2:')
+      ::Rails.logger.info(">> SELF2:")
       ::Rails.logger.info(self)
-      ::Rails.logger.info('>> ARGS:')
+      ::Rails.logger.info(">> ARGS:")
       ::Rails.logger.info(args)
-      ::Rails.logger.info('>> BLOCK:')
+      ::Rails.logger.info(">> BLOCK:")
       ::Rails.logger.info(block)
     end
     original_method_missing(*args, &block)
@@ -47,7 +45,7 @@ class JbuilderTemplate < Jbuilder
   # self.template_lookup_options = { handlers: [:jbuilder] }
 
   def initialize(context, *args)
-    ::Rails.logger.info('>>JbuilderTemplate')
+    ::Rails.logger.info(">>JbuilderTemplate")
     # @context = context
     # @cached_root = nil
     #
@@ -60,13 +58,12 @@ class JbuilderTemplate < Jbuilder
   private
 
   def _render_partial(options)
-
-    ::Rails.logger.info('_render_partial:')
+    ::Rails.logger.info("_render_partial:")
     ::Rails.logger.info(options)
     ::Rails.logger.info(@context.inspect)
     ::Rails.logger.info(self)
 
-    options[:locals].merge! json: self
+    options[:locals][:json] = self
     @context.render options
   end
 end
@@ -94,8 +91,8 @@ class JbuilderHandler
   def self.call(template, source = nil)
     source ||= template.source
 
-      ::Rails.logger.info('>>JbuilderHandler')
-      ::Rails.logger.info(self)
+    ::Rails.logger.info(">>JbuilderHandler")
+    ::Rails.logger.info(self)
     # puts ">>SELF #{self}"
 
     # this juggling is required to keep line numbers right in the error
