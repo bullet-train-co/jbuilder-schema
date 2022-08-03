@@ -1,5 +1,6 @@
 require "jbuilder/jbuilder_template"
 require "jbuilder/blank"
+require "jbuilder/jbuilder"
 
 module JbuilderSchema
   class Template < ::JbuilderTemplate
@@ -12,7 +13,7 @@ module JbuilderSchema
     @@key_formatter = nil
     @@ignore_nil = false
     @@deep_format_keys = false
-    BLANK = Blank.new
+    # BLANK = Blank.new
 
     def initialize(options = {})
       @context = nil
@@ -31,7 +32,7 @@ module JbuilderSchema
       @attributes
     end
 
-    def set!(key, value = BLANK, *args, &block)
+    def set!(key, value = ::Jbuilder::BLANK, *args, &block)
       result = if block
         if !_blank?(value)
           # json.comments @post.comments { |comment| ... }
