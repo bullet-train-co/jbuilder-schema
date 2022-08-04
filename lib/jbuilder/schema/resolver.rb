@@ -36,9 +36,53 @@ module JbuilderSchema
     def build_template(template)
       source = source_for_template(template)
 
-      JbuilderSchema::Template.new do |json, *|
-        eval(source.to_s)
+      # json = JbuilderSchema::Template.new
+
+      # @article = Article.first
+      #
+
+
+      puts "!!!>>>PARSED SOURCE #{_parse_source(source).to_ary}"
+      #
+      # json
+
+      # puts "SSS>>SSS> #{eval(source.to_s)}"
+      #
+      # JbuilderSchema::Template.new do |json, *|
+      #   eval(_parse_source(source))
+      # end
+    end
+
+    def _parse_source(source)
+      Zeitwerk::Loader.eager_load_all if defined?(Zeitwerk::Loader)
+
+      lines = source.to_s
+                    .split(/\n+|\r+/)
+                    .reject(&:empty?)
+                    .reject { |l| l.start_with?('#') }
+                    .map { |l| l.split('#').first }
+
+      lines.each_with_index do |line, index|
+
+        puts ">>>LINE n#{index}: #{line}"
+
+        danger = line.split[1]
+
+        puts ">>>DANGER: #{danger}"
+
+        begin
+          eval(danger)
+        rescue NoMethodError
+          data = _find_data(danger)
+          line.gsub!(danger, data)
+        end
       end
+    end
+
+    def _find_data(string)
+      variable, method = string.split('.')
+      type = ObjectSpace.each_object(Class).select { |c| c.name == variable.gsub('@', '').classify }.first.columns_hash[method].type
+
     end
   end
 end

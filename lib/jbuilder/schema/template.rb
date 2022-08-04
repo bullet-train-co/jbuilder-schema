@@ -15,7 +15,7 @@ module JbuilderSchema
     @@deep_format_keys = false
     # BLANK = Blank.new
 
-    def initialize(options = {})
+    def initialize(options = {}, &block)
       @context = nil
       @cached_root = nil
 
@@ -25,7 +25,12 @@ module JbuilderSchema
       @ignore_nil = options.fetch(:ignore_nil, @@ignore_nil)
       @deep_format_keys = options.fetch(:deep_format_keys, @@deep_format_keys)
 
-      yield self if ::Kernel.block_given?
+      # begin
+        yield self if ::Kernel.block_given?
+      # rescue NoMethodError
+      #   puts ">>>SSS #{block }"
+      # end
+
     end
 
     def schema!
@@ -70,7 +75,7 @@ module JbuilderSchema
 
     def method_missing(*args, &block)
       # puts ">>>HELLO MF!!!"
-      # puts ">>>method_missing ARGS>> #{args}"
+      puts ">>>method_missing ARGS>> #{args}"
 
       # Get object and type:
       # ObjectSpace.each_object(Class).select { |c| c.name == '@article'.gsub('@', '').classify }.first.columns_hash["id"].type
@@ -102,3 +107,15 @@ module JbuilderSchema
     end
   end
 end
+
+# class NilClass
+#   def method_missing(method_name, *args, &block)
+#     puts ">>>MISSING METHOD: #{method_name}"
+#     puts ">>>MISSING args: #{args}"
+#     puts ">>>MISSING block: #{block}"
+#
+#     nil
+#
+#     # ObjectSpace.each_object(Class).select { |c| c.name == '@article'.gsub('@', '').classify }.first.columns_hash["id"].type
+#   end
+# end
