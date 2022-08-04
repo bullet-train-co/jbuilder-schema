@@ -42,15 +42,15 @@ module JbuilderSchema
       #
 
 
-      puts "!!!>>>PARSED SOURCE #{_parse_source(source).to_ary}"
+      puts "!!!>>>PARSED SOURCE #{_parse_source(source)}"
       #
       # json
 
       # puts "SSS>>SSS> #{eval(source.to_s)}"
       #
-      # JbuilderSchema::Template.new do |json, *|
-      #   eval(_parse_source(source))
-      # end
+      JbuilderSchema::Template.new do |json, *|
+        eval(_parse_source(source))
+      end
     end
 
     def _parse_source(source)
@@ -62,9 +62,9 @@ module JbuilderSchema
                     .reject { |l| l.start_with?('#') }
                     .map { |l| l.split('#').first }
 
-      lines.each_with_index do |line, index|
+      lines.map do |line|
 
-        puts ">>>LINE n#{index}: #{line}"
+        puts ">>>LINE: #{line}"
 
         danger = line.split[1]
 
@@ -74,15 +74,17 @@ module JbuilderSchema
           eval(danger)
         rescue NoMethodError
           data = _find_data(danger)
-          line.gsub!(danger, data)
+          line.gsub!(danger, data.to_s)
         end
       end
+
+      lines.join("\n")
     end
 
     def _find_data(string)
       variable, method = string.split('.')
       type = ObjectSpace.each_object(Class).select { |c| c.name == variable.gsub('@', '').classify }.first.columns_hash[method].type
-
+      1
     end
   end
 end
