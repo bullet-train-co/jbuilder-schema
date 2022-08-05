@@ -31,7 +31,7 @@ module JbuilderSchema
       {}.tap do |hash|
         _lines.each_with_index do |line, index|
           hash[index] = {}.tap do |line_hash|
-            line_hash[:property] = line.split.first.delete_prefix('json.')
+            line_hash[:property] = line.split.first.delete_prefix('json.').to_sym
             schema = line.slice!(/#{schema_regexp + hash_regexp}/)&.strip&.gsub(/#{schema_regexp}/, '') || '{}'
             line_hash[:schema] = SafeParser.new(schema).safe_load
             line_hash[:arguments] = line.split[1..-1].map { |e| e.gsub(',', '') }
