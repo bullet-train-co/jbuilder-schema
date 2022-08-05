@@ -19,10 +19,10 @@ module JbuilderSchema
       #   required: %w[id title body]
       # }
 
-      @template ||= _resolve(path)
-      return {} unless @template
+      @schema ||= _resolve(path)
+      return {} unless @schema
 
-      _set_properties @template.schema!
+      _set_properties @schema #.schema!
       #
       # puts ">>>OBJ #{_object}"
 
