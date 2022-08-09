@@ -51,22 +51,48 @@ module JbuilderSchema
 
     def _schema_for_line(line)
       schema = line[:schema]
-      schema[:type] = _get_type(line[:arguments].first) unless schema[:type]
+      unless schema[:type]
+        type = _get_type(line[:arguments].first)
+        type.is_a?(Array) ? (schema[:type], schema[:format] = type) : schema[:type] = type
+      end
       schema
     end
 
     def _get_type(value)
-      # TODO: Find a way to get rid of `eval` method
-      eval(value).class.name.downcase.to_sym
-    rescue NoMethodError
-      _find_type(value)
+      klass = :boolean if %w[true false].include?(value)
+      klass = :integer if Integer(value, exception: false) && klass.nil?
+      klass = :number if Float(value, exception: false) && klass.nil?
+
+      _schematize_type(klass || _type_from_model(value))
     end
 
-    def _find_type(string)
+    def _schematize_type(type)
+      case type
+      when :datetime
+        [:string, "date-time"]
+      when nil, :text
+        :string
+      else
+        type
+      end
+    end
+
+    def _type_from_model(string)
       variable, method = string.split(".")
-      ObjectSpace.each_object(Class)
-        .find { |c| c.name == variable.delete("@").classify }
-        .columns_hash[method].type
+      class_name = variable.delete("@").classify
+
+      return unless models.key?(class_name) || _find_class(class_name)
+
+      models[class_name].columns_hash[method].type
+    end
+
+    def _find_class(string)
+      return unless Object.const_defined? string
+
+      klass = Object.const_get string
+      return unless klass.respond_to? "columns_hash"
+
+      models[string] = klass
     end
 
     def _create_properties!
