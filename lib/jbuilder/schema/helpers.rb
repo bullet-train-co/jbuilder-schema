@@ -53,6 +53,8 @@ module JbuilderSchema
       prefix = path.delete_suffix("/#{controller}/#{action}")
       partial = action[0] == "_"
 
+      action.delete_prefix!("_") if action[0] == "_"
+
       [prefix, controller, action, partial]
     end
   end
