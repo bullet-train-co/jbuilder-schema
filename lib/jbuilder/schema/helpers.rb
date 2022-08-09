@@ -1,34 +1,19 @@
+# frozen_string_literal: true
+
 require "jbuilder/schema/resolver"
 
 module JbuilderSchema
+  # Helpers to build json-schema
   module Helpers
-    def jbuilder_schema(path)
-      # {type: :array, items: {} } # if 'index'
-      # { '$ref' => "#/components/schemas/#{path}" }
+    def jbuilder_schema(path, title = "", description = "")
+      @template ||= _resolve(path)
+      return {} unless @template
 
-      # {
-      #   type: :object,
-      #   properties: {
-      #     id: { type: :integer },
-      #     title: { type: :string },
-      #     body: { type: :string },
-      #     created_at: { type: :string, format: :"date-time" },
-      #     updated_at: { type: :string, format: :"date-time" },
-      #     url: { type: :string }
-      #   },
-      #   required: %w[id title body]
-      # }
-
-      @schema ||= _resolve(path)
-      return {} unless @schema
-
-      _set_properties @schema #.schema!
-      #
-      # puts ">>>OBJ #{_object}"
+      _set_meta title, description
+      _set_properties @template.properties
+      _set_required @template.required
 
       _object
-
-      # {:type=>:object, :title=>"", :description=>"", :links=>[], :properties=>{:id=>{:type=>:integer}, :title=>{:type=>:string}}}
     end
 
     private
@@ -39,12 +24,22 @@ module JbuilderSchema
         title: "",
         description: "",
         links: [],
+        required: [],
         properties: {}
       }
     end
 
-    def _set_properties(schema)
-      _object[:properties].merge! schema
+    def _set_meta(title = "", description = "")
+      _object[:title] = title
+      _object[:description] = description
+    end
+
+    def _set_properties(properties)
+      _object[:properties].merge! properties
+    end
+
+    def _set_required(properties)
+      _object[:required] = properties # if properties.any?
     end
 
     def _resolve(path)

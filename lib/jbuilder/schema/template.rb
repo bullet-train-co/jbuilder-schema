@@ -1,106 +1,87 @@
-require "jbuilder/jbuilder_template"
-require "jbuilder/blank"
-require "jbuilder/jbuilder"
-# require 'jbuilder/schema/formatter'
+# frozen_string_literal: true
+
+require "safe_parser"
 
 module JbuilderSchema
-  class Template < ::JbuilderTemplate
-    # include JbuilderSchema::Formatter
+  # Template parser class
+  class Template
+    attr_reader :source, :models
 
-    # class << self
-    #   attr_accessor :template_lookup_options
-    # end
-    #
-    # self.template_lookup_options = {handlers: [:jbuilder]}
+    def initialize(source)
+      @source = source
+      @models = {}
 
-    @@key_formatter = nil
-    @@ignore_nil = false
-    @@deep_format_keys = false
-
-    def initialize(options = {})
-      @context = nil
-      @cached_root = nil
-
-      @attributes = {}
-
-      @key_formatter = options.fetch(:key_formatter) { @@key_formatter ? @@key_formatter.clone : nil }
-      @ignore_nil = options.fetch(:ignore_nil, @@ignore_nil)
-      @deep_format_keys = options.fetch(:deep_format_keys, @@deep_format_keys)
-
-      yield self if ::Kernel.block_given?
+      Zeitwerk::Loader.eager_load_all if defined?(Zeitwerk::Loader)
     end
 
-    def schema!
-      @attributes
+    def properties
+      _create_properties!
     end
 
-    def set!(key, value = ::Jbuilder::BLANK, *args, &block)
-      result = if block
-        if !_blank?(value)
-          # json.comments @post.comments { |comment| ... }
-          # { "comments": [ { ... }, { ... } ] }
-          _scope { array! value, &block }
-        else
-          # json.comments { ... }
-          # { "comments": ... }
-          _merge_block(key) { yield self }
-        end
-      elsif args.empty?
-        if ::Jbuilder === value
-          # json.age 32
-          # json.person another_jbuilder
-          # { "age": 32, "person": { ...  }
-          _format_keys(value.attributes!)
-        else
-          # json.age 32
-          # { "age": 32 }
-          type = _get_type(value)
-          _format_keys(type)
-        end
-      elsif _is_collection?(value)
-        # json.comments @post.comments, :content, :created_at
-        # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
-        _scope { array! value, *args }
-      else
-        # json.author @post.creator, :name, :email_address
-        # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-        _merge_block(key) { extract! value, *args }
-      end
-
-      _set_value key.to_sym, result
-    end
-
-    def method_missing(*args, &block)
-      # puts ">>>HELLO MF!!!"
-      # puts ">>>method_missing ARGS>> #{args}"
-
-      # Get object and type:
-      # ObjectSpace.each_object(Class).select { |c| c.name == '@article'.gsub('@', '').classify }.first.columns_hash["id"].type
-      if block
-        set!(*args, &block)
-      else
-        set!(*args)
-      end
+    def required
+      _create_required!
     end
 
     private
 
-    # def _render_partial(options)
-    #   puts ">>>PARTIAL: #{options[:partial]}"
-    #   puts ">>>OPTIONS: #{options}"
-    #   puts ">>>SELF: #{self}"
-    #   options[:locals].merge! json: self
-    #   @context.render options
-    # end
-
-    def _get_type(value)
-      return value if _blank?(value)
-
-      {type: value.class.name.downcase.to_sym}
+    def _lines
+      source.to_s
+        .split(/\n+|\r+/)
+        .reject(&:empty?)
+        .reject { |l| l.start_with?("#") }
+        .map { |l| l.split("#").first }
     end
 
-    def _key(key)
-      @key_formatter ? @key_formatter.format(key).to_sym : key.to_sym
+    def _parse_lines!
+      schema_regexp = ",?\s?schema(:|=>|\s=>)\s?"
+      hash_regexp = "{(.*?)}"
+
+      {}.tap do |hash|
+        _lines.each_with_index do |line, index|
+          hash[index] = {}.tap do |line_hash|
+            line_hash[:property] = line.split.first.delete_prefix("json.").to_sym
+            schema = line.slice!(/#{schema_regexp + hash_regexp}/)&.strip&.gsub(/#{schema_regexp}/, "") || "{}"
+            line_hash[:schema] = SafeParser.new(schema).safe_load
+            line_hash[:arguments] = line.split[1..].map { |e| e.delete(",") }
+            line_hash[:schema] = _schema_for_line(line_hash)
+          end
+        end
+      end
+    end
+
+    def _schema_for_line(line)
+      schema = line[:schema]
+      schema[:type] = _get_type(line[:arguments].first) unless schema[:type]
+      schema
+    end
+
+    def _get_type(value)
+      # TODO: Find a way to get rid of `eval` method
+      eval(value).class.name.downcase.to_sym
+    rescue NoMethodError
+      _find_type(value)
+    end
+
+    def _find_type(string)
+      variable, method = string.split(".")
+      ObjectSpace.each_object(Class)
+        .find { |c| c.name == variable.delete("@").classify }
+        .columns_hash[method].type
+    end
+
+    def _create_properties!
+      sorted_hash = _parse_lines!.sort.to_h
+
+      {}.tap do |hash|
+        sorted_hash.each do |_index, line|
+          hash[line[:property]] = line[:schema]
+        end
+      end
+    end
+
+    def _create_required!
+      # TODO:
+      [:id, :title]
     end
   end
 end
