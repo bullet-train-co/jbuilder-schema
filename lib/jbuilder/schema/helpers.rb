@@ -44,6 +44,7 @@ module JbuilderSchema
 
     def _resolve(path)
       prefix, controller, action, partial = _resolve_path(path)
+      # TODO: Doesn't find 'api/v1/articles/article', only finds 'api/v1/articles/_article'
       JbuilderSchema::Resolver.new(prefix).find_all(action, controller, partial)
     end
 
