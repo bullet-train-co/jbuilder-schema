@@ -1,3 +1,5 @@
+<h3 style="text-align: right; margin-bottom: -40px;"><a style="font-weight: bold; color: #0057b7;" href="https://linktr.ee/RazomForUkraine" target="_blank">SAVE <span style="color: #ffd700;">UKRAINE</span></a></h3>
+
 # JbuilderSchema
 
 Generate JSON Schema from Jbuilder files
@@ -33,3 +35,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/newstl
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+
+### Open-source development sponsored by:
+
+<a href="https://www.clickfunnels.com"><img src="https://images.clickfunnel.com/uploads/digital_asset/file/176632/clickfunnels-dark-logo.svg" width="575" /></a>
