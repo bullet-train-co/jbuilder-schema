@@ -5,7 +5,7 @@ require "jbuilder/schema/resolver"
 module JbuilderSchema
   # Helpers to build json-schema
   module Helpers
-    def jbuilder_schema(path, title = "", description = "")
+    def jbuilder_schema(path, title: "", description: "")
       @template ||= _resolve(path)
       return {} unless @template
 
