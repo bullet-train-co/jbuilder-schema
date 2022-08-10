@@ -5,7 +5,7 @@ require "jbuilder/schema/resolver"
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    attr_reader :template, :object, :title, :description
+    attr_reader :template, :title, :description
 
     def initialize(path, title: "", description: "")
       @template = _resolve(path)
@@ -14,7 +14,7 @@ module JbuilderSchema
     end
 
     def schema!
-      return {} unless @template
+      return {} unless template
 
       _object
     end
@@ -22,13 +22,13 @@ module JbuilderSchema
     private
 
     def _object
-      @object ||= {
+      {
         type: :object,
-        title: @title,
-        description: @description,
+        title: title,
+        description: description,
         links: [],
-        required: @template.required,
-        properties: @template.properties
+        required: template.required,
+        properties: template.properties
       }
     end
 
