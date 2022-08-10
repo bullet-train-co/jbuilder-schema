@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "active_support/inflections"
 require "safe_parser"
 
 module JbuilderSchema
@@ -87,10 +88,8 @@ module JbuilderSchema
     end
 
     def _find_class(string)
-      return unless Object.const_defined? string
-
-      klass = Object.const_get string
-      return unless klass.respond_to? "columns_hash"
+      klass = string.classify.safe_constantize
+      return unless klass && klass.respond_to?("columns_hash")
 
       models[string] = klass
     end
