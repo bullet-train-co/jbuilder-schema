@@ -5,6 +5,61 @@ require "safe_parser"
 
 module JbuilderSchema
   # Template parser class
+  # =====================
+  #
+  # Here we do the following:
+  #
+  # ✅ Direct fields definition:
+  #    json.title @article.title
+  #    json.url article_url(@article, format: :json)
+  #    json.custom 123
+  #
+  # ⛔ Relations:
+  #    json.user_name @article.user.name
+  #    json.comments @article.comments, :content, :created_at
+  #
+  # ⛔ Collections:
+  #    json.comments @comments, :content, :created_at
+  #    json.people my_array
+  #
+  # ⛔️ Blocks:
+  #    json.author do
+  #      json.name @article.user.name
+  #      json.email @article.user.email
+  #      json.url url_for(@article.user, format: :json)
+  #    end
+  #
+  #    json.attachments @article.attachments do |attachment|
+  #      json.filename attachment.filename
+  #      json.url url_for(attachment)
+  #    end
+  #
+  # ⛔️ Conditions:
+  #    if current_user.admin?
+  #      json.visitors calculate_visitors(@article)
+  #    end
+  #
+  # ⛔️ Ruby code:
+  #    hash = { author: { name: "David" } }
+  #
+  # ⛔️ Jbuilder commands:
+  #    json.set! :name, 'David'
+  #    json.merge! { author: { name: "David" } }
+  #    json.array! @people, :id, :name
+  #    json.array! @posts, partial: 'posts/post', as: :post
+  #    json.partial! 'comments/comments', comments: @message.comments
+  #    json.partial! partial: 'articles/article', collection: @articles, as: :article
+  #    json.comments @article.comments, partial: 'comments/comment', as: :comment
+  #    json.extract! @article, :id, :title, :content, :published_at
+  #    json.key_format! camelize: :lower
+  #    json.deep_format_keys!
+  #
+  # ⛔️ Ignore (?) some of them:
+  #    json.ignore_nil!
+  #    json.cache! ['v1', @person], expires_in: 10.minutes {}
+  #    json.cache_if! !admin?, ['v1', @person], expires_in: 10.minutes {}
+  #    json.key_format! camelize: :lower
+  #
   class Template
     attr_reader :source, :models
 
@@ -20,6 +75,7 @@ module JbuilderSchema
     end
 
     def required
+      _parse_lines! if models.empty?
       _create_required!
     end
 
@@ -105,6 +161,7 @@ module JbuilderSchema
     end
 
     def _create_required!
+      puts ">>>MODELS #{models}"
       models.flat_map { |_k, model|
         model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
       }

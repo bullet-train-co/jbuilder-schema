@@ -5,12 +5,14 @@ require "jbuilder/schema/resolver"
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    attr_reader :template, :title, :description
+    attr_reader :path, :template, :title, :description, :locals
 
-    def initialize(path, title: "", description: "")
-      @template = _resolve(path)
+    def initialize(path, title: "", description: "", locals: {})
+      @path = path
+      @template = _find_template
       @title = title
       @description = description
+      @locals = locals
     end
 
     def schema!
@@ -26,18 +28,17 @@ module JbuilderSchema
         type: :object,
         title: title,
         description: description,
-        links: [],
         required: template.required,
         properties: template.properties
       }
     end
 
-    def _resolve(path)
-      prefix, controller, action, partial = _resolve_path(path)
+    def _find_template
+      prefix, controller, action, partial = _resolve_path
       JbuilderSchema::Resolver.new(prefix).find_all(action, controller, partial)
     end
 
-    def _resolve_path(path)
+    def _resolve_path
       action = path.split("/").last
       controller = path.split("/")[-2]
       prefix = path.delete_suffix("/#{controller}/#{action}")
