@@ -7,12 +7,12 @@ module JbuilderSchema
   class Builder
     attr_reader :path, :template, :title, :description, :locals
 
-    def initialize(path, title: "", description: "", locals: {})
+    def initialize(path, **options)
       @path = path
       @template = _find_template
-      @title = title
-      @description = description
-      @locals = locals
+      @title = options[:title]
+      @description = options[:description]
+      @locals = options[:locals] || {}
     end
 
     def schema!

@@ -161,7 +161,6 @@ module JbuilderSchema
     end
 
     def _create_required!
-      puts ">>>MODELS #{models}"
       models.flat_map { |_k, model|
         model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
       }
