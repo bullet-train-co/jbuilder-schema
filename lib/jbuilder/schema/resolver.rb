@@ -32,13 +32,12 @@ module JbuilderSchema
       paths = template_glob("#{escape_entry(path.to_s)}*")
 
       paths.map do |path|
-        build_template(path)
+        _source(path)
       end
     end
 
-    def build_template(template)
-      source = source_for_template(template)
-      @template ||= JbuilderSchema::Template.new(source)
+    def _source(template)
+      source_for_template(template).to_s
     end
   end
 end

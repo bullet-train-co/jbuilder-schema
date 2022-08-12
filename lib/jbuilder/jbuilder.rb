@@ -11,10 +11,6 @@ class Jbuilder
     original_method_missing(*args, &block)
   end
 
-  def respond_to_missing?
-    true
-  end
-
   private
 
   def _extract_schema_meta!(*args)

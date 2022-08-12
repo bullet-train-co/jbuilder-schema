@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/inflections"
-require "safe_parser"
+require 'jbuilder/jbuilder_template'
+require 'active_support/inflections'
+require 'safe_parser'
 
 module JbuilderSchema
   # Template parser class
@@ -14,7 +15,7 @@ module JbuilderSchema
   #    json.url article_url(@article, format: :json)
   #    json.custom 123
   #
-  # ⛔ Relations:
+  # ✅ Relations:
   #    json.user_name @article.user.name
   #    json.comments @article.comments, :content, :created_at
   #
@@ -22,7 +23,7 @@ module JbuilderSchema
   #    json.comments @comments, :content, :created_at
   #    json.people my_array
   #
-  # ⛔️ Blocks:
+  # ✅ Blocks:
   #    json.author do
   #      json.name @article.user.name
   #      json.email @article.user.email
@@ -34,12 +35,12 @@ module JbuilderSchema
   #      json.url url_for(attachment)
   #    end
   #
-  # ⛔️ Conditions:
+  # ✅️ Conditions:
   #    if current_user.admin?
   #      json.visitors calculate_visitors(@article)
   #    end
   #
-  # ⛔️ Ruby code:
+  # ✅️ Ruby code:
   #    hash = { author: { name: "David" } }
   #
   # ⛔️ Jbuilder commands:
@@ -60,73 +61,108 @@ module JbuilderSchema
   #    json.cache_if! !admin?, ['v1', @person], expires_in: 10.minutes {}
   #    json.key_format! camelize: :lower
   #
-  class Template
-    attr_reader :source, :models
+  class Template < ::JbuilderTemplate
+    def set!(key, value = BLANK, *args, &block)
+      result = if ::Kernel.block_given?
+                 if !_blank?(value)
+                   # json.comments @post.comments { |comment| ... }
+                   # { "comments": [ { ... }, { ... } ] }
+                   _scope{ array! value, &block }
+                 else
+                   # json.comments { ... }
+                   # { "comments": ... }
+                   _merge_block(key){ yield self }
+                 end
+               elsif args.empty?
+                 if ::Jbuilder === value
+                   # json.age 32
+                   # json.person another_jbuilder
+                   # { "age": 32, "person": { ...  }
+                   _format_keys(value.attributes!)
+                 else
+                   # json.age 32
+                   # { "age": 32 }
+                   # _format_keys(value)
+                   type = _get_type(value)
+                   _format_keys(type)
+                 end
+               elsif _is_collection?(value)
+                 # json.comments @post.comments, :content, :created_at
+                 # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+                 _scope{ array! value, *args }
+               else
+                 # json.author @post.creator, :name, :email_address
+                 # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
+                 _merge_block(key){ extract! value, *args }
+               end
 
-    def initialize(source)
-      @source = source
-      @models = {}
-
-      Zeitwerk::Loader.eager_load_all if defined?(Zeitwerk::Loader)
+      _set_value key, result
     end
 
     def properties
-      _create_properties!
+      # _create_properties!
+      @attributes
     end
 
     def required
-      _parse_lines! if models.empty?
-      _create_required!
+      # _parse_lines! if models.empty?
+      # _create_required!
     end
 
     private
 
-    def _lines
-      source.to_s
-        .split(/\n+|\r+/)
-        .reject(&:empty?)
-        .reject { |l| l.start_with?("#") }
-        .map { |l| l.split("#").first }
-    end
+    # def _lines
+    #   source.to_s
+    #     .split(/\n+|\r+/)
+    #     .reject(&:empty?)
+    #     .reject { |l| l.start_with?("#") }
+    #     .map { |l| l.split("#").first }
+    # end
 
-    def _parse_lines!
-      schema_regexp = ",?\s?schema(:|=>|\s=>)\s?"
-      hash_regexp = "{(.*?)}"
+    # def _parse_lines!
+    #   schema_regexp = ",?\s?schema(:|=>|\s=>)\s?"
+    #   hash_regexp = "{(.*?)}"
+    #
+    #   {}.tap do |hash|
+    #     _lines.each_with_index do |line, index|
+    #       hash[index] = {}.tap do |line_hash|
+    #         line_hash[:property] = line.split.first.delete_prefix("json.").to_sym
+    #         schema = line.slice!(/#{schema_regexp + hash_regexp}/)&.strip&.gsub(/#{schema_regexp}/, "") || "{}"
+    #         line_hash[:schema] = SafeParser.new(schema).safe_load
+    #         line_hash[:arguments] = line.split[1..].map { |e| e.delete(",") }
+    #         line_hash[:schema] = _schema_for_line(line_hash)
+    #       end
+    #     end
+    #   end
+    # end
 
-      {}.tap do |hash|
-        _lines.each_with_index do |line, index|
-          hash[index] = {}.tap do |line_hash|
-            line_hash[:property] = line.split.first.delete_prefix("json.").to_sym
-            schema = line.slice!(/#{schema_regexp + hash_regexp}/)&.strip&.gsub(/#{schema_regexp}/, "") || "{}"
-            line_hash[:schema] = SafeParser.new(schema).safe_load
-            line_hash[:arguments] = line.split[1..].map { |e| e.delete(",") }
-            line_hash[:schema] = _schema_for_line(line_hash)
-          end
-        end
-      end
-    end
-
-    def _schema_for_line(line)
-      schema = line[:schema]
-      unless schema[:type]
-        type = _get_type(line[:arguments].first)
-        type.is_a?(Array) ? (schema[:type], schema[:format] = type) : schema[:type] = type
-      end
-      schema
-    end
+    # def _schema_for_line(line)
+    #   schema = line[:schema]
+    #   unless schema[:type]
+    #     type = _get_type(line[:arguments].first)
+    #     type.is_a?(Array) ? (schema[:type], schema[:format] = type) : schema[:type] = type
+    #   end
+    #   schema
+    # end
 
     def _get_type(value)
-      klass = :boolean if %w[true false].include?(value)
-      klass = :integer if Integer(value, exception: false) && klass.nil?
-      klass = :number if Float(value, exception: false) && klass.nil?
+      return value if _blank?(value)
 
-      _schematize_type(klass || _type_from_model(value))
+      {type: value.class.name.downcase.to_sym}
     end
+
+    # def _get_type(value)
+    #   klass = :boolean if %w[true false].include?(value)
+    #   klass = :integer if Integer(value, exception: false) && klass.nil?
+    #   klass = :number if Float(value, exception: false) && klass.nil?
+    #
+    #   _schematize_type(klass || _type_from_model(value))
+    # end
 
     def _schematize_type(type)
       case type
       when :datetime
-        [:string, "date-time"]
+        [:string, 'date-time']
       when nil, :text
         :string
       else
@@ -135,8 +171,8 @@ module JbuilderSchema
     end
 
     def _type_from_model(string)
-      variable, method = string.split(".")
-      class_name = variable.delete("@").classify
+      variable, method = string.split('.')
+      class_name = variable.delete('@').classify
 
       return unless models.key?(class_name) || _find_class(class_name)
 
@@ -145,7 +181,7 @@ module JbuilderSchema
 
     def _find_class(string)
       klass = string.classify.safe_constantize
-      return unless klass && klass.respond_to?("columns_hash")
+      return unless klass && klass.respond_to?('columns_hash')
 
       models[string] = klass
     end
@@ -160,10 +196,18 @@ module JbuilderSchema
       end
     end
 
-    def _create_required!
-      models.flat_map { |_k, model|
-        model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
-      }
+    # def _create_required!
+    #   models.flat_map { |_k, model|
+    #     model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
+    #   }
+    # end
+
+    ###
+    # Jbuilder methods
+    ###
+
+    def _key(key)
+      @key_formatter ? @key_formatter.format(key).to_sym : key.to_sym
     end
   end
 end
