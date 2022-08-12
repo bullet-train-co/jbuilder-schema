@@ -37,7 +37,7 @@ module JbuilderSchema
     end
 
     def _source(template)
-      source_for_template(template).to_s
+      source_for_template(template)
     end
   end
 end

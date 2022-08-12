@@ -1,24 +1,19 @@
 # frozen_string_literal: true
 
-require "jbuilder/schema/handler"
 require "jbuilder/schema/resolver"
-require "jbuilder/schema/template"
-require "jbuilder/schema/executor"
+require "jbuilder/schema/renderer"
 
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    # include ActionController::Helpers
     attr_reader :path, :template, :title, :description, :locals
 
     def initialize(path, **options)
-      ActionView::Template.register_template_handler :jbuilder, JbuilderSchema::Handler
-
       @path = path
       @title = options[:title]
       @description = options[:description]
       @locals = options[:locals] || {}
-      @template = _build_template
+      @template = _render_template
     end
 
     def schema!
@@ -55,10 +50,8 @@ module JbuilderSchema
       [prefix, controller, action, partial]
     end
 
-    def _build_template
-      JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
-        JbuilderSchema::Executor.new(locals).exec(eval("lambda { #{_find_template} }"))
-      end
+    def _render_template
+      JbuilderSchema::Renderer.new(locals).render(_find_template)
     end
   end
 end
