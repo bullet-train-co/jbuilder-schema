@@ -6,10 +6,12 @@ require "jbuilder/schema/renderer"
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    attr_reader :path, :template, :title, :description, :locals
+    attr_reader :path, :template, :models, :title, :description, :locals
 
     def initialize(path, **options)
       @path = path
+      # TODO: Need this for required, make it simpler:
+      @models = options[:models]
       @title = options[:title]
       @description = options[:description]
       @locals = options[:locals] || {}
@@ -29,7 +31,7 @@ module JbuilderSchema
         type: :object,
         title: title,
         description: description,
-        required: template.required,
+        required: _create_required!,
         properties: template.properties
       }
     end
@@ -52,6 +54,12 @@ module JbuilderSchema
 
     def _render_template
       JbuilderSchema::Renderer.new(locals).render(_find_template)
+    end
+
+    def _create_required!
+      models.flat_map { |model|
+        model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
+      }.unshift(:id).select { |property| template.properties.keys.include?(property) }
     end
   end
 end

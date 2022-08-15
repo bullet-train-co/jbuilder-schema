@@ -6,10 +6,13 @@ require 'jbuilder/schema/handler'
 module JbuilderSchema
   # Here we initialize all the variables needed for template and pass them to it
   class Renderer
+    attr_reader :models
+
     def initialize(locals)
+      # OPTIMIZE: Not sure if we need this
       ActionView::Template.register_template_handler :jbuilder, JbuilderSchema::Handler
 
-      locals.each { |k, v| define_singleton_method(k) {v } }
+      initialize_locals!(locals)
     end
 
     def render(source)
@@ -27,6 +30,21 @@ module JbuilderSchema
         "#{method}"
       else
         super
+      end
+    end
+
+    private
+
+    def initialize_locals!(locals)
+      locals.each do |k, v|
+        # Setting instance variables (`@article`):
+        instance_variable_set("@#{k}", v)
+
+        # Setting local variables (`article`):
+        # We can define method:
+        # define_singleton_method(k) { v }
+        # or set attr_reader on an instance, this feels better:
+        singleton_class.instance_eval { attr_reader k }
       end
     end
   end
