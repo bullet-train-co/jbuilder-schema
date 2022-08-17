@@ -21,19 +21,30 @@ module JbuilderSchema
     def schema!
       return {} unless template
 
-      _object
+      _schema
     end
 
     private
 
+    def _schema
+      {
+        type: template.object_type
+      }.merge(template.object_type == :object ? _object : _array)
+    end
+
     def _object
       {
-        type: :object,
         title: title,
         description: description,
         required: _create_required!,
         properties: template.properties
       }
+    end
+
+    def _array
+
+        template.properties
+
     end
 
     def _find_template
