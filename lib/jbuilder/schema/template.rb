@@ -22,7 +22,7 @@ module JbuilderSchema
   #    json.user_name @article.user.name
   #    json.comments @article.comments, :content, :created_at
   #
-  # ⛔ Collections:
+  # ✅ Collections:
   #    json.comments @comments, :content, :created_at
   #    json.people my_array
   #
@@ -47,14 +47,14 @@ module JbuilderSchema
   #    hash = { author: { name: "David" } }
   #
   # ⛔️ Jbuilder commands:
-  #    json.set! :name, 'David'
-  #    json.merge! { author: { name: "David" } }
+  # ✅ json.set! :name, 'David'
+  # ✅ json.merge! { author: { name: "David" } }
   #    json.array! @people, :id, :name
-  #    json.array! @posts, partial: 'posts/post', as: :post
-  #    json.partial! 'comments/comments', comments: @message.comments
-  #    json.partial! partial: 'articles/article', collection: @articles, as: :article
-  #    json.comments @article.comments, partial: 'comments/comment', as: :comment
-  #    json.extract! @article, :id, :title, :content, :published_at
+  # ✅ json.array! @posts, partial: 'posts/post', as: :post
+  # ✅ json.partial! 'comments/comments', comments: @message.comments
+  # ✅ json.partial! partial: 'articles/article', collection: @articles, as: :article
+  # ✅ json.comments @article.comments, partial: 'comments/comment', as: :comment
+  # ✅ json.extract! @article, :id, :title, :content, :published_at
   #    json.key_format! camelize: :lower
   #    json.deep_format_keys!
   #
@@ -65,6 +65,8 @@ module JbuilderSchema
   #    json.key_format! camelize: :lower
   #
   class Template < ::JbuilderTemplate
+    attr_reader :attributes, :type
+
     def initialize(context, *args)
       @type = :object
       @inline_array = false
@@ -75,39 +77,39 @@ module JbuilderSchema
     def set!(key, value = BLANK, *args, &block)
       result = if ::Kernel.block_given?
                  if !_blank?(value)
+                   # OBJECTS ARRAY:
                    # json.comments @post.comments { |comment| ... }
                    # { "comments": [ { ... }, { ... } ] }
-                   puts ">>> PARTIAL ARRAY"
                    _scope{ array! value, &block }
                  else
+                   # BLOCK:
                    # json.comments { ... }
                    # { "comments": ... }
-                   puts ">>> BLOCK"
                    @inline_array = true
                    _merge_block(key){ yield self }
                  end
                elsif args.empty?
                  if ::Jbuilder === value
+                   # ATTRIBUTE1:
                    # json.age 32
                    # json.person another_jbuilder
                    # { "age": 32, "person": { ...  }
-                   puts ">>> ATTRIBUTE1"
                    _format_keys(value.attributes!)
                  else
+                   # ATTRIBUTE2:
                    # json.age 32
                    # { "age": 32 }
-                   puts ">>> ATTRIBUTE2"
                    _format_keys(_get_type(value))
                  end
                elsif _is_collection?(value)
-                 puts ">>> COLLECTION"
-                 @inline_array = true
-                 @collection = true
+                 # COLLECTION:
                  # json.comments @post.comments, :content, :created_at
                  # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+                 @inline_array = true
+                 @collection = true
                  _scope{ array! value, *args }
                else
-                 puts ">>> ELSE"
+                 # EXTRACT!:
                  # json.author @post.creator, :name, :email_address
                  # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
                  _merge_block(key){ extract! value, *args }
@@ -116,20 +118,10 @@ module JbuilderSchema
       _set_value key, result
     end
 
-    def properties
-      @attributes
-    end
-
-    def object_type
-      @type
-    end
-
     def array!(collection = [], *args)
       options = args.first
 
       if args.one? && _partial_options?(options)
-        # @type = :array
-        # @attributes["$ref"] = "#/components/schemas/#{options[:partial].split("/").last}"
         _set_ref(options[:partial].split("/").last)
       else
         super
@@ -137,16 +129,9 @@ module JbuilderSchema
     end
 
     def partial!(*args)
-      # partial = args.first
-      # _set_value
-
-      # puts ">>> partial! mcaller: #{caller}"
-      puts ">>> partial! method called with args: #{args}"
-
-      # puts ">>>ARGS #{ args.first[:partial].split('/').last }"
       if args.one? && _is_active_model?(args.first)
-      puts ">>>1"
-      #   _render_active_model_partial args.first
+        # TODO: Find where it is being used
+        _render_active_model_partial args.first
       else
         if args.first.is_a?(Hash)
           _set_ref(args.first[:partial].split("/").last)
@@ -154,22 +139,33 @@ module JbuilderSchema
           @collection = true if args[1].key?(:collection)
           _set_ref(args.first.split("/").last)
         end
-
-      # { type: :array, "$ref" => "#/components/schemas/#{args.first[:partial].split("/").last}" }
-        # _render_explicit_partial(*args)
       end
+    end
+
+    def merge!(object)
+      hash_or_array = ::Jbuilder === object ? object.attributes! : object
+      hash_or_array.deep_transform_values! { |value| _get_type(value) } if hash_or_array.is_a?(Hash)
+      @attributes = _merge_values(@attributes, _format_keys(hash_or_array))
     end
 
     private
 
     def _set_ref(component)
       if @inline_array
-        @collection ? _set_value(:type, :array) : _set_value(:type, :object)
+        if @collection
+          _set_value(:type, :array)
+          _set_value(:items, { "$ref" => _component_path(component)})
+        else
+          _set_value("$ref", _component_path(component))
+        end
       else
         @type = :array
+        _set_value(:items, { "$ref" => _component_path(component)})
       end
+    end
 
-      _set_value(:items, { "$ref" => "#/components/schemas/#{component}"})
+    def _component_path(component)
+      "#/components/schemas/#{component}"
     end
 
     def _get_type(value)
@@ -203,6 +199,14 @@ module JbuilderSchema
 
     def _key(key)
       @key_formatter ? @key_formatter.format(key).to_sym : key.to_sym
+    end
+
+    def _extract_hash_values(object, attributes)
+      attributes.each{ |key| _set_value key, _format_keys(_get_type(object.fetch(key))) }
+    end
+
+    def _extract_method_values(object, attributes)
+      attributes.each{ |key| _set_value key, _format_keys(_get_type(object.public_send(key))) }
     end
   end
 end

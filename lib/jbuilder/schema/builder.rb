@@ -10,7 +10,7 @@ module JbuilderSchema
 
     def initialize(path, **options)
       @path = path
-      # TODO: Need this for required, make it simpler:
+      # TODO: Need this for `required`, make it simpler:
       @models = options[:models]
       @title = options[:title]
       @description = options[:description]
@@ -27,9 +27,7 @@ module JbuilderSchema
     private
 
     def _schema
-      {
-        type: template.object_type
-      }.merge(template.object_type == :object ? _object : _array)
+      { type: template.type }.merge(template.type == :object ? _object : _array)
     end
 
     def _object
@@ -37,12 +35,12 @@ module JbuilderSchema
         title: title,
         description: description,
         required: _create_required!,
-        properties: template.properties
+        properties: template.attributes
       }
     end
 
     def _array
-      template.properties
+      template.attributes
     end
 
     def _find_template
@@ -68,7 +66,7 @@ module JbuilderSchema
     def _create_required!
       models.flat_map { |model|
         model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
-      }.unshift(:id).select { |property| template.properties.keys.include?(property) }
+      }.unshift(:id).select { |attribute| template.attributes.keys.include?(attribute) }
     end
   end
 end
