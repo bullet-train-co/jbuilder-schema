@@ -2,10 +2,13 @@
 
 require 'jbuilder/schema/template'
 require 'jbuilder/schema/handler'
+# require './app/helpers/articles_helper'
 
 module JbuilderSchema
   # Here we initialize all the variables needed for template and pass them to it
   class Renderer
+    # include ::ArticlesHelper
+
     attr_reader :models
 
     def initialize(locals)
