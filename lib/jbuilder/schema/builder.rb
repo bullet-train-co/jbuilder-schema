@@ -42,9 +42,7 @@ module JbuilderSchema
     end
 
     def _array
-
-        template.properties
-
+      template.properties
     end
 
     def _find_template

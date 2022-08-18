@@ -68,6 +68,7 @@ module JbuilderSchema
     def initialize(context, *args)
       @type = :object
       @inline_array = false
+      @collection = false
       super
     end
 
@@ -101,6 +102,7 @@ module JbuilderSchema
                elsif _is_collection?(value)
                  puts ">>> COLLECTION"
                  @inline_array = true
+                 @collection = true
                  # json.comments @post.comments, :content, :created_at
                  # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
                  _scope{ array! value, *args }
@@ -149,6 +151,7 @@ module JbuilderSchema
         if args.first.is_a?(Hash)
           _set_ref(args.first[:partial].split("/").last)
         else
+          @collection = true if args[1].key?(:collection)
           _set_ref(args.first.split("/").last)
         end
 
@@ -160,8 +163,12 @@ module JbuilderSchema
     private
 
     def _set_ref(component)
-      @type = :array unless @inline_array
-      _set_value(:type, :array) if @inline_array
+      if @inline_array
+        @collection ? _set_value(:type, :array) : _set_value(:type, :object)
+      else
+        @type = :array
+      end
+
       _set_value(:items, { "$ref" => "#/components/schemas/#{component}"})
     end
 
@@ -189,16 +196,6 @@ module JbuilderSchema
         { type: type }
       end
     end
-
-    # def _create_properties!
-    #   sorted_hash = _parse_lines!.sort.to_h
-    #
-    #   {}.tap do |hash|
-    #     sorted_hash.each do |_index, line|
-    #       hash[line[:property]] = line[:schema]
-    #     end
-    #   end
-    # end
 
     ###
     # Jbuilder methods
