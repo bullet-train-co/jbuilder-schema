@@ -1,36 +1,46 @@
 # frozen_string_literal: true
 
 require "jbuilder/schema/resolver"
+require "jbuilder/schema/renderer"
 
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    attr_reader :path, :template, :title, :description, :locals
+    attr_reader :path, :template, :model, :title, :description, :locals
 
     def initialize(path, **options)
       @path = path
-      @template = _find_template
+      # TODO: Need this for `required`, make it simpler:
+      @model = options[:model]
       @title = options[:title]
       @description = options[:description]
       @locals = options[:locals] || {}
+      @template = _render_template
     end
 
     def schema!
       return {} unless template
 
-      _object
+      _schema
     end
 
     private
 
+    def _schema
+      { type: template.type }.merge(template.type == :object ? _object : _array)
+    end
+
     def _object
       {
-        type: :object,
         title: title,
         description: description,
-        required: template.required,
-        properties: template.properties
+        required: _create_required!,
+        properties: template.attributes
       }
+    end
+
+    def _array
+      template.attributes
     end
 
     def _find_template
@@ -47,6 +57,21 @@ module JbuilderSchema
       action.delete_prefix!("_") if action[0] == "_"
 
       [prefix, controller, action, partial]
+    end
+
+    def _render_template
+      JbuilderSchema::Renderer.new(locals).render(_find_template)
+    end
+
+    def _create_required!
+      # OPTIMIZE: It might be that there could be several models in required field, need to learn more about it.
+      # Here's the code for that case:
+      # models.flat_map { |model|
+      #   model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
+      # }.unshift(:id).select { |attribute| template.attributes.keys.include?(attribute) }
+      model.validators.grep(ActiveRecord::Validations::PresenceValidator)
+           .flat_map(&:attributes).unshift(:id)
+           .select { |attribute| template.attributes.keys.include?(attribute) }
     end
   end
 end
