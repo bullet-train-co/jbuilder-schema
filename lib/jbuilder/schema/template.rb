@@ -15,7 +15,7 @@ module JbuilderSchema
   #    json.url article_url(@article, format: :json)
   #    json.custom 123
   #
-  # ⛔️ Main app helpers:
+  # ✅️ Main app helpers:
   #    json.title human_title(@article.title)
   #
   # ✅ Relations:
@@ -58,10 +58,10 @@ module JbuilderSchema
   # ✅ json.key_format! camelize: :lower
   # ✅ json.deep_format_keys!
   #
-  # ⛔️ Ignore (?) some of them:
+  # ✅ Ignore (?) some of them:
   # ✅ json.ignore_nil!
-  #    json.cache! ['v1', @person], expires_in: 10.minutes {}
-  #    json.cache_if! !admin?, ['v1', @person], expires_in: 10.minutes {}
+  # ✅ json.cache! ['v1', @person], expires_in: 10.minutes {}
+  # ✅ json.cache_if! !admin?, ['v1', @person], expires_in: 10.minutes {}
   #
   class Template < ::JbuilderTemplate
     attr_reader :attributes, :type
@@ -157,6 +157,10 @@ module JbuilderSchema
       hash_or_array = _format_keys(hash_or_array)
       hash_or_array.deep_transform_values! { |value| _get_type(value) } if hash_or_array.is_a?(Hash)
       @attributes = _merge_values(@attributes, hash_or_array)
+    end
+
+    def cache!(key=nil, options={})
+      yield
     end
 
     private

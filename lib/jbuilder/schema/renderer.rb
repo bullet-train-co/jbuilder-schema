@@ -2,12 +2,14 @@
 
 require 'jbuilder/schema/template'
 require 'jbuilder/schema/handler'
-# require './app/helpers/articles_helper'
+# TODO: Find a better way to load main app's helpers:
+ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| require "./app/helpers/#{helper}_helper" }
 
 module JbuilderSchema
   # Here we initialize all the variables needed for template and pass them to it
   class Renderer
-    # include ::ArticlesHelper
+    # TODO: Find a better way to load main app's helpers:
+    ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| include Object.const_get("::#{helper.camelize}Helper") }
 
     attr_reader :models
 
