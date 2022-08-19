@@ -19,9 +19,9 @@ Or install it yourself as:
 
 ## Usage
 
-Wherever you want to generate schemas, you should extend `JbuilderSchema::Helpers`:
+Wherever you want to generate schemas, you should extend `JbuilderSchema`:
 
-    extend JbuilderSchema::Helpers
+    extend JbuilderSchema
 
 Then you can use `jbuilder_schema` helper:
 
@@ -34,17 +34,19 @@ Then you can use `jbuilder_schema` helper:
                       current_user: @user
                     })
 
-`jbuilder_schema` helper takes path to Jbuilder template as a first argument and several optional arguments:
+`jbuilder_schema` helper takes `path` to Jbuilder template as a first argument and several optional arguments:
 
 - `model`: Model described in template, this is needed to populate `required` field in schema
 - `title` and `description`: Title and description of schema
 - `locals`: Here you should pass all the locals which are met in the template. Those could be any objects as long as they respond to methods called on them in template.
 
+Notice that partial templates should be prepended with an underscore just like in the name of the file (i.e. `_article` but not `article` an when using Jbuilder).
+
 **Schema is produced in ruby Hash, so you can call `.as_json`/`.to_json` on it if you want it in pure JSON.**
 
 ### Collections
 
-If array of objects is generated in template, either in root or in some field through Jbuilder partials, JSON-Schema `$ref` is generated pointing to object with the same name as partial. By default those schemas should appear in `"#/components/schemas/"`.
+If an object or an array of objects is generated in template, either in root or in some field through Jbuilder partials, JSON-Schema `$ref` is generated pointing to object with the same name as partial. By default those schemas should appear in `"#/components/schemas/"`.
 
 For example, if we have:
 
@@ -69,6 +71,15 @@ The result would be:
       }
     }
     
+[//]: # (### Customization)
+
+[//]: # ()
+[//]: # ()
+[//]: # (You can add your own data for fields in schema with `schema` keyword:)
+
+[//]: # ()
+[//]: # ()
+[//]: # (    json.amount order.amount, schema: { type: :number, format })
 
 ### RSwag
 

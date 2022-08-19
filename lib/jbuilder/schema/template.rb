@@ -201,6 +201,8 @@ module JbuilderSchema
         { type: :string }
       when :float, :decimal
         { type: :number }
+      when :trueclass, :falseclass
+        { type: :boolean }
       when :array
         # TODO: Find a way to store same keys with different values in the same hash
         # { "type" => :array, contains: value.map { |v| _schematize_type(v).compare_by_identity }.inject(:merge), minContains: 0 }
