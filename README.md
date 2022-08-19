@@ -85,13 +85,13 @@ It's super easy to use JbuilderSchema with RSwag, — just add `jbuilder_schema`
         components: {
           schemas: {
             article: jbuilder_schema('api/v1/articles/_article',
-            model: Article,
-            title: 'Article',
-            description: 'Article in the blog',
-            locals: {
-              article: FactoryBot.create(:article),
-              current_user: FactoryBot.create(:user, admin: true)
-            })
+                                     model: Article,
+                                     title: 'Article',
+                                     description: 'Article in the blog',
+                                     locals: {
+                                       article: FactoryBot.create(:article),
+                                       current_user: FactoryBot.create(:user, admin: true)
+                                     })
           }
         }
 
