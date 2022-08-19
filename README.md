@@ -28,10 +28,10 @@ Then you can use `jbuilder_schema` helper:
     jbuilder_schema('api/v1/articles/_article',
                     model: Article,
                     title: 'Article',
-                    description: 'Show action for 1 article in the blog',
+                    description: 'Article in the blog',
                     locals: {
-                      article: FactoryBot.create(:article),
-                      current_user: FactoryBot.create(:user, admin: true)
+                      article: Article.first,
+                      current_user: User.first
                     })
 
 `jbuilder_schema` helper takes path to Jbuilder template as a first argument and several optional arguments:
@@ -68,6 +68,38 @@ The result would be:
         }
       }
     }
+
+### RSwag
+
+It's super easy to use JbuilderSchema with RSwag, — just add `jbuilder_schema` helper in `swagger_helper.rb` like this:
+
+    RSpec.configure do |config|
+      extend JbuilderSchema::Helpers
+
+      ...
+
+      config.swagger_docs = {
+
+        ...
+      
+        components: {
+          schemas: {
+            article: jbuilder_schema('api/v1/articles/_article',
+            model: Article,
+            title: 'Article',
+            description: 'Article in the blog',
+            locals: {
+              article: FactoryBot.create(:article),
+              current_user: FactoryBot.create(:user, admin: true)
+            })
+          }
+        }
+
+        ...
+
+      }
+
+      ...
 
 ## Development
 
