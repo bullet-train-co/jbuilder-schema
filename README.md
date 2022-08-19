@@ -30,8 +30,8 @@ Then you can use `jbuilder_schema` helper:
                     title: 'Article',
                     description: 'Article in the blog',
                     locals: {
-                      article: Article.first,
-                      current_user: User.first
+                      article: @article,
+                      current_user: @user
                     })
 
 `jbuilder_schema` helper takes path to Jbuilder template as a first argument and several optional arguments:
