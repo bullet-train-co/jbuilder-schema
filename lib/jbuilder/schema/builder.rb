@@ -6,12 +6,12 @@ require "jbuilder/schema/renderer"
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    attr_reader :path, :template, :models, :title, :description, :locals
+    attr_reader :path, :template, :model, :title, :description, :locals
 
     def initialize(path, **options)
       @path = path
       # TODO: Need this for `required`, make it simpler:
-      @models = options[:models]
+      @model = options[:model]
       @title = options[:title]
       @description = options[:description]
       @locals = options[:locals] || {}
@@ -64,9 +64,14 @@ module JbuilderSchema
     end
 
     def _create_required!
-      models.flat_map { |model|
-        model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
-      }.unshift(:id).select { |attribute| template.attributes.keys.include?(attribute) }
+      # OPTIMIZE: It might be that there could be several models in required field, need to learn more about it.
+      # Here's the code for that case:
+      # models.flat_map { |model|
+      #   model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
+      # }.unshift(:id).select { |attribute| template.attributes.keys.include?(attribute) }
+      model.validators.grep(ActiveRecord::Validations::PresenceValidator)
+           .flat_map(&:attributes).unshift(:id)
+           .select { |attribute| template.attributes.keys.include?(attribute) }
     end
   end
 end

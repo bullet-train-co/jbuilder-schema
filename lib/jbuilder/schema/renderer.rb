@@ -11,7 +11,7 @@ module JbuilderSchema
     # TODO: Find a better way to load main app's helpers:
     ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| include Object.const_get("::#{helper.camelize}Helper") }
 
-    attr_reader :models
+    attr_reader :model
 
     def initialize(locals)
       # OPTIMIZE: Not sure if we need this

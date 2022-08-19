@@ -124,6 +124,7 @@ module JbuilderSchema
       options = args.first
 
       if args.one? && _partial_options?(options)
+        @collection = true
         _set_ref(options[:partial].split("/").last)
       else
         array = super
@@ -171,6 +172,7 @@ module JbuilderSchema
           _set_value(:type, :array)
           _set_value(:items, { "$ref" => _component_path(component)})
         else
+          _set_value(:type, :object)
           _set_value("$ref", _component_path(component))
         end
       else
