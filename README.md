@@ -50,24 +50,25 @@ For example, if we have:
 
     json.user do
       json.partial! 'api/v1/users/user', user: user
+    end
 
-      json.articles do
-        json.array! user.articles, partial: "api/v1/articles/article", as: :article
-      end
+    json.articles do
+      json.array! user.articles, partial: "api/v1/articles/article", as: :article
     end
 
 The result would be:
 
     "user": {
       "type": "object",
-      "$ref": "#/components/schemas/user",
-      "articles": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/article"
-        }
+      "$ref": "#/components/schemas/user"
+    },
+    "articles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/article"
       }
     }
+    
 
 ### RSwag
 
