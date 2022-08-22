@@ -77,45 +77,45 @@ module JbuilderSchema
     end
 
     def set!(key, value = BLANK, *args, &block)
-      result = if ::Kernel.block_given?
-                 if !_blank?(value)
-                   # puts ">>> OBJECTS ARRAY:"
-                   # json.comments @article.comments { |comment| ... }
-                   # { "comments": [ { ... }, { ... } ] }
-                   _scope{ array! value, &block }
-                 else
-                   # puts ">>> BLOCK:"
-                   # json.comments { ... }
-                   # { "comments": ... }
-                   @inline_array = true
-                   _merge_block(key){ yield self }
-                 end
-               elsif args.empty?
-                 if ::Jbuilder === value
-                   # puts ">>> ATTRIBUTE1:"
-                   # json.age 32
-                   # json.person another_jbuilder
-                   # { "age": 32, "person": { ...  }
-                   _format_keys(value.attributes!)
-                 else
-                   # puts ">>> ATTRIBUTE2:"
-                   # json.age 32
-                   # { "age": 32 }
-                   _get_type(_format_keys(value))
-                 end
-               elsif _is_collection?(value)
-                 # puts ">>> COLLECTION:"
-                 # json.comments @article.comments, :content, :created_at
-                 # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
-                 @inline_array = true
-                 @collection = true
-                 _scope{ array! value, *args }
-               else
-                 # puts ">>> EXTRACT!:"
-                 # json.author @article.creator, :name, :email_address
-                 # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-                 _merge_block(key){ extract! value, *args }
-               end
+      result = if block
+        if !_blank?(value)
+          # puts ">>> OBJECTS ARRAY:"
+          # json.comments @article.comments { |comment| ... }
+          # { "comments": [ { ... }, { ... } ] }
+          _scope { array! value, &block }
+        else
+          # puts ">>> BLOCK:"
+          # json.comments { ... }
+          # { "comments": ... }
+          @inline_array = true
+          _merge_block(key) { yield self }
+        end
+      elsif args.empty?
+        if ::Jbuilder === value
+          # puts ">>> ATTRIBUTE1:"
+          # json.age 32
+          # json.person another_jbuilder
+          # { "age": 32, "person": { ...  }
+          _format_keys(value.attributes!)
+        else
+          # puts ">>> ATTRIBUTE2:"
+          # json.age 32
+          # { "age": 32 }
+          _get_type(_format_keys(value))
+        end
+      elsif _is_collection?(value)
+        # puts ">>> COLLECTION:"
+        # json.comments @article.comments, :content, :created_at
+        # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+        @inline_array = true
+        @collection = true
+        _scope { array! value, *args }
+      else
+        # puts ">>> EXTRACT!:"
+        # json.author @article.creator, :name, :email_address
+        # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
+        _merge_block(key) { extract! value, *args }
+      end
 
       _set_value key, result
     end
@@ -143,13 +143,11 @@ module JbuilderSchema
       if args.one? && _is_active_model?(args.first)
         # TODO: Find where it is being used
         _render_active_model_partial args.first
+      elsif args.first.is_a?(Hash)
+        _set_ref(args.first[:partial].split("/").last)
       else
-        if args.first.is_a?(Hash)
-          _set_ref(args.first[:partial].split("/").last)
-        else
-          @collection = true if args[1].key?(:collection)
-          _set_ref(args.first.split("/").last)
-        end
+        @collection = true if args[1].key?(:collection)
+        _set_ref(args.first.split("/").last)
       end
     end
 
@@ -160,7 +158,7 @@ module JbuilderSchema
       @attributes = _merge_values(@attributes, hash_or_array)
     end
 
-    def cache!(key=nil, options={})
+    def cache!(key = nil, options = {})
       yield
     end
 
@@ -170,14 +168,14 @@ module JbuilderSchema
       if @inline_array
         if @collection
           _set_value(:type, :array)
-          _set_value(:items, { "$ref" => _component_path(component)})
+          _set_value(:items, {"$ref" => _component_path(component)})
         else
           _set_value(:type, :object)
           _set_value("$ref", _component_path(component))
         end
       else
         @type = :array
-        _set_value(:items, { "$ref" => _component_path(component)})
+        _set_value(:items, {"$ref" => _component_path(component)})
       end
     end
 
@@ -196,19 +194,19 @@ module JbuilderSchema
 
       case type
       when :datetime, :"activesupport::timewithzone"
-        { type: :string, format: "date-time" }
+        {type: :string, format: "date-time"}
       when nil, :text, :nilclass
-        { type: :string }
+        {type: :string}
       when :float, :decimal
-        { type: :number }
+        {type: :number}
       when :trueclass, :falseclass
-        { type: :boolean }
+        {type: :boolean}
       when :array
         # TODO: Find a way to store same keys with different values in the same hash
         # { "type" => :array, contains: value.map { |v| _schematize_type(v).compare_by_identity }.inject(:merge), minContains: 0 }
-        { type: :array, contains: value.map { |v| _schematize_type(v).compare_by_identity }.inject(:merge), minContains: 0 }
+        {type: :array, contains: value.map { |v| _schematize_type(v).compare_by_identity }.inject(:merge), minContains: 0}
       else
-        { type: type }
+        {type: type}
       end
     end
 
@@ -221,11 +219,11 @@ module JbuilderSchema
     end
 
     def _extract_hash_values(object, attributes)
-      attributes.each{ |key| _set_value key, _get_type(_format_keys(object.fetch(key))) }
+      attributes.each { |key| _set_value key, _get_type(_format_keys(object.fetch(key))) }
     end
 
     def _extract_method_values(object, attributes)
-      attributes.each{ |key| _set_value key, _get_type(_format_keys(object.public_send(key))) }
+      attributes.each { |key| _set_value key, _get_type(_format_keys(object.public_send(key))) }
     end
 
     def _map_collection(collection)

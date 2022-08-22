@@ -1,15 +1,17 @@
 # frozen_string_literal: true
 
-require 'jbuilder/schema/template'
-require 'jbuilder/schema/handler'
+require "jbuilder/schema/template"
+require "jbuilder/schema/handler"
 # TODO: Find a better way to load main app's helpers:
-ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| require "./app/helpers/#{helper}_helper" }
+# Helpers don't work in Jbuilder itself, so no need to include them here!
+# ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| require "./app/helpers/#{helper}_helper" }
 
 module JbuilderSchema
   # Here we initialize all the variables needed for template and pass them to it
   class Renderer
     # TODO: Find a better way to load main app's helpers:
-    ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| include Object.const_get("::#{helper.camelize}Helper") }
+    # Helpers don't work in Jbuilder itself, so no need to include them here!
+    # ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| include Object.const_get("::#{helper.camelize}Helper") }
 
     attr_reader :model
 
@@ -28,11 +30,11 @@ module JbuilderSchema
     end
 
     def method_missing method, *args
-      if method.to_s.end_with?('_path') or method.to_s.end_with?('_url')
+      if method.to_s.end_with?("_path", "_url")
         # For cases like 'article_url(article)'
         # Not sure if we should really generate urls here, if so we can use something like
         #   ::Rails.application.routes.url_helpers.send(method, *args, only_path: true)
-        "#{method}"
+        method.to_s
       else
         super
       end
