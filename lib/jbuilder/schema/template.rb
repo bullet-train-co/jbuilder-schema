@@ -2,6 +2,7 @@
 
 require "jbuilder/jbuilder_template"
 require "active_support/inflections"
+require "active_support/core_ext/hash/deep_transform_values"
 require "safe_parser"
 
 module JbuilderSchema
@@ -11,19 +12,19 @@ module JbuilderSchema
   # Here we do the following:
   #
   # ✅ Direct fields definition:
-  #    json.title @article.title
-  #    json.url article_url(@article, format: :json)
-  #    json.custom 123
+  #    json.title @article.title +
+  #    json.url article_url(@article, format: :json) +
+  #    json.custom 123 +
   #
   # ✅️ Main app helpers:
-  #    json.title human_title(@article.title)
+  #    json.title human_title(@article.title) +
   #
   # ✅ Relations:
-  #    json.user_name @article.user.name
+  #    json.user_name @article.user.name +
   #    json.comments @article.comments, :content, :created_at
   #
   # ✅ Collections:
-  #    json.comments @comments, :content, :created_at
+  #    json.comments @comments, :content, :created_at +
   #    json.people my_array
   #
   # ✅ Blocks:
@@ -47,13 +48,13 @@ module JbuilderSchema
   #    hash = { author: { name: "David" } }
   #
   # ✅ Jbuilder commands:
-  # ✅ json.set! :name, 'David'
+  # ✅ json.set! :name, 'David' +
   # ✅ json.merge! { author: { name: "David" } }
   # ✅ json.array! @articles, :id, :title
   # ✅ json.array! @articles, partial: 'articles/article', as: :article
   # ✅ json.partial! 'comments/comments', comments: @message.comments
   # ✅ json.partial! partial: 'articles/article', collection: @articles, as: :article
-  # ✅ json.comments @article.comments, partial: 'comments/comment', as: :comment
+  # ✅ json.comments @article.comments, partial: 'comments/comment', as: :comment +
   # ✅ json.extract! @article, :id, :title, :content, :published_at
   # ✅ json.key_format! camelize: :lower
   # ✅ json.deep_format_keys!
@@ -99,9 +100,13 @@ module JbuilderSchema
           _format_keys(value.attributes!)
         else
           # puts ">>> ATTRIBUTE2:"
-          # json.age 32
-          # { "age": 32 }
-          _get_type(_format_keys(value))
+          if value.is_a?(Array)
+            _scope { array! value }
+          else
+            # json.age 32
+            # { "age": 32 }
+            _schema(_format_keys(value))
+          end
         end
       elsif _is_collection?(value)
         # puts ">>> COLLECTION:"
@@ -123,15 +128,27 @@ module JbuilderSchema
     def array!(collection = [], *args)
       options = args.first
 
+      # puts ">>>collection #{collection}"
+      # puts ">>>args #{args}"
+      # puts ">>>args.one? #{args.one?}"
+      # puts ">>>_partial_options?(options) #{_partial_options?(options)}"
+
       if args.one? && _partial_options?(options)
+        puts ">>>1"
         @collection = true
         _set_ref(options[:partial].split("/").last)
       else
+        puts ">>>2"
         array = super
 
         if @inline_array
+          puts ">>>3 #{array}"
           array
         else
+          puts ">>>4 #{array.map { |a|_is_active_model?(a) }}"
+          # puts ">>>c #{collection}"
+          # puts ">>>o #{args}"
+
           @type = :array
           @attributes = {}
           _set_value(:items, array)
@@ -147,19 +164,31 @@ module JbuilderSchema
         _set_ref(args.first[:partial].split("/").last)
       else
         @collection = true if args[1].key?(:collection)
-        _set_ref(args.first.split("/").last)
+        _set_ref(args.first&.split("/")&.last)
       end
     end
 
     def merge!(object)
       hash_or_array = ::Jbuilder === object ? object.attributes! : object
       hash_or_array = _format_keys(hash_or_array)
-      hash_or_array.deep_transform_values! { |value| _get_type(value) } if hash_or_array.is_a?(Hash)
+      hash_or_array.deep_transform_values! { |value| _schema(value) } if hash_or_array.is_a?(Hash)
       @attributes = _merge_values(@attributes, hash_or_array)
+      puts ">>>@attributes #{@attributes}"
+      @attributes
     end
 
     def cache!(key = nil, options = {})
       yield
+    end
+
+    def method_missing(*args, &block)
+      puts ">>>AAA #{args}"
+
+      if ::Kernel.block_given?
+        set!(*args, &block)
+      else
+        set!(*args)
+      end
     end
 
     private
@@ -174,39 +203,47 @@ module JbuilderSchema
           _set_value("$ref", _component_path(component))
         end
       else
+        puts ">>>@collection #{@collection}"
         @type = :array
         _set_value(:items, {"$ref" => _component_path(component)})
       end
     end
 
+    # TODO: Move prefix part to configuration
     def _component_path(component)
       "#/components/schemas/#{component}"
     end
 
-    def _get_type(value)
-      return value if _blank?(value)
-
-      _schematize_type(value)
-    end
-
-    def _schematize_type(value)
-      type = value.class.name.downcase.to_sym
+    def _schema(value)
+      type = value.class.name&.downcase&.to_sym
 
       case type
-      when :datetime, :"activesupport::timewithzone"
+      when :time, :datetime, :"activesupport::timewithzone"
         {type: :string, format: "date-time"}
       when nil, :text, :nilclass
-        {type: :string}
-      when :float, :decimal
-        {type: :number}
+        {type: _type(type)}
+      when :float, :bigdecimal
+        {type: _type(type)}
       when :trueclass, :falseclass
-        {type: :boolean}
+        {type: _type(type)}
       when :array
-        # TODO: Find a way to store same keys with different values in the same hash
-        # { "type" => :array, contains: value.map { |v| _schematize_type(v).compare_by_identity }.inject(:merge), minContains: 0 }
-        {type: :array, contains: value.map { |v| _schematize_type(v).compare_by_identity }.inject(:merge), minContains: 0}
+        types = value.map { |v| _type(v.class.name&.downcase&.to_sym) }.uniq
+        {type: :array, contains: {type: types.size > 1 ? types : types.first}, minContains: 0}
       else
-        {type: type}
+        {type: _type(type)}
+      end
+    end
+
+    def _type(type)
+      case type
+      when :time, :datetime, :"activesupport::timewithzone", nil, :text, :nilclass
+        :string
+      when :float, :bigdecimal
+        :number
+      when :trueclass, :falseclass
+        :boolean
+      else
+        type
       end
     end
 
@@ -219,11 +256,11 @@ module JbuilderSchema
     end
 
     def _extract_hash_values(object, attributes)
-      attributes.each { |key| _set_value key, _get_type(_format_keys(object.fetch(key))) }
+      attributes.each { |key| _set_value key, _schema(_format_keys(object.fetch(key))) }
     end
 
     def _extract_method_values(object, attributes)
-      attributes.each { |key| _set_value key, _get_type(_format_keys(object.public_send(key))) }
+      attributes.each { |key| _set_value key, _schema(_format_keys(object.public_send(key))) }
     end
 
     def _map_collection(collection)

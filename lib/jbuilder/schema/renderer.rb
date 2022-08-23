@@ -19,7 +19,7 @@ module JbuilderSchema
       # OPTIMIZE: Not sure if we need this
       ActionView::Template.register_template_handler :jbuilder, JbuilderSchema::Handler
 
-      initialize_locals!(locals)
+      _define_locals!(locals)
     end
 
     def render(source)
@@ -29,7 +29,7 @@ module JbuilderSchema
       end
     end
 
-    def method_missing method, *args
+    def method_missing(method, *args)
       if method.to_s.end_with?("_path", "_url")
         # For cases like 'article_url(article)'
         # Not sure if we should really generate urls here, if so we can use something like
@@ -40,9 +40,13 @@ module JbuilderSchema
       end
     end
 
+    def respond_to_missing?(method_name, include_private = false)
+      method_name.to_s.end_with?("_path", "_url") || super
+    end
+
     private
 
-    def initialize_locals!(locals)
+    def _define_locals!(locals)
       locals.each do |k, v|
         # Setting instance variables (`@article`):
         instance_variable_set("@#{k}", v)
