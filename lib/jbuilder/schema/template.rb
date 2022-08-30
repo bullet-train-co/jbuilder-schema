@@ -145,13 +145,23 @@ module JbuilderSchema
           puts ">>>3 #{array}"
           array
         else
-          puts ">>>4 #{array.map { |a|_is_active_model?(a) }}"
-          # puts ">>>c #{collection}"
-          # puts ">>>o #{args}"
+          puts ">>>4"
+          # TODO: Find better way to determine if all array elements are models
+          if array.map { |a|_is_active_model?(a) }.uniq == [true]
+            puts ">>>5"
+            @attributes = {}
+            @inline_array = true
+            @collection = true
+            _set_value(:type, :array)
+            _set_value(:items, _scope { array! array, *array.first.attribute_names(&:to_sym) })
+          else
+            puts ">>>6 #{}"
 
-          @type = :array
-          @attributes = {}
-          _set_value(:items, array)
+            @type = :array
+            @attributes = {}
+            _set_value(:items, array)
+          end
+
         end
       end
     end
@@ -173,8 +183,6 @@ module JbuilderSchema
       hash_or_array = _format_keys(hash_or_array)
       hash_or_array.deep_transform_values! { |value| _schema(value) } if hash_or_array.is_a?(Hash)
       @attributes = _merge_values(@attributes, hash_or_array)
-      puts ">>>@attributes #{@attributes}"
-      @attributes
     end
 
     def cache!(key = nil, options = {})
@@ -182,8 +190,6 @@ module JbuilderSchema
     end
 
     def method_missing(*args, &block)
-      puts ">>>AAA #{args}"
-
       if ::Kernel.block_given?
         set!(*args, &block)
       else
