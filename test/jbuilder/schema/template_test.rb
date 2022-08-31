@@ -20,16 +20,14 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({type: :array, contains: {type: %i[string integer number boolean]}, minContains: 0}.as_json, json.multitype_array(['a', 1, 1.5, false]).as_json)
   end
 
-  test "blocks" do
-    hash = { name: "David" }
-
-    # block = ->{ json.id 123; json.merge!(hash) }
-    assert_equal({type: :string}, json.author { json.id 123; json.merge!(hash) })
-  end
+  # test "blocks" do
+  #   assert_equal({type: :string}, json.author { json.id 123 })
+  #   # assert_equal({type: :string}, json.author { json.id 123; json.merge!({ name: "David" }) })
+  # end
 
   test "collections" do
     articles = FactoryBot.create_list(:article, 3)
-    assert_equal({id: {type: :integer}, title: {type: :string}}, json.articles(articles, :id, :title))
+    assert_equal({type: :array, items: { id: {type: :integer}, title: {type: :string}}}, json.articles(articles, :id, :title))
     assert_equal({type: :array, items: { id: { type: :integer },
                                          title: {type: :string},
                                          body: {type: :string},
