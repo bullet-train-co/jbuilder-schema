@@ -79,52 +79,48 @@ module JbuilderSchema
 
     def set!(key, value = BLANK, *args, &block)
       result = if block
-                 if !_blank?(value)
-                   # puts ">>> OBJECTS ARRAY:"
-                   # json.comments @article.comments { |comment| ... }
-                   # { "comments": [ { ... }, { ... } ] }
-                   _scope { array! value, &block }
-                 else
-                   puts ">>> BLOCK:"
-                   # json.comments { ... }
-                   # { "comments": ... }
-                   puts ">>>key #{key}"
-                   puts ">>>value #{value}"
-                   @inline_array = true
-                   _merge_block(key) { yield self }
-                 end
-               elsif args.empty?
-                 if ::Jbuilder === value
-                   # puts ">>> ATTRIBUTE1:"
-                   # json.age 32
-                   # json.person another_jbuilder
-                   # { "age": 32, "person": { ...  }
-                   _format_keys(value.attributes!)
-                 else
-                   # puts ">>> ATTRIBUTE2:"
-                   if _is_collection_array?(value)
-                     # json.articles @articles
-                     _scope { array! value }
-                   else
-                     # json.age 32
-                     # { "age": 32 }
-                     _schema(_format_keys(value))
-                   end
-                 end
-               elsif _is_collection?(value)
-                 # puts ">>> COLLECTION:"
-                 # json.comments @article.comments, :content, :created_at
-                 # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
-                 @inline_array = true
-                 @collection = true
+        if !_blank?(value)
+          # puts ">>> OBJECTS ARRAY:"
+          # json.comments @article.comments { |comment| ... }
+          # { "comments": [ { ... }, { ... } ] }
+          _scope { array! value, &block }
+        else
+          # puts ">>> BLOCK:"
+          # json.comments { ... }
+          # { "comments": ... }
+          @inline_array = true
+          _merge_block(key) { yield self }
+        end
+      elsif args.empty?
+        if ::Jbuilder === value
+          # puts ">>> ATTRIBUTE1:"
+          # json.age 32
+          # json.person another_jbuilder
+          # { "age": 32, "person": { ...  }
+          _format_keys(value.attributes!)
+        elsif _is_collection_array?(value)
+          # puts ">>> ATTRIBUTE2:"
+          _scope { array! value }
+        # json.articles @articles
+        else
+          # json.age 32
+          # { "age": 32 }
+          _schema(_format_keys(value))
+        end
+      elsif _is_collection?(value)
+        # puts ">>> COLLECTION:"
+        # json.comments @article.comments, :content, :created_at
+        # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+        @inline_array = true
+        @collection = true
 
-                 _scope { array! value, *args }
-               else
-                 # puts ">>> EXTRACT!:"
-                 # json.author @article.creator, :name, :email_address
-                 # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-                 _merge_block(key) { extract! value, *args }
-               end
+        _scope { array! value, *args }
+      else
+        # puts ">>> EXTRACT!:"
+        # json.author @article.creator, :name, :email_address
+        # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
+        _merge_block(key) { extract! value, *args }
+      end
 
       _set_value key, result
     end
@@ -142,17 +138,15 @@ module JbuilderSchema
           @attributes = {}
           _set_value(:type, :array)
           _set_value(:items, array)
+        elsif _is_collection_array?(array)
+          @attributes = {}
+          @inline_array = true
+          @collection = true
+          array! array, *array.first.attribute_names(&:to_sym)
         else
-          if _is_collection_array?(array)
-            @attributes = {}
-            @inline_array = true
-            @collection = true
-            array! array, *array.first.attribute_names(&:to_sym)
-          else
-            @type = :array
-            @attributes = {}
-            _set_value(:items, array)
-          end
+          @type = :array
+          @attributes = {}
+          _set_value(:items, array)
         end
       end
     end
@@ -258,6 +252,17 @@ module JbuilderSchema
 
     def _map_collection(collection)
       super.first
+    end
+
+    def _merge_block(key)
+      current_value = _blank? ? BLANK : @attributes.fetch(_key(key), BLANK)
+      raise NullError.build(key) if current_value.nil?
+      new_value = _scope{ yield self }
+      unless new_value.key?(:type) && new_value[:type] == :array
+        new_value_data = new_value
+        new_value = {type: :object, properties: new_value_data}
+      end
+      _merge_values(current_value, new_value)
     end
   end
 end

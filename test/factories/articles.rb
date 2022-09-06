@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'active_model/naming'
-require 'active_model/conversion'
+require "active_model/naming"
+require "active_model/conversion"
 
 FactoryBot.define do
   factory :article do
@@ -29,10 +29,10 @@ class Article
   end
 
   def attribute_names
-    instance_variables.map(&:name).map { |v| v.delete_prefix '@' }
+    instance_variables.map(&:name).map { |v| v.delete_prefix "@" }
   end
 
   def as_json(options = nil)
-    super({ only: [:id, :title, :body] }.merge(options || {}))
+    super({only: [:id, :title, :body]}.merge(options || {}))
   end
 end
