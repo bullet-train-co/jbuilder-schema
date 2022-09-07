@@ -80,12 +80,12 @@ module JbuilderSchema
     def set!(key, value = BLANK, *args, &block)
       result = if block
         if !_blank?(value)
-          # puts ">>> OBJECTS ARRAY:"
+          # OBJECTS ARRAY:
           # json.comments @article.comments { |comment| ... }
           # { "comments": [ { ... }, { ... } ] }
           _scope { array! value, &block }
         else
-          # puts ">>> BLOCK:"
+          # BLOCK:
           # json.comments { ... }
           # { "comments": ... }
           @inline_array = true
@@ -93,13 +93,13 @@ module JbuilderSchema
         end
       elsif args.empty?
         if ::Jbuilder === value
-          # puts ">>> ATTRIBUTE1:"
+          # ATTRIBUTE1:
           # json.age 32
           # json.person another_jbuilder
           # { "age": 32, "person": { ...  }
           _format_keys(value.attributes!)
         elsif _is_collection_array?(value)
-          # puts ">>> ATTRIBUTE2:"
+          # ATTRIBUTE2:
           _scope { array! value }
         # json.articles @articles
         else
@@ -108,7 +108,7 @@ module JbuilderSchema
           _schema(_format_keys(value))
         end
       elsif _is_collection?(value)
-        # puts ">>> COLLECTION:"
+        # COLLECTION:
         # json.comments @article.comments, :content, :created_at
         # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
         @inline_array = true
@@ -116,7 +116,7 @@ module JbuilderSchema
 
         _scope { array! value, *args }
       else
-        # puts ">>> EXTRACT!:"
+        # EXTRACT!:
         # json.author @article.creator, :name, :email_address
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
         _merge_block(key) { extract! value, *args }
@@ -258,7 +258,7 @@ module JbuilderSchema
       current_value = _blank? ? BLANK : @attributes.fetch(_key(key), BLANK)
       raise NullError.build(key) if current_value.nil?
       new_value = _scope{ yield self }
-      unless new_value.key?(:type) && new_value[:type] == :array
+      unless new_value.key?(:type) && new_value[:type] == :array || new_value.key?(:$ref)
         new_value_data = new_value
         new_value = {type: :object, properties: new_value_data}
       end
@@ -266,7 +266,6 @@ module JbuilderSchema
     end
   end
 end
-
 
 class Jbuilder
   class KeyFormatter

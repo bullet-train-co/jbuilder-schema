@@ -51,6 +51,14 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({author: {type: :object, properties: {id: {type: :integer}, name: {type: :string}}}}, result.attributes)
   end
 
+  test "block with partial" do
+    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+      json.user { json.partial! 'api/v1/users/user', user: FactoryBot.create(:user) }
+    end
+
+    assert_equal({user: {type: :object, "$ref": "#/components/schemas/user"}}, result.attributes)
+  end
+
   test "collections" do
     assert_equal({type: :array, items: {id: {type: :integer}, title: {type: :string}}}, json.articles(articles, :id, :title))
     assert_equal({type: :array, items: {id: {type: :integer},
