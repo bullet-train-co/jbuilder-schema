@@ -19,6 +19,14 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({type: :array, contains: {type: %i[string integer number boolean]}, minContains: 0}.as_json, json.multitype_array(["a", 1, 1.5, false]).as_json)
   end
 
+  test "json.extract!" do
+    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+      json.extract!(articles.first, :id, :title, :body)
+    end
+
+    assert_equal({id: {type: :integer}, title: {type: :string}, body: {type: :string}}, result.attributes)
+  end
+
   test "simple block" do
     result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
       json.author { json.id 123 }
@@ -58,16 +66,40 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({type: :string}, json.set!(:name, "David"))
     assert_equal({"$ref" => "#/components/schemas/article"}, json.partial!("articles/article", collection: articles, as: :article))
     assert_equal({id: {type: :integer}, title: {type: :string}}, json.array!(articles, :id, :title))
-    # assert_equal({type: :array}, json.key_format!())
-    # assert_equal({type: :array}, json.deep_format_keys!())
   end
 
-  test "json.extract!" do
+  test "key format" do
     result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
-      json.extract!(articles.first, :id, :title, :body)
+      json.key_format! camelize: :upper
+      json.id 123
+      json.name "David"
     end
 
-    assert_equal({id: {type: :integer}, title: {type: :string}, body: {type: :string}}, result.attributes)
+    assert_equal({Id: {type: :integer}, Name: {type: :string}}, result.attributes)
+  end
+
+  test "deep key format" do
+    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+      json.key_format! camelize: :upper
+      json.deep_format_keys!
+      json.id 123
+      json.title "Article"
+      json.author { json.id 123; json.name "David" }
+    end
+
+    assert_equal({Id: {type: :integer}, Title: {type: :string}, Author: {type: :object, properties: {Id: {type: :integer}, Name: {type: :string}}}}, result.attributes)
+  end
+
+  test "deep key format with array" do
+    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+      json.key_format! camelize: :upper
+      json.deep_format_keys!
+      json.id 123
+      json.name "David"
+      json.articles articles, :title, :created_at
+    end
+
+    assert_equal({Id: {type: :integer}, Name: {type: :string}, Articles: {type: :array, items: {Title: {type: :string}, CreatedAt: {type: :string, format: "date-time"}}}}, result.attributes)
   end
 
   test "schematize type" do

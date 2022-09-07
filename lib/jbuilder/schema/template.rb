@@ -266,3 +266,16 @@ module JbuilderSchema
     end
   end
 end
+
+
+class Jbuilder
+  class KeyFormatter
+    alias_method :original_format, :format
+
+    def format(key)
+      return key if %i[type items properties].include?(key)
+
+      original_format(key)
+    end
+  end
+end
