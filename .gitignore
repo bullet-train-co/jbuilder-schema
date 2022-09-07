@@ -7,8 +7,8 @@
 /spec/reports/
 /tmp/
 
-# rspec failure tracking
-.rspec_status
-
 # RubyMine
 .idea
+
+# Macos
+.DS_Store

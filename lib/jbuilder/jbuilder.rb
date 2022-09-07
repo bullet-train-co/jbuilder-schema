@@ -4,11 +4,15 @@ require "jbuilder"
 
 # Patches for Jbuilder to make it ignore schema metadata
 class Jbuilder
-  alias original_method_missing method_missing
+  alias_method :original_method_missing, :method_missing
 
   def method_missing(*args, &block)
     args = _extract_schema_meta!(*args)
     original_method_missing(*args, &block)
+  end
+
+  def respond_to_missing?(method_name, include_private = false)
+    super
   end
 
   private

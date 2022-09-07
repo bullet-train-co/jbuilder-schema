@@ -27,7 +27,7 @@ module JbuilderSchema
     private
 
     def _schema
-      { type: template.type }.merge(template.type == :object ? _object : _array)
+      {type: template.type}.merge(template.type == :object ? _object : _array)
     end
 
     def _object
@@ -74,9 +74,11 @@ module JbuilderSchema
       #      .select { |attribute| template.attributes.deep_transform_keys { |key| key.to_s.underscore.to_sym }.key?(attribute) }
       #      .uniq!
 
-      template.attributes.keys.select { |attribute| model.validators.grep(ActiveRecord::Validations::PresenceValidator)
-                                                         .flat_map(&:attributes).unshift(:id)
-                                                         .include?(attribute.to_s.underscore.to_sym) }.uniq
+      template.attributes.keys.select { |attribute|
+        model.validators.grep(ActiveRecord::Validations::PresenceValidator)
+          .flat_map(&:attributes).unshift(:id)
+          .include?(attribute.to_s.underscore.to_sym)
+      }.uniq
     end
   end
 end

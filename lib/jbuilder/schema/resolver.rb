@@ -10,6 +10,7 @@ module JbuilderSchema
     attr_reader :template
 
     def initialize(path)
+      # TODO: Move prefix part to configuration
       super("app/views/#{path}")
     end
 
@@ -31,8 +32,8 @@ module JbuilderSchema
       # do, scan the directory for files with the right prefix.
       paths = template_glob("#{escape_entry(path.to_s)}*")
 
-      paths.map do |path|
-        _source(path)
+      paths.map do |p|
+        _source(p)
       end
     end
 

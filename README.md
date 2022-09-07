@@ -2,12 +2,15 @@
 
 Generate JSON Schema from Jbuilder files
 
+[![Tests](https://github.com/newstler/jbuilder-schema/actions/workflows/tests.yml/badge.svg?branch=tests)](https://github.com/newstler/jbuilder-schema/actions)
+[![Standard](https://github.com/newstler/jbuilder-schema/actions/workflows/standard.yml/badge.svg?branch=tests)](https://github.com/newstler/jbuilder-schema/actions)
+
 ## Installation
 
-In Gemfile put `gem 'jbuilder-schema'` **before** `gem 'jbuilder'`:
+In Gemfile put `gem "jbuilder-schema"` **before** `gem "jbuilder"`:
 
-    gem 'jbuilder-schema', require: 'jbuilder/schema'
-    gem 'jbuilder'
+    gem "jbuilder-schema", require: "jbuilder/schema"
+    gem "jbuilder"
 
 And then execute:
 
@@ -83,7 +86,7 @@ The result would be:
 
 ### RSwag
 
-It's super easy to use JbuilderSchema with RSwag, — just add `jbuilder_schema` helper in `swagger_helper.rb` like this:
+It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` helper in `swagger_helper.rb` like this:
 
     RSpec.configure do |config|
       extend JbuilderSchema::Helpers
