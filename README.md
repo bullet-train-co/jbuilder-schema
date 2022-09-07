@@ -89,7 +89,7 @@ The result would be:
 It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` helper in `swagger_helper.rb` like this:
 
     RSpec.configure do |config|
-      extend JbuilderSchema::Helpers
+      extend JbuilderSchema
 
       ...
 
