@@ -67,12 +67,12 @@ module JbuilderSchema
   class Template < ::JbuilderTemplate
     attr_reader :attributes, :type
 
-    def initialize(context, *args)
+    def initialize(*args)
       @type = :object
       @inline_array = false
       @collection = false
 
-      super
+      super(nil, *args)
 
       @ignore_nil = false
     end

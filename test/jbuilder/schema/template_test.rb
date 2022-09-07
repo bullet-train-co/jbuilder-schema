@@ -2,7 +2,6 @@
 
 require "test_helper"
 require "jbuilder/schema/template"
-require "jbuilder/schema/handler"
 
 class TemplateTest < ActiveSupport::TestCase
   test "user fields" do
@@ -20,7 +19,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "json.extract!" do
-    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+    result = JbuilderSchema::Template.new do |json|
       json.extract!(articles.first, :id, :title, :body)
     end
 
@@ -28,7 +27,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "simple block" do
-    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+    result = JbuilderSchema::Template.new do |json|
       json.author { json.id 123 }
     end
 
@@ -36,7 +35,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "block with array" do
-    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+    result = JbuilderSchema::Template.new do |json|
       json.articles { json.array! FactoryBot.create_list(:article, 3), :id, :title }
     end
 
@@ -44,7 +43,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "block with merge" do
-    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+    result = JbuilderSchema::Template.new do |json|
       json.author {
         json.id 123
         json.merge!({name: "David"})
@@ -55,7 +54,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "block with partial" do
-    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+    result = JbuilderSchema::Template.new do |json|
       json.user { json.partial! "api/v1/users/user", user: FactoryBot.create(:user) }
     end
 
@@ -63,7 +62,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "block with array with partial" do
-    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+    result = JbuilderSchema::Template.new do |json|
       json.articles { json.array! articles, partial: "api/v1/articles/article", as: :article }
     end
 
@@ -88,7 +87,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "key format" do
-    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+    result = JbuilderSchema::Template.new do |json|
       json.key_format! camelize: :upper
       json.id 123
       json.name "David"
@@ -98,7 +97,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "deep key format" do
-    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+    result = JbuilderSchema::Template.new do |json|
       json.key_format! camelize: :upper
       json.deep_format_keys!
       json.id 123
@@ -113,7 +112,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "deep key format with array" do
-    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+    result = JbuilderSchema::Template.new do |json|
       json.key_format! camelize: :upper
       json.deep_format_keys!
       json.id 123
@@ -141,7 +140,7 @@ class TemplateTest < ActiveSupport::TestCase
   private
 
   def json
-    JbuilderSchema::Template.new(JbuilderSchema::Handler)
+    JbuilderSchema::Template.new
   end
 
   def articles

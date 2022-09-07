@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "jbuilder/schema/template"
-require "jbuilder/schema/handler"
 # TODO: Find a better way to load main app's helpers:
 # Helpers don't work in Jbuilder itself, so no need to include them here!
 # ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| require "./app/helpers/#{helper}_helper" }
@@ -16,14 +15,11 @@ module JbuilderSchema
     attr_reader :model
 
     def initialize(locals)
-      # OPTIMIZE: Not sure if we need this
-      ActionView::Template.register_template_handler :jbuilder, JbuilderSchema::Handler
-
       _define_locals!(locals)
     end
 
     def render(source)
-      JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+      JbuilderSchema::Template.new do |json|
         # TODO: Get rid of 'eval'
         eval source.to_s # standard:disable Security/Eval
       end
@@ -31,9 +27,6 @@ module JbuilderSchema
 
     def method_missing(method, *args)
       if method.to_s.end_with?("_path", "_url")
-        # For cases like 'article_url(article)'
-        # Not sure if we should really generate urls here, if so we can use something like
-        #   ::Rails.application.routes.url_helpers.send(method, *args, only_path: true)
         method.to_s
       else
         super
