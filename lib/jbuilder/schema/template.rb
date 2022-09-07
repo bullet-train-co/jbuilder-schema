@@ -180,14 +180,14 @@ module JbuilderSchema
       if @inline_array
         if @collection
           _set_value(:type, :array)
-          _set_value(:items, {"$ref" => _component_path(component)})
+          _set_value(:items, {:$ref => _component_path(component)})
         else
           _set_value(:type, :object)
-          _set_value("$ref", _component_path(component))
+          _set_value(:$ref, _component_path(component))
         end
       else
         @type = :array
-        _set_value(:items, {"$ref" => _component_path(component)})
+        _set_value(:items, {:$ref => _component_path(component)})
       end
     end
 
@@ -257,7 +257,7 @@ module JbuilderSchema
     def _merge_block(key)
       current_value = _blank? ? BLANK : @attributes.fetch(_key(key), BLANK)
       raise NullError.build(key) if current_value.nil?
-      new_value = _scope{ yield self }
+      new_value = _scope { yield self }
       unless new_value.key?(:type) && new_value[:type] == :array || new_value.key?(:$ref)
         new_value_data = new_value
         new_value = {type: :object, properties: new_value_data}

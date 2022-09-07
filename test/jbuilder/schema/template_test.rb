@@ -45,7 +45,10 @@ class TemplateTest < ActiveSupport::TestCase
 
   test "block with merge" do
     result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
-      json.author { json.id 123; json.merge!({ name: "David" })}
+      json.author {
+        json.id 123
+        json.merge!({name: "David"})
+      }
     end
 
     assert_equal({author: {type: :object, properties: {id: {type: :integer}, name: {type: :string}}}}, result.attributes)
@@ -53,10 +56,18 @@ class TemplateTest < ActiveSupport::TestCase
 
   test "block with partial" do
     result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
-      json.user { json.partial! 'api/v1/users/user', user: FactoryBot.create(:user) }
+      json.user { json.partial! "api/v1/users/user", user: FactoryBot.create(:user) }
     end
 
-    assert_equal({user: {type: :object, "$ref": "#/components/schemas/user"}}, result.attributes)
+    assert_equal({user: {:type => :object, :$ref => "#/components/schemas/user"}}, result.attributes)
+  end
+
+  test "block with array with partial" do
+    result = JbuilderSchema::Template.new(JbuilderSchema::Handler) do |json|
+      json.articles { json.array! articles, partial: "api/v1/articles/article", as: :article }
+    end
+
+    assert_equal({articles: {type: :array, items: {:$ref => "#/components/schemas/article"}}}, result.attributes)
   end
 
   test "collections" do
@@ -72,7 +83,7 @@ class TemplateTest < ActiveSupport::TestCase
 
   test "jbuilder methods" do
     assert_equal({type: :string}, json.set!(:name, "David"))
-    assert_equal({"$ref" => "#/components/schemas/article"}, json.partial!("articles/article", collection: articles, as: :article))
+    assert_equal({:$ref => "#/components/schemas/article"}, json.partial!("articles/article", collection: articles, as: :article))
     assert_equal({id: {type: :integer}, title: {type: :string}}, json.array!(articles, :id, :title))
   end
 
@@ -92,7 +103,10 @@ class TemplateTest < ActiveSupport::TestCase
       json.deep_format_keys!
       json.id 123
       json.title "Article"
-      json.author { json.id 123; json.name "David" }
+      json.author {
+        json.id 123
+        json.name "David"
+      }
     end
 
     assert_equal({Id: {type: :integer}, Title: {type: :string}, Author: {type: :object, properties: {Id: {type: :integer}, Name: {type: :string}}}}, result.attributes)
