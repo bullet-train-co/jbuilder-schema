@@ -126,8 +126,6 @@ It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` hel
 
 ## Contributing
 
-This gem is still in early development, so **it's not really recommended for production** yet. At least tests are to be done :)
-
 Bug reports and pull requests are welcome on GitHub at https://github.com/newstler/jbuilder-schema.
 
 ## License
