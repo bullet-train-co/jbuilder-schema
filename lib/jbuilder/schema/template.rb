@@ -200,7 +200,7 @@ module JbuilderSchema
       type = value.class.name&.downcase&.to_sym
 
       case type
-      when :time, :datetime, :"activesupport::timewithzone"
+      when :time, :date, :datetime, :"activesupport::timewithzone"
         {type: :string, format: "date-time"}
       when nil, :text, :nilclass, :"actiontext::richtext"
         {type: _type(type)}
@@ -225,7 +225,7 @@ module JbuilderSchema
 
     def _type(type)
       case type
-      when :time, :datetime, :"activesupport::timewithzone", nil, :text, :nilclass, :"actiontext::richtext"
+      when :time, :date, :datetime, :"activesupport::timewithzone", nil, :text, :nilclass, :"actiontext::richtext"
         :string
       when :float, :bigdecimal
         :number
