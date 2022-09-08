@@ -9,11 +9,6 @@ module JbuilderSchema
   class Resolver < ::ActionView::FileSystemResolver
     attr_reader :template
 
-    # def initialize(path)
-    #   # ApplicationController.new.view_paths.map
-    #   super(path)
-    # end
-
     def find_all(name, prefix = nil, partial = false)
       _find_all(name, prefix, partial)
     end
