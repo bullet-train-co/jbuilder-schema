@@ -3,8 +3,7 @@ name: Standard
 on:
   push:
     branches:
-      - master
-      - tests
+      - main
 
   pull_request:
 
