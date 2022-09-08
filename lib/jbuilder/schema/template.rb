@@ -202,15 +202,22 @@ module JbuilderSchema
       case type
       when :time, :datetime, :"activesupport::timewithzone"
         {type: :string, format: "date-time"}
-      when nil, :text, :nilclass
+      when nil, :text, :nilclass, :"actiontext::richtext"
         {type: _type(type)}
       when :float, :bigdecimal
         {type: _type(type)}
       when :trueclass, :falseclass
         {type: _type(type)}
       when :array
+        hash = {type: :array}
         types = value.map { |v| _type(v.class.name&.downcase&.to_sym) }.uniq
-        {type: :array, contains: {type: types.size > 1 ? types : types.first}, minContains: 0}
+
+        unless types.empty?
+          hash[:contains] = {type: types.size > 1 ? types : types.first}
+          hash[:minContains] = 0
+        end
+
+        hash
       else
         {type: _type(type)}
       end
@@ -218,7 +225,7 @@ module JbuilderSchema
 
     def _type(type)
       case type
-      when :time, :datetime, :"activesupport::timewithzone", nil, :text, :nilclass
+      when :time, :datetime, :"activesupport::timewithzone", nil, :text, :nilclass, :"actiontext::richtext"
         :string
       when :float, :bigdecimal
         :number

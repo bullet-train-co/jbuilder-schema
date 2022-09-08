@@ -6,7 +6,7 @@ require "jbuilder/schema/renderer"
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    attr_reader :path, :template, :model, :title, :description, :locals, :format
+    attr_reader :path, :template, :model, :title, :description, :locals, :format, :paths
 
     def initialize(path, **options)
       @path = path
@@ -16,6 +16,7 @@ module JbuilderSchema
       @description = options[:description]
       @locals = options[:locals] || {}
       @format = options[:format]
+      @paths = options[:paths] || ["app/views"]
       @template = _render_template
     end
 
@@ -65,7 +66,12 @@ module JbuilderSchema
 
     def _find_template
       prefix, controller, action, partial = _resolve_path
-      JbuilderSchema::Resolver.new(prefix).find_all(action, controller, partial)
+      found = nil
+      paths.each do |path|
+        found = JbuilderSchema::Resolver.new("#{path}/#{prefix}").find_all(action, controller, partial)
+        break if found
+      end
+      found
     end
 
     def _resolve_path
