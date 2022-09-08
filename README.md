@@ -2,8 +2,8 @@
 
 Generate JSON Schema from Jbuilder files
 
-[![Tests](https://github.com/newstler/jbuilder-schema/actions/workflows/tests.yml/badge.svg?branch=tests)](https://github.com/newstler/jbuilder-schema/actions)
-[![Standard](https://github.com/newstler/jbuilder-schema/actions/workflows/standard.yml/badge.svg?branch=tests)](https://github.com/newstler/jbuilder-schema/actions)
+[![Tests](https://github.com/bullet-train-co/jbuilder-schema/actions/workflows/tests.yml/badge.svg?branch=tests)](https://github.com/bullet-train-co/jbuilder-schema/actions)
+[![Standard](https://github.com/bullet-train-co/jbuilder-schema/actions/workflows/standard.yml/badge.svg?branch=tests)](https://github.com/bullet-train-co/jbuilder-schema/actions)
 
 ## Installation
 
@@ -126,7 +126,7 @@ It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` hel
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/newstler/jbuilder-schema.
+Bug reports and pull requests are welcome on GitHub at https://github.com/bullet-train-co/jbuilder-schema.
 
 ## License
 
