@@ -6,7 +6,7 @@ require "jbuilder/schema/renderer"
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    attr_reader :path, :template, :model, :title, :description, :locals
+    attr_reader :path, :template, :model, :title, :description, :locals, :format
 
     def initialize(path, **options)
       @path = path
@@ -15,19 +15,39 @@ module JbuilderSchema
       @title = options[:title]
       @description = options[:description]
       @locals = options[:locals] || {}
+      @format = options[:format]
       @template = _render_template
     end
 
     def schema!
       return {} unless template
 
-      _schema
+      case format
+      when :yaml
+        _yaml_schema
+      when :json
+        _json_schema
+      else
+        _schema
+      end
     end
 
     private
 
     def _schema
       {type: template.type}.merge(template.type == :object ? _object : _array)
+    end
+
+    def _stringified_schema
+      _schema.deep_stringify_keys.deep_transform_values(&:to_s)
+    end
+
+    def _yaml_schema
+      YAML.dump _stringified_schema
+    end
+
+    def _json_schema
+      JSON.dump _stringified_schema
     end
 
     def _object
