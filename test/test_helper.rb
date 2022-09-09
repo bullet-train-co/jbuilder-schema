@@ -10,6 +10,7 @@ require "jbuilder"
 require "jbuilder/schema"
 
 require "active_support/testing/autorun"
+require 'mocha/minitest'
 
 ActiveSupport.test_order = :random
 ActiveSupport::TimeWithZone.singleton_class.remove_method(:name) # Remove after Rails 7.1 release

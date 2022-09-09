@@ -14,12 +14,13 @@ module JbuilderSchema
 
     attr_reader :model
 
-    def initialize(locals)
+    def initialize(locals, **options)
+      @model = options[:model]
       _define_locals!(locals)
     end
 
     def render(source)
-      JbuilderSchema::Template.new do |json|
+      JbuilderSchema::Template.new(model: model) do |json|
         # TODO: Get rid of 'eval'
         eval source.to_s # standard:disable Security/Eval
       end

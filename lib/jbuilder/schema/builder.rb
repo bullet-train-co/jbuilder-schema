@@ -86,7 +86,7 @@ module JbuilderSchema
     end
 
     def _render_template
-      JbuilderSchema::Renderer.new(locals).render(_find_template)
+      JbuilderSchema::Renderer.new(locals, model: model).render(_find_template)
     end
 
     def _create_required!

@@ -8,8 +8,8 @@ FactoryBot.define do
     sequence(:id)
     sequence(:title) { |n| "Generic title #{n}" }
     body { Faker::Lorem.paragraph_by_chars(number: 256) }
-    created_at { Time.now }
-    updated_at { Time.now }
+    created_at { DateTime.now }
+    updated_at { DateTime.now }
     user
   end
 end

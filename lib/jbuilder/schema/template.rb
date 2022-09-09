@@ -65,12 +65,14 @@ module JbuilderSchema
   # ✅ json.cache_if! !admin?, ['v1', @person], expires_in: 10.minutes {}
   #
   class Template < ::JbuilderTemplate
-    attr_reader :attributes, :type
+    attr_reader :attributes, :type, :model
 
-    def initialize(*args)
+    def initialize(*args, **options)
       @type = :object
       @inline_array = false
       @collection = false
+
+      @model = options.delete(:model)
 
       super(nil, *args)
 
@@ -97,7 +99,7 @@ module JbuilderSchema
           # json.age 32
           # json.person another_jbuilder
           # { "age": 32, "person": { ...  }
-          _format_keys(value.attributes!)
+          _schema(_format_keys(value.attributes!))
         elsif _is_collection_array?(value)
           # ATTRIBUTE2:
           _scope { array! value }
@@ -122,6 +124,7 @@ module JbuilderSchema
         _merge_block(key) { extract! value, *args }
       end
 
+      result = _set_description key, result if model
       _set_value key, result
     end
 
@@ -166,7 +169,13 @@ module JbuilderSchema
     def merge!(object)
       hash_or_array = ::Jbuilder === object ? object.attributes! : object
       hash_or_array = _format_keys(hash_or_array)
-      hash_or_array.deep_transform_values! { |value| _schema(value) } if hash_or_array.is_a?(Hash)
+      if hash_or_array.is_a?(Hash)
+        hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
+          result = _schema(value)
+          result = _set_description(key, result) if model
+          a[key] = result
+        end
+      end
       @attributes = _merge_values(@attributes, hash_or_array)
     end
 
@@ -175,6 +184,12 @@ module JbuilderSchema
     end
 
     private
+
+    def _set_description(key, result)
+      # TODO: Put route to the description into Configuration:
+      heading = ::I18n.t("#{model.name.underscore.pluralize}.fields.#{key}.heading")
+      {description: heading}.merge! result
+    end
 
     def _set_ref(component)
       if @inline_array
@@ -254,11 +269,19 @@ module JbuilderSchema
     end
 
     def _extract_hash_values(object, attributes)
-      attributes.each { |key| _set_value key, _schema(_format_keys(object.fetch(key))) }
+      attributes.each do |key|
+        result = _schema(_format_keys(object.fetch(key)))
+        result = _set_description(key, result) if model
+        _set_value key, result
+      end
     end
 
     def _extract_method_values(object, attributes)
-      attributes.each { |key| _set_value key, _schema(_format_keys(object.public_send(key))) }
+      attributes.each do |key|
+        result = _schema(_format_keys(object.public_send(key)))
+        result = _set_description(key, result) if model
+        _set_value key, result
+      end
     end
 
     def _map_collection(collection)
