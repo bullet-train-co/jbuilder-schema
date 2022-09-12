@@ -185,10 +185,10 @@ module JbuilderSchema
 
     private
 
-    def _set_description(key, result)
+    def _set_description(key, value)
       # TODO: Put route to the description into Configuration:
-      heading = ::I18n.t("#{model.name.underscore.pluralize}.fields.#{key}.heading")
-      {description: heading}.merge! result
+      description = ::I18n.t("#{model.name.underscore.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
+      {description: description}.merge! value
     end
 
     def _set_ref(component)
@@ -208,7 +208,7 @@ module JbuilderSchema
 
     # TODO: Move prefix part to configuration
     def _component_path(component)
-      "#/components/schemas/#{component}"
+      "#/#{JbuilderSchema.configuration.components_path}/#{component}"
     end
 
     def _schema(value)

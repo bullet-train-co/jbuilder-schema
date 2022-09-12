@@ -68,7 +68,7 @@ module JbuilderSchema
       prefix, controller, action, partial = _resolve_path
       found = nil
       paths.each do |path|
-        found = JbuilderSchema::Resolver.new("#{path}/#{prefix}").find_all(action, controller, partial)
+        found = Resolver.new("#{path}/#{prefix}").find_all(action, controller, partial)
         break if found
       end
       found
@@ -86,22 +86,13 @@ module JbuilderSchema
     end
 
     def _render_template
-      JbuilderSchema::Renderer.new(locals, model: model).render(_find_template)
+      Renderer.new(locals, model: model).render(_find_template)
     end
 
     def _create_required!
       # OPTIMIZE: It might be that there could be several models in required field, need to learn more about it.
-      # Here's the code for that case:
-      # models.flat_map { |model|
-      #   model.validators.grep(ActiveRecord::Validations::PresenceValidator).flat_map(&:attributes)
-      # }.unshift(:id).select { |attribute| template.attributes.keys.include?(attribute) }
-      # model.validators.grep(ActiveRecord::Validations::PresenceValidator)
-      #      .flat_map(&:attributes).unshift(:id)
-      #      .select { |attribute| template.attributes.deep_transform_keys { |key| key.to_s.underscore.to_sym }.key?(attribute) }
-      #      .uniq!
-
       template.attributes.keys.select { |attribute|
-        model.validators.grep(ActiveRecord::Validations::PresenceValidator)
+        model.validators.grep(::ActiveRecord::Validations::PresenceValidator)
           .flat_map(&:attributes).unshift(:id)
           .include?(attribute.to_s.underscore.to_sym)
       }.uniq

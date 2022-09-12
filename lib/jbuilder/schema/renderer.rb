@@ -20,7 +20,7 @@ module JbuilderSchema
     end
 
     def render(source)
-      JbuilderSchema::Template.new(model: model) do |json|
+      Template.new(model: model) do |json|
         # TODO: Get rid of 'eval'
         eval source.to_s # standard:disable Security/Eval
       end
