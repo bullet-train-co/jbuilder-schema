@@ -10,19 +10,35 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "user fields" do
-    # assert_equal({description: "test", type: :integer}, json.integer(1))
-    # assert_equal({description: "test", type: :number}, json.number(1.5))
-    # assert_equal({description: "test", type: :number}, json.big_decimal(BigDecimal("1.5", 1)))
-    # assert_equal({description: "test", type: :string}, json.string("String"))
-    # assert_equal({description: "test", type: :string}, json.nil_method(nil))
-    # assert_equal({description: "test", type: :string, format: "date"}, json.time(Date.new(2012, 12, 01)))
-    # assert_equal({description: "test", type: :string, format: "time"}, json.time(Time.now))
-    # assert_equal({description: "test", type: :string, format: "date-time"}, json.time(DateTime.new(2012, 12, 01)))
-    # assert_equal({description: "test", type: :string, format: "date-time"}, json.time_with_zone(ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample)))
-    # assert_equal({description: "test", type: :boolean}, json.true_method(true))
-    # assert_equal({description: "test", type: :boolean}, json.false_method(false))
+    assert_equal({description: "test", type: :integer}, json.integer(1))
+    assert_equal({description: "test", type: :number}, json.number(1.5))
+    assert_equal({description: "test", type: :number}, json.big_decimal(BigDecimal("1.5", 1)))
+    assert_equal({description: "test", type: :string}, json.string("String"))
+    assert_equal({description: "test", type: :string}, json.nil_method(nil))
+    assert_equal({description: "test", type: :string, format: "date"}, json.time(Date.new(2012, 12, 01)))
+    assert_equal({description: "test", type: :string, format: "time"}, json.time(Time.now))
+    assert_equal({description: "test", type: :string, format: "date-time"}, json.time(DateTime.new(2012, 12, 01)))
+    assert_equal({description: "test", type: :string, format: "date-time"}, json.time_with_zone(ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample)))
+    assert_equal({description: "test", type: :boolean}, json.true_method(true))
+    assert_equal({description: "test", type: :boolean}, json.false_method(false))
     assert_equal({description: "test", type: :array, contains: {type: :string}, minContains: 0}.as_json, json.string_array(%w[a b c d]).as_json)
-    # assert_equal({description: "test", type: :array, contains: {type: %i[string integer number boolean]}, minContains: 0}.as_json, json.multitype_array(["a", 1, 1.5, false]).as_json)
+    assert_equal({description: "test", type: :array, contains: {type: %i[string integer number boolean]}, minContains: 0}.as_json, json.multitype_array(["a", 1, 1.5, false]).as_json)
+  end
+
+  test "user fields with schema types" do
+    assert_equal({description: "test", type: :string}, json.integer(1, schema: {type: :string}))
+    assert_equal({description: "test", type: :string}, json.number(1.5, schema: {type: :string}))
+    assert_equal({description: "test", type: :string}, json.big_decimal(BigDecimal("1.5", 1), schema: {type: :string}))
+    assert_equal({description: "test", type: :integer}, json.string("String", schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}, json.nil_method(nil, schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}, json.time(Date.new(2012, 12, 01), schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}, json.time(Time.now, schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}, json.time(DateTime.new(2012, 12, 01), schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}, json.time_with_zone(ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample), schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}, json.true_method(true, schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}, json.false_method(false, schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}.as_json, json.string_array(%w[a b c d], schema: {type: :integer}).as_json)
+    assert_equal({description: "test", type: :integer}.as_json, json.multitype_array(["a", 1, 1.5, false], schema: {type: :integer}).as_json)
   end
 
   test "json.extract!" do
