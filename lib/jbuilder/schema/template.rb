@@ -239,29 +239,25 @@ module JbuilderSchema
       case type
       when :datetime, :"activesupport::timewithzone"
         {type: :string, format: "date-time"}
-      when :time
-        {type: :string, format: "time"}
-      when :date
-        {type: :string, format: "date"}
-      when nil, :text, :nilclass, :"actiontext::richtext"
-        {type: _type(type)}
-      when :float, :bigdecimal
-        {type: :number}
-      when :trueclass, :falseclass
-        {type: _type(type)}
+      when :time, :date
+        {type: :string, format: type.to_s}
       when :array
-        hash = {type: :array}
-        types = value.map { |v| _type(v.class.name&.downcase&.to_sym) }.uniq
-
-        unless types.empty?
-          hash[:contains] = {type: types.size > 1 ? types : types.first}
-          hash[:minContains] = 0
-        end
-
-        hash
+        _guess_array_types(value)
       else
         {type: _type(type)}
       end
+    end
+
+    def _guess_array_types(array)
+      hash = {type: :array}
+      types = array.map { |a| _type(a.class.name&.downcase&.to_sym) }.uniq
+
+      unless types.empty?
+        hash[:contains] = {type: types.size > 1 ? types : types.first}
+        hash[:minContains] = 0
+      end
+
+      hash
     end
 
     def _type(type)
