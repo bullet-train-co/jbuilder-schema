@@ -79,50 +79,50 @@ module JbuilderSchema
       @ignore_nil = false
     end
 
-    def set!(key, value = BLANK, *args, &block)
+    def set!(key, value = BLANK, *args, **schema_options, &block)
       result = if block
-        if !_blank?(value)
-          # OBJECTS ARRAY:
-          # json.comments @article.comments { |comment| ... }
-          # { "comments": [ { ... }, { ... } ] }
-          _scope { array! value, &block }
-        else
-          # BLOCK:
-          # json.comments { ... }
-          # { "comments": ... }
-          @inline_array = true
-          _merge_block(key) { yield self }
-        end
-      elsif args.empty?
-        if ::Jbuilder === value
-          # ATTRIBUTE1:
-          # json.age 32
-          # json.person another_jbuilder
-          # { "age": 32, "person": { ...  }
-          _schema(_format_keys(value.attributes!))
-        elsif _is_collection_array?(value)
-          # ATTRIBUTE2:
-          _scope { array! value }
-        # json.articles @articles
-        else
-          # json.age 32
-          # { "age": 32 }
-          _schema(_format_keys(value))
-        end
-      elsif _is_collection?(value)
-        # COLLECTION:
-        # json.comments @article.comments, :content, :created_at
-        # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
-        @inline_array = true
-        @collection = true
+                 if !_blank?(value)
+                   # OBJECTS ARRAY:
+                   # json.comments @article.comments { |comment| ... }
+                   # { "comments": [ { ... }, { ... } ] }
+                   _scope { array! value, &block }
+                 else
+                   # BLOCK:
+                   # json.comments { ... }
+                   # { "comments": ... }
+                   @inline_array = true
+                   _merge_block(key) { yield self }
+                 end
+               elsif args.empty?
+                 if ::Jbuilder === value
+                   # ATTRIBUTE1:
+                   # json.age 32
+                   # json.person another_jbuilder
+                   # { "age": 32, "person": { ...  }
+                   _schema(_format_keys(value.attributes!), **schema_options)
+                 elsif _is_collection_array?(value)
+                   # ATTRIBUTE2:
+                   _scope { array! value }
+                 # json.articles @articles
+                 else
+                   # json.age 32
+                   # { "age": 32 }
+                   _schema(_format_keys(value), **schema_options)
+                 end
+               elsif _is_collection?(value)
+                 # COLLECTION:
+                 # json.comments @article.comments, :content, :created_at
+                 # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+                 @inline_array = true
+                 @collection = true
 
-        _scope { array! value, *args }
-      else
-        # EXTRACT!:
-        # json.author @article.creator, :name, :email_address
-        # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-        _merge_block(key) { extract! value, *args }
-      end
+                 _scope { array! value, *args }
+               else
+                 # EXTRACT!:
+                 # json.author @article.creator, :name, :email_address
+                 # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
+                 _merge_block(key) { extract! value, *args }
+               end
 
       result = _set_description key, result if model
       _set_value key, result
@@ -183,10 +183,28 @@ module JbuilderSchema
       yield
     end
 
+    def method_missing(*args, &block)
+      args, schema_arguments = _args_and_schema_arguments(*args)
+
+      if ::Kernel.block_given?
+        set!(*args, **schema_arguments, &block)
+      else
+        set!(*args, **schema_arguments)
+      end
+    end
+
+    def respond_to_missing?(method_name, include_private = false)
+      super
+    end
+
     private
 
+    def _args_and_schema_arguments(*args)
+      schema_arguments = args.extract! { |a| a.is_a?(::Hash) && a.key?(:schema) }.first.try(:[], :schema) || {}
+      [args, schema_arguments]
+    end
+
     def _set_description(key, value)
-      # TODO: Put route to the description into Configuration:
       description = ::I18n.t("#{model.name.underscore.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
       {description: description}.merge! value
     end
@@ -206,12 +224,16 @@ module JbuilderSchema
       end
     end
 
-    # TODO: Move prefix part to configuration
     def _component_path(component)
       "#/#{JbuilderSchema.configuration.components_path}/#{component}"
     end
 
-    def _schema(value)
+    def _schema(value, **options)
+      options.merge!(_guess_type(value)) unless options[:type]
+      options
+    end
+
+    def _guess_type(value)
       type = value.class.name&.downcase&.to_sym
 
       case type
@@ -224,7 +246,7 @@ module JbuilderSchema
       when nil, :text, :nilclass, :"actiontext::richtext"
         {type: _type(type)}
       when :float, :bigdecimal
-        {type: _type(type)}
+        {type: :number}
       when :trueclass, :falseclass
         {type: _type(type)}
       when :array
