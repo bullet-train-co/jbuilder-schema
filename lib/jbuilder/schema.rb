@@ -9,19 +9,4 @@ module JbuilderSchema
   def jbuilder_schema(path, **options)
     Builder.new(path, **options).schema!
   end
-
-  # Configuration
-  class << self
-    def configuration
-      @configuration ||= Configuration.new
-    end
-
-    def reset
-      @configuration = Configuration.new
-    end
-
-    def configure
-      yield(configuration)
-    end
-  end
 end
