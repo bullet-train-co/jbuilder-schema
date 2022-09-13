@@ -81,48 +81,48 @@ module JbuilderSchema
 
     def set!(key, value = BLANK, *args, **schema_options, &block)
       result = if block
-                 if !_blank?(value)
-                   # OBJECTS ARRAY:
-                   # json.comments @article.comments { |comment| ... }
-                   # { "comments": [ { ... }, { ... } ] }
-                   _scope { array! value, &block }
-                 else
-                   # BLOCK:
-                   # json.comments { ... }
-                   # { "comments": ... }
-                   @inline_array = true
-                   _merge_block(key) { yield self }
-                 end
-               elsif args.empty?
-                 if ::Jbuilder === value
-                   # ATTRIBUTE1:
-                   # json.age 32
-                   # json.person another_jbuilder
-                   # { "age": 32, "person": { ...  }
-                   _schema(_format_keys(value.attributes!), **schema_options)
-                 elsif _is_collection_array?(value)
-                   # ATTRIBUTE2:
-                   _scope { array! value }
-                 # json.articles @articles
-                 else
-                   # json.age 32
-                   # { "age": 32 }
-                   _schema(_format_keys(value), **schema_options)
-                 end
-               elsif _is_collection?(value)
-                 # COLLECTION:
-                 # json.comments @article.comments, :content, :created_at
-                 # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
-                 @inline_array = true
-                 @collection = true
+        if !_blank?(value)
+          # OBJECTS ARRAY:
+          # json.comments @article.comments { |comment| ... }
+          # { "comments": [ { ... }, { ... } ] }
+          _scope { array! value, &block }
+        else
+          # BLOCK:
+          # json.comments { ... }
+          # { "comments": ... }
+          @inline_array = true
+          _merge_block(key) { yield self }
+        end
+      elsif args.empty?
+        if ::Jbuilder === value
+          # ATTRIBUTE1:
+          # json.age 32
+          # json.person another_jbuilder
+          # { "age": 32, "person": { ...  }
+          _schema(_format_keys(value.attributes!), **schema_options)
+        elsif _is_collection_array?(value)
+          # ATTRIBUTE2:
+          _scope { array! value }
+        # json.articles @articles
+        else
+          # json.age 32
+          # { "age": 32 }
+          _schema(_format_keys(value), **schema_options)
+        end
+      elsif _is_collection?(value)
+        # COLLECTION:
+        # json.comments @article.comments, :content, :created_at
+        # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+        @inline_array = true
+        @collection = true
 
-                 _scope { array! value, *args }
-               else
-                 # EXTRACT!:
-                 # json.author @article.creator, :name, :email_address
-                 # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-                 _merge_block(key) { extract! value, *args }
-               end
+        _scope { array! value, *args }
+      else
+        # EXTRACT!:
+        # json.author @article.creator, :name, :email_address
+        # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
+        _merge_block(key) { extract! value, *args }
+      end
 
       result = _set_description key, result if model
       _set_value key, result
@@ -186,7 +186,7 @@ module JbuilderSchema
     def method_missing(*args, &block)
       args, schema_arguments = _args_and_schema_arguments(*args)
 
-      if ::Kernel.block_given?
+      if block
         set!(*args, **schema_arguments, &block)
       else
         set!(*args, **schema_arguments)

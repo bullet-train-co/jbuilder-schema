@@ -7,7 +7,7 @@ module JbuilderSchema
 
     def initialize
       @components_path = "components/schemas"
-      @description_name = "heading"
+      @description_name = "description"
     end
   end
 end

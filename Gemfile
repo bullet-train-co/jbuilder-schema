@@ -12,4 +12,4 @@ gem "faker"
 
 gem "standard", "~> 1.3"
 
-gem 'mocha'
+gem "mocha"

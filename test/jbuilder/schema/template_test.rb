@@ -15,9 +15,9 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({description: "test", type: :number}, json.big_decimal(BigDecimal("1.5", 1)))
     assert_equal({description: "test", type: :string}, json.string("String"))
     assert_equal({description: "test", type: :string}, json.nil_method(nil))
-    assert_equal({description: "test", type: :string, format: "date"}, json.time(Date.new(2012, 12, 01)))
+    assert_equal({description: "test", type: :string, format: "date"}, json.time(Date.new(2012, 12, 0o1)))
     assert_equal({description: "test", type: :string, format: "time"}, json.time(Time.now))
-    assert_equal({description: "test", type: :string, format: "date-time"}, json.time(DateTime.new(2012, 12, 01)))
+    assert_equal({description: "test", type: :string, format: "date-time"}, json.time(DateTime.new(2012, 12, 0o1)))
     assert_equal({description: "test", type: :string, format: "date-time"}, json.time_with_zone(ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample)))
     assert_equal({description: "test", type: :boolean}, json.true_method(true))
     assert_equal({description: "test", type: :boolean}, json.false_method(false))
@@ -31,9 +31,9 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({description: "test", type: :string}, json.big_decimal(BigDecimal("1.5", 1), schema: {type: :string}))
     assert_equal({description: "test", type: :integer}, json.string("String", schema: {type: :integer}))
     assert_equal({description: "test", type: :integer}, json.nil_method(nil, schema: {type: :integer}))
-    assert_equal({description: "test", type: :integer}, json.time(Date.new(2012, 12, 01), schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}, json.time(Date.new(2012, 12, 0o1), schema: {type: :integer}))
     assert_equal({description: "test", type: :integer}, json.time(Time.now, schema: {type: :integer}))
-    assert_equal({description: "test", type: :integer}, json.time(DateTime.new(2012, 12, 01), schema: {type: :integer}))
+    assert_equal({description: "test", type: :integer}, json.time(DateTime.new(2012, 12, 0o1), schema: {type: :integer}))
     assert_equal({description: "test", type: :integer}, json.time_with_zone(ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample), schema: {type: :integer}))
     assert_equal({description: "test", type: :integer}, json.true_method(true, schema: {type: :integer}))
     assert_equal({description: "test", type: :integer}, json.false_method(false, schema: {type: :integer}))
@@ -81,7 +81,7 @@ class TemplateTest < ActiveSupport::TestCase
       json.user { json.partial! "api/v1/users/user", user: FactoryBot.create(:user) }
     end
 
-    assert_equal({user: {description: "test", :type => :object, :$ref => "#/components/schemas/user"}}, result.attributes)
+    assert_equal({user: {:description => "test", :type => :object, :$ref => "#/components/schemas/user"}}, result.attributes)
   end
 
   test "block with array with partial" do
@@ -95,11 +95,11 @@ class TemplateTest < ActiveSupport::TestCase
   test "collections" do
     assert_equal({description: "test", type: :array, items: {id: {description: "test", type: :integer}, title: {description: "test", type: :string}}}, json.articles(articles, :id, :title))
     assert_equal({description: "test", type: :array, items: {id: {description: "test", type: :integer},
-                                        title: {description: "test", type: :string},
-                                        body: {description: "test", type: :string},
-                                        created_at: {description: "test", type: :string, format: "date-time"},
-                                        updated_at: {description: "test", type: :string, format: "date-time"},
-                                        user_id: {description: "test", type: :integer}}},
+                                                             title: {description: "test", type: :string},
+                                                             body: {description: "test", type: :string},
+                                                             created_at: {description: "test", type: :string, format: "date-time"},
+                                                             updated_at: {description: "test", type: :string, format: "date-time"},
+                                                             user_id: {description: "test", type: :integer}}},
       json.articles(articles))
   end
 
@@ -154,9 +154,9 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({type: :number}, json.send(:_schema, BigDecimal("1.5", 1)))
     assert_equal({type: :string}, json.send(:_schema, "String"))
     assert_equal({type: :string}, json.send(:_schema, nil))
-    assert_equal({type: :string, format: "date"}, json.send(:_schema, Date.new(2012, 12, 01)))
+    assert_equal({type: :string, format: "date"}, json.send(:_schema, Date.new(2012, 12, 0o1)))
     assert_equal({type: :string, format: "time"}, json.send(:_schema, Time.now))
-    assert_equal({type: :string, format: "date-time"}, json.send(:_schema, DateTime.new(2012, 12, 01)))
+    assert_equal({type: :string, format: "date-time"}, json.send(:_schema, DateTime.new(2012, 12, 0o1)))
     assert_equal({type: :string, format: "date-time"}, json.send(:_schema, ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample)))
     assert_equal({type: :boolean}, json.send(:_schema, true))
     assert_equal({type: :boolean}, json.send(:_schema, false))
