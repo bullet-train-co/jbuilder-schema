@@ -116,19 +116,31 @@ module JbuilderSchema
         @inline_array = true
         @collection = true
 
-        _scope { array! value, *args }
+        _scope { array! value, *args, **schema_options }
       else
         # EXTRACT!:
         # json.author @article.creator, :name, :email_address
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-        _merge_block(key) { extract! value, *args }
+        _merge_block(key) { extract! value, *args, **schema_options }
       end
 
       result = _set_description key, result if model
       _set_value key, result
     end
 
+    def extract!(object, *attributes, **schema_options)
+      schema_options = schema_options[:schema] if schema_options.key?(:schema)
+
+      if ::Hash === object
+        _extract_hash_values(object, attributes, **schema_options)
+      else
+        _extract_method_values(object, attributes, **schema_options)
+      end
+    end
+
     def array!(collection = [], *args)
+      # schema_options = schema_options[:schema] if schema_options.key?(:schema)
+
       options = args.first
 
       if args.one? && _partial_options?(options)
@@ -145,7 +157,7 @@ module JbuilderSchema
           @attributes = {}
           @inline_array = true
           @collection = true
-          array! array, *array.first.attribute_names(&:to_sym)
+          array! array, *array.first&.attribute_names(&:to_sym)
         else
           @type = :array
           @attributes = {}
@@ -179,17 +191,17 @@ module JbuilderSchema
       @attributes = _merge_values(@attributes, hash_or_array)
     end
 
-    def cache!(key = nil, options = {})
+    def cache!(key = nil, **options)
       yield
     end
 
     def method_missing(*args, &block)
-      args, schema_arguments = _args_and_schema_arguments(*args)
+      args, schema_options = _args_and_schema_options(*args)
 
       if block
-        set!(*args, **schema_arguments, &block)
+        set!(*args, **schema_options, &block)
       else
-        set!(*args, **schema_arguments)
+        set!(*args, **schema_options)
       end
     end
 
@@ -199,9 +211,9 @@ module JbuilderSchema
 
     private
 
-    def _args_and_schema_arguments(*args)
-      schema_arguments = args.extract! { |a| a.is_a?(::Hash) && a.key?(:schema) }.first.try(:[], :schema) || {}
-      [args, schema_arguments]
+    def _args_and_schema_options(*args)
+      schema_options = args.extract! { |a| a.is_a?(::Hash) && a.key?(:schema) }.first.try(:[], :schema) || {}
+      [args, schema_options]
     end
 
     def _set_description(key, value)
@@ -286,17 +298,17 @@ module JbuilderSchema
       @key_formatter ? @key_formatter.format(key).to_sym : key.to_sym
     end
 
-    def _extract_hash_values(object, attributes)
+    def _extract_hash_values(object, attributes, **schema_options)
       attributes.each do |key|
-        result = _schema(_format_keys(object.fetch(key)))
+        result = _schema(_format_keys(object.fetch(key)), **schema_options[key] || {})
         result = _set_description(key, result) if model
         _set_value key, result
       end
     end
 
-    def _extract_method_values(object, attributes)
+    def _extract_method_values(object, attributes, **schema_options)
       attributes.each do |key|
-        result = _schema(_format_keys(object.public_send(key)))
+        result = _schema(_format_keys(object.public_send(key)), **schema_options[key] || {})
         result = _set_description(key, result) if model
         _set_value key, result
       end
@@ -309,6 +321,7 @@ module JbuilderSchema
     def _merge_block(key)
       current_value = _blank? ? BLANK : @attributes.fetch(_key(key), BLANK)
       raise NullError.build(key) if current_value.nil?
+
       new_value = _scope { yield self }
       unless new_value.key?(:type) && new_value[:type] == :array || new_value.key?(:$ref)
         new_value_data = new_value
@@ -320,6 +333,7 @@ module JbuilderSchema
 end
 
 class Jbuilder
+  # Monkey-patch for Jbuilder::KeyFormatter to ignore schema keys
   class KeyFormatter
     alias_method :original_format, :format
 
