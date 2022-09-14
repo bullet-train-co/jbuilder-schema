@@ -138,8 +138,8 @@ module JbuilderSchema
       end
     end
 
-    def array!(collection = [], *args)
-      # schema_options = schema_options[:schema] if schema_options.key?(:schema)
+    def array!(collection = [], *args, **schema_options)
+      schema_options = schema_options[:schema] if schema_options.key?(:schema)
 
       options = args.first
 
