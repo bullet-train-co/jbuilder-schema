@@ -138,7 +138,7 @@ module JbuilderSchema
       end
     end
 
-    def array!(collection = [], *args)
+    def array!(collection = [], *args, &block)
       args, schema_options = _args_and_schema_options(*args)
       options = args.first
 
@@ -146,15 +146,7 @@ module JbuilderSchema
         @collection = true
         _set_ref(options[:partial].split("/").last)
       else
-        array = if collection.nil?
-          []
-        elsif ::Kernel.block_given?
-          _map_collection(collection, &block)
-        elsif args.any?
-          _map_collection(collection) { |element| extract! element, *args, **schema_options }
-        else
-          _format_keys(collection.to_a)
-        end
+        array = _make_array(collection, *args, **schema_options, &block)
 
         if @inline_array
           @attributes = {}
@@ -289,6 +281,18 @@ module JbuilderSchema
         :boolean
       else
         type
+      end
+    end
+
+    def _make_array(collection, *args, **schema_options, &block)
+      if collection.nil?
+        []
+      elsif block
+        _map_collection(collection, &block)
+      elsif args.any?
+        _map_collection(collection) { |element| extract! element, *args, **schema_options }
+      else
+        _format_keys(collection.to_a)
       end
     end
 

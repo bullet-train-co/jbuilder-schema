@@ -73,6 +73,30 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({articles: {description: "test", type: :array, items: {id: {description: "test", type: :integer}, title: {description: "test", type: :string}}}}, result.attributes)
   end
 
+  test "array with block" do
+    result = JbuilderSchema::Template.new(model: Article) do |json|
+      json.array! articles do |article|
+        json.id article.id
+        json.title article.title
+        json.body article.body
+      end
+    end
+
+    assert_equal({items: {id: {description: "test", type: :integer}, title: {description: "test", type: :string}, body: {description: "test", type: :string}}}, result.attributes)
+  end
+
+  test "array with block with schema attributes" do
+    result = JbuilderSchema::Template.new(model: Article) do |json|
+      json.array! articles do |article|
+        json.id article.id, schema: {type: :string}
+        json.title article.title
+        json.body article.body, schema: {type: :text}
+      end
+    end
+
+    assert_equal({items: {id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}}, result.attributes)
+  end
+
   test "block with merge" do
     result = JbuilderSchema::Template.new(model: Article) do |json|
       json.author {
