@@ -49,6 +49,14 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({id: {description: "test", type: :integer}, title: {description: "test", type: :string}, body: {description: "test", type: :string}}, result.attributes)
   end
 
+  test "json.extract! with schema arguments" do
+    result = JbuilderSchema::Template.new(model: Article) do |json|
+      json.extract!(articles.first, :id, :title, :body, schema: {id: {type: :string}, body: {type: :text}})
+    end
+
+    assert_equal({id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}, result.attributes)
+  end
+
   test "simple block" do
     result = JbuilderSchema::Template.new(model: User) do |json|
       json.author { json.id 123 }
@@ -107,6 +115,7 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({description: "test", type: :string}, json.set!(:name, "David"))
     assert_equal({:$ref => "#/components/schemas/article"}, json.partial!("articles/article", collection: articles, as: :article))
     assert_equal({id: {description: "test", type: :integer}, title: {description: "test", type: :string}}, json.array!(articles, :id, :title))
+    assert_equal({id: {description: "test", type: :string}, title: {description: "test", type: :string}}, json.array!(articles, :id, :title, schema: {id: {type: :string}}))
   end
 
   test "key format" do

@@ -116,7 +116,7 @@ module JbuilderSchema
         @inline_array = true
         @collection = true
 
-        _scope { array! value, *args, **schema_options }
+        _scope { array! value, *args }
       else
         # EXTRACT!:
         # json.author @article.creator, :name, :email_address
@@ -138,16 +138,23 @@ module JbuilderSchema
       end
     end
 
-    def array!(collection = [], *args, **schema_options)
-      schema_options = schema_options[:schema] if schema_options.key?(:schema)
-
+    def array!(collection = [], *args)
+      args, schema_options = _args_and_schema_options(*args)
       options = args.first
 
       if args.one? && _partial_options?(options)
         @collection = true
         _set_ref(options[:partial].split("/").last)
       else
-        array = super
+        array = if collection.nil?
+          []
+        elsif ::Kernel.block_given?
+          _map_collection(collection, &block)
+        elsif args.any?
+          _map_collection(collection) { |element| extract! element, *args, **schema_options }
+        else
+          _format_keys(collection.to_a)
+        end
 
         if @inline_array
           @attributes = {}
