@@ -65,14 +65,14 @@ module JbuilderSchema
   # ✅ json.cache_if! !admin?, ['v1', @person], expires_in: 10.minutes {}
   #
   class Template < ::JbuilderTemplate
-    attr_reader :attributes, :type, :model
+    attr_reader :attributes, :type, :models
 
     def initialize(*args, **options)
       @type = :object
       @inline_array = false
       @collection = false
 
-      @model = options.delete(:model)
+      @models = [options.delete(:model)]
 
       super(nil, *args)
 
@@ -81,50 +81,61 @@ module JbuilderSchema
 
     def set!(key, value = BLANK, *args, **schema_options, &block)
       result = if block
-        if !_blank?(value)
-          # OBJECTS ARRAY:
-          # json.comments @article.comments { |comment| ... }
-          # { "comments": [ { ... }, { ... } ] }
-          _scope { array! value, &block }
-        else
-          # BLOCK:
-          # json.comments { ... }
-          # { "comments": ... }
-          @inline_array = true
-          _merge_block(key) { yield self }
-        end
-      elsif args.empty?
-        if ::Jbuilder === value
-          # ATTRIBUTE1:
-          # json.age 32
-          # json.person another_jbuilder
-          # { "age": 32, "person": { ...  }
-          _schema(_format_keys(value.attributes!), **schema_options)
-        elsif _is_collection_array?(value)
-          # ATTRIBUTE2:
-          _scope { array! value }
-        # json.articles @articles
-        else
-          # json.age 32
-          # { "age": 32 }
-          _schema(_format_keys(value), **schema_options)
-        end
-      elsif _is_collection?(value)
-        # COLLECTION:
-        # json.comments @article.comments, :content, :created_at
-        # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
-        @inline_array = true
-        @collection = true
+                 if !_blank?(value)
+                   # OBJECTS ARRAY:
+                   # json.comments @article.comments { |comment| ... }
+                   # { "comments": [ { ... }, { ... } ] }
+                   _scope { array! value, &block }
+                 else
+                   # BLOCK:
+                   # json.comments { ... }
+                   # { "comments": ... }
+                   @inline_array = true
+                   models << schema_options[:object].class if schema_options.key?(:object)
+                   r = _merge_block(key) { yield self }
+                   models.pop if schema_options.key?(:object)
+                   r
+                 end
+               elsif args.empty?
+                 if ::Jbuilder === value
+                   # ATTRIBUTE1:
+                   # json.age 32
+                   # json.person another_jbuilder
+                   # { "age": 32, "person": { ...  }
+                   _schema(_format_keys(value.attributes!), **schema_options)
+                 elsif _is_collection_array?(value)
+                   # ATTRIBUTE2:
+                   _scope { array! value }
+                 # json.articles @articles
+                 else
+                   # json.age 32
+                   # { "age": 32 }
+                   _schema(_format_keys(value), **schema_options)
+                 end
+               elsif _is_collection?(value)
+                 # COLLECTION:
+                 # json.comments @article.comments, :content, :created_at
+                 # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+                 @inline_array = true
+                 @collection = true
 
-        _scope { array! value, *args }
-      else
-        # EXTRACT!:
-        # json.author @article.creator, :name, :email_address
-        # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-        _merge_block(key) { extract! value, *args, **schema_options }
-      end
+                 _scope { array! value, *args }
+               else
+                 # EXTRACT!:
+                 # json.author @article.creator, :name, :email_address
+                 # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
 
-      result = _set_description key, result if model
+                 if schema_options.key?(:object)
+                   models << schema_options.delete(:object).class
+                   r = _merge_block(key) { extract! value, *args, **schema_options }
+                   models.pop
+                   r
+                 else
+                   _merge_block(key) { extract! value, *args, **schema_options }
+                 end
+               end
+
+      result = _set_description key, result if models.any?
       _set_value key, result
     end
 
@@ -183,7 +194,7 @@ module JbuilderSchema
       if hash_or_array.is_a?(Hash)
         hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
           result = _schema(value)
-          result = _set_description(key, result) if model
+          result = _set_description(key, result) if models.any?
           a[key] = result
         end
       end
@@ -216,7 +227,7 @@ module JbuilderSchema
     end
 
     def _set_description(key, value)
-      description = ::I18n.t("#{model.name.underscore.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
+      description = ::I18n.t("#{models.last&.name&.underscore&.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
       {description: description}.merge! value
     end
 
@@ -312,7 +323,7 @@ module JbuilderSchema
     def _extract_hash_values(object, attributes, **schema_options)
       attributes.each do |key|
         result = _schema(_format_keys(object.fetch(key)), **schema_options[key] || {})
-        result = _set_description(key, result) if model
+        result = _set_description(key, result) if models.any?
         _set_value key, result
       end
     end
@@ -320,7 +331,7 @@ module JbuilderSchema
     def _extract_method_values(object, attributes, **schema_options)
       attributes.each do |key|
         result = _schema(_format_keys(object.public_send(key)), **schema_options[key] || {})
-        result = _set_description(key, result) if model
+        result = _set_description(key, result) if models.any?
         _set_value key, result
       end
     end

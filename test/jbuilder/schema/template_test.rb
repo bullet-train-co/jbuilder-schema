@@ -65,6 +65,16 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({author: {description: "test", type: :object, properties: {id: {description: "test", type: :integer}}}}, result.attributes)
   end
 
+  test "block with schema object attribute" do
+    result = JbuilderSchema::Template.new(model: User) do |json|
+      json.author schema: {object: articles.first.user} do
+        json.id 123
+      end
+    end
+
+    assert_equal({author: {description: "test", type: :object, properties: {id: {description: "test", type: :integer}}}}, result.attributes)
+  end
+
   test "block with array" do
     result = JbuilderSchema::Template.new(model: Article) do |json|
       json.articles { json.array! FactoryBot.create_list(:article, 3), :id, :title }
@@ -99,10 +109,10 @@ class TemplateTest < ActiveSupport::TestCase
 
   test "block with merge" do
     result = JbuilderSchema::Template.new(model: Article) do |json|
-      json.author {
+      json.author do
         json.id 123
         json.merge!({name: "David"})
-      }
+      end
     end
 
     assert_equal({author: {description: "test", type: :object, properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result.attributes)
@@ -118,7 +128,9 @@ class TemplateTest < ActiveSupport::TestCase
 
   test "block with array with partial" do
     result = JbuilderSchema::Template.new(model: Article) do |json|
-      json.articles { json.array! articles, partial: "api/v1/articles/article", as: :article }
+      json.articles schema: {object: articles.first} do
+        json.array! articles, partial: "api/v1/articles/article", as: :article
+      end
     end
 
     assert_equal({articles: {description: "test", type: :array, items: {:$ref => "#/components/schemas/article"}}}, result.attributes)

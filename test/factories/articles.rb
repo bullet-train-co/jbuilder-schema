@@ -22,6 +22,7 @@ class Article
 
   def user=(user)
     self.user_id = user.id
+    define_singleton_method(:user) { user }
   end
 
   def save!
@@ -33,6 +34,6 @@ class Article
   end
 
   def as_json(options = nil)
-    super({only: [:id, :title, :body]}.merge(options || {}))
+    super({only: %i[id title body]}.merge(options || {}))
   end
 end
