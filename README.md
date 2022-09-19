@@ -110,9 +110,9 @@ This will produce the following:
           description: Timestamp when article was created
           type: string
           format: date
-          pattern: ^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$
+          pattern: "^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$"
 
-### Nested objects
+[//]: # (### Nested objects)
 
 ### Collections
 

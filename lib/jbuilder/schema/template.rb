@@ -81,59 +81,57 @@ module JbuilderSchema
 
     def set!(key, value = BLANK, *args, **schema_options, &block)
       result = if block
-                 if !_blank?(value)
-                   # OBJECTS ARRAY:
-                   # json.comments @article.comments { |comment| ... }
-                   # { "comments": [ { ... }, { ... } ] }
-                   _scope { array! value, &block }
-                 else
-                   # BLOCK:
-                   # json.comments { ... }
-                   # { "comments": ... }
-                   @inline_array = true
-                   models << schema_options[:object].class if schema_options.key?(:object)
-                   r = _merge_block(key) { yield self }
-                   models.pop if schema_options.key?(:object)
-                   r
-                 end
-               elsif args.empty?
-                 if ::Jbuilder === value
-                   # ATTRIBUTE1:
-                   # json.age 32
-                   # json.person another_jbuilder
-                   # { "age": 32, "person": { ...  }
-                   _schema(_format_keys(value.attributes!), **schema_options)
-                 elsif _is_collection_array?(value)
-                   # ATTRIBUTE2:
-                   _scope { array! value }
-                 # json.articles @articles
-                 else
-                   # json.age 32
-                   # { "age": 32 }
-                   _schema(_format_keys(value), **schema_options)
-                 end
-               elsif _is_collection?(value)
-                 # COLLECTION:
-                 # json.comments @article.comments, :content, :created_at
-                 # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
-                 @inline_array = true
-                 @collection = true
+        if !_blank?(value)
+          # OBJECTS ARRAY:
+          # json.comments @article.comments { |comment| ... }
+          # { "comments": [ { ... }, { ... } ] }
+          _scope { array! value, &block }
+        else
+          # BLOCK:
+          # json.comments { ... }
+          # { "comments": ... }
+          @inline_array = true
+          models << schema_options[:object].class if schema_options.key?(:object)
+          r = _merge_block(key) { yield self }
+          models.pop if schema_options.key?(:object)
+          r
+        end
+      elsif args.empty?
+        if ::Jbuilder === value
+          # ATTRIBUTE1:
+          # json.age 32
+          # json.person another_jbuilder
+          # { "age": 32, "person": { ...  }
+          _schema(_format_keys(value.attributes!), **schema_options)
+        elsif _is_collection_array?(value)
+          # ATTRIBUTE2:
+          _scope { array! value }
+        # json.articles @articles
+        else
+          # json.age 32
+          # { "age": 32 }
+          _schema(_format_keys(value), **schema_options)
+        end
+      elsif _is_collection?(value)
+        # COLLECTION:
+        # json.comments @article.comments, :content, :created_at
+        # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+        @inline_array = true
+        @collection = true
 
-                 _scope { array! value, *args }
-               else
-                 # EXTRACT!:
-                 # json.author @article.creator, :name, :email_address
-                 # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
+        _scope { array! value, *args }
+      elsif schema_options.key?(:object)
+        # EXTRACT!:
+        # json.author @article.creator, :name, :email_address
+        # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
 
-                 if schema_options.key?(:object)
-                   models << schema_options.delete(:object).class
-                   r = _merge_block(key) { extract! value, *args, **schema_options }
-                   models.pop
-                   r
-                 else
-                   _merge_block(key) { extract! value, *args, **schema_options }
-                 end
-               end
+        models << schema_options.delete(:object).class
+        r = _merge_block(key) { extract! value, *args, **schema_options }
+        models.pop
+        r
+      else
+        _merge_block(key) { extract! value, *args, **schema_options }
+      end
 
       result = _set_description key, result if models.any?
       _set_value key, result

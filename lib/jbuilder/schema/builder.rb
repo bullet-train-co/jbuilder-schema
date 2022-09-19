@@ -41,8 +41,8 @@ module JbuilderSchema
 
     def _stringified_schema
       _schema.deep_stringify_keys
-             .deep_transform_values { |v| v.is_a?(Symbol) ? v.to_s : v }
-             .deep_transform_values { |v| v.is_a?(Regexp) ? v.source : v }
+        .deep_transform_values { |v| v.is_a?(Symbol) ? v.to_s : v }
+        .deep_transform_values { |v| v.is_a?(Regexp) ? v.source : v }
     end
 
     def _yaml_schema
@@ -95,8 +95,8 @@ module JbuilderSchema
       # OPTIMIZE: It might be that there could be several models in required field, need to learn more about it.
       template.attributes.keys.select { |attribute|
         model.validators.grep(::ActiveRecord::Validations::PresenceValidator)
-             .flat_map(&:attributes).unshift(:id)
-             .include?(attribute.to_s.underscore.to_sym)
+          .flat_map(&:attributes).unshift(:id)
+          .include?(attribute.to_s.underscore.to_sym)
       }.uniq
     end
   end
