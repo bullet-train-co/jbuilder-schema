@@ -29,6 +29,8 @@ Wherever you want to generate schemas, you should extend `JbuilderSchema`:
 Then you can use `jbuilder_schema` helper:
 
     jbuilder_schema('api/v1/articles/_article',
+                    format: :yaml,
+                    paths: view_paths.map(&:path),
                     model: Article,
                     title: 'Article',
                     description: 'Article in the blog',
@@ -39,13 +41,78 @@ Then you can use `jbuilder_schema` helper:
 
 `jbuilder_schema` helper takes `path` to Jbuilder template as a first argument and several optional arguments:
 
-- `model`: Model described in template, this is needed to populate `required` field in schema
-- `title` and `description`: Title and description of schema
-- `locals`: Here you should pass all the locals which are met in the template. Those could be any objects as long as they respond to methods called on them in template.
+- `format`: Desired output format, can be either `:yaml` or `:json`. If no `format` option is passed, the output will be the Ruby Hash object;
+- `paths`: If you need to scope any other paths than `app/views`, pass them as an array here;
+- `model`: Model described in template, this is needed to populate `required` field in schema;
+- `title` and `description`: Title and description of schema, if not passed then they will be grabbed from locale files (see *Titles & Descriptions*);
+- `locals`: Here you should pass all the locals which are met in the jbuilder template. Those could be any objects as long as they respond to methods called on them in template.
 
 Notice that partial templates should be prepended with an underscore just like in the name of the file (i.e. `_article` but not `article` an when using Jbuilder).
 
-**Schema is produced in ruby Hash, so you can call `.as_json`/`.to_json` on it if you want it in pure JSON.**
+### Output
+
+JbuilderSchema automatically sets `description`, `type`, and `required` options in JSON-Schema.
+
+For example, if we have `_articles.json.jbilder` file:
+
+    json.extract! article, :id, :title, :body, :created_at
+
+The output for it will be:
+
+    type: object
+      title: Article
+      description: Article in the blog
+      required:
+        - id
+        - title
+        - body
+      properties:
+        id:
+          description: ID of an article
+          type: integer
+        title:
+          description: Title of an article
+          type: string
+        body:
+          description: Contents of an article
+          type: string
+        created_at:
+          description: Timestamp when article was created
+          type: string
+          format: date-time
+
+### Customization
+
+Sometimes you would want to set you own data in generated JSON-Schema. All you need to do is just pass hash with it under `schema` keyword in your jbuilder template:
+
+    json.id article.id, schema: { type: :number }
+    json.title article.title, schema: { minLength: 5, maxLength: 20 }
+    json.body article.body, schema: { type: :text, maxLength: 500 }
+    json.created_at article.created_at.strftime('%d/%m/%Y'), schema: { format: :date, pattern: "^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$" }
+
+This will produce the following:
+
+    ...
+      properties:
+        id:
+          description: ID of an article
+          type: number
+        title:
+          description: Title of an article
+          type: string
+          minLength: 5
+          maxLength: 20
+        body:
+          description: Contents of an article
+          type: string
+          maxLength: 500
+        created_at:
+          description: Timestamp when article was created
+          type: string
+          format: date
+          pattern: ^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$
+
+### Nested objects
 
 ### Collections
 
@@ -63,26 +130,38 @@ For example, if we have:
 
 The result would be:
 
-    "user": {
-      "type": "object",
-      "$ref": "#/components/schemas/user"
-    },
-    "articles": {
-      "type": "array",
-      "items": {
-        "$ref": "#/components/schemas/article"
-      }
-    }
+    user:
+      description: Information about user
+      type: object
+      $ref: #/components/schemas/user
+    articles:
+      type: array
+      items:
+        $ref: #/components/schemas/article
     
-[//]: # (### Customization)
+The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *Configuration* for more info.
 
-[//]: # ()
-[//]: # ()
-[//]: # (You can add your own data for fields in schema with `schema` keyword:)
+### Titles & Descriptions
 
-[//]: # ()
-[//]: # ()
-[//]: # (    json.amount order.amount, schema: { type: :number, format })
+Descriptions for the fields are supposed to be found in locale files under `<underscored_plural_model_name>.fields.<field_name>.<description_name>`, for example:
+
+    en:
+      articles:
+        fields:
+          title:
+            description: The title of an article
+
+`<description_name>` can be configured (see *Configuration*), it defaults to `description`.
+
+### Configuration
+
+You can configure some variables that JbuilderSchema uses (for example, in `config/initializers/jbuilder_schema.rb`):
+
+    JbuilderSchema.configure do |config|
+        config.components_path = "components/schemas"   # could be "definitions/schemas"
+        config.title_name = "title"                     # could be "label"
+        config.description_name = "description"         # could be "heading"
+    end
 
 ### RSwag
 
@@ -100,12 +179,13 @@ It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` hel
         components: {
           schemas: {
             article: jbuilder_schema('api/v1/articles/_article',
+                                     format: :yaml,
                                      model: Article,
                                      title: 'Article',
                                      description: 'Article in the blog',
                                      locals: {
-                                       article: FactoryBot.create(:article),
-                                       current_user: FactoryBot.create(:user, admin: true)
+                                       article: FactoryBot.build(:article, id: 1),
+                                       current_user: FactoryBot.build(:user, admin: true)
                                      })
           }
         }
