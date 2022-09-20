@@ -83,12 +83,14 @@ The output for it will be:
 
 ### Customization
 
+#### Simple
+
 Sometimes you would want to set you own data in generated JSON-Schema. All you need to do is just pass hash with it under `schema` keyword in your jbuilder template:
 
     json.id article.id, schema: { type: :number }
     json.title article.title, schema: { minLength: 5, maxLength: 20 }
     json.body article.body, schema: { type: :text, maxLength: 500 }
-    json.created_at article.created_at.strftime('%d/%m/%Y'), schema: { format: :date, pattern: "^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$" }
+    json.created_at article.created_at.strftime('%d/%m/%Y'), schema: { format: :date, pattern: /^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$/ }
 
 This will produce the following:
 
@@ -111,6 +113,12 @@ This will produce the following:
           type: string
           format: date
           pattern: "^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$"
+
+#### Bulk
+
+You can customize output for multiple fields at once:
+
+    json.extract! user, :id, :name, :email, schema: {id: {type: :string}, email: {type: :email, pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/}}
 
 ### Nested objects
 
