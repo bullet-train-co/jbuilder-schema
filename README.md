@@ -112,7 +112,16 @@ This will produce the following:
           format: date
           pattern: "^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$"
 
-[//]: # (### Nested objects)
+### Nested objects
+
+When you have nested objects in jbuilder template, you have to pass it to `schema: {object: <nested_object>}` when the block starts:
+
+    json.extract! article
+    json.author schema: {object: article.user} do
+      json.extract! article.user
+    end
+
+This will help JbuilderSchema to process those fields right.
 
 ### Collections
 
@@ -131,7 +140,6 @@ For example, if we have:
 The result would be:
 
     user:
-      description: Information about user
       type: object
       $ref: #/components/schemas/user
     articles:
