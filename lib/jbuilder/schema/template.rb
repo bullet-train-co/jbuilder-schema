@@ -79,6 +79,9 @@ module JbuilderSchema
       @ignore_nil = false
     end
 
+    def schema!
+    end
+
     def set!(key, value = BLANK, *args, **schema_options, &block)
       result = if block
         if !_blank?(value)
@@ -102,7 +105,7 @@ module JbuilderSchema
           # json.age 32
           # json.person another_jbuilder
           # { "age": 32, "person": { ...  }
-          _schema(_format_keys(value.attributes!), **schema_options)
+          _schema(key, _format_keys(value.attributes!), **schema_options)
         elsif _is_collection_array?(value)
           # ATTRIBUTE2:
           _scope { array! value }
@@ -110,7 +113,7 @@ module JbuilderSchema
         else
           # json.age 32
           # { "age": 32 }
-          _schema(_format_keys(value), **schema_options)
+          _schema(key, _format_keys(value), **schema_options)
         end
       elsif _is_collection?(value)
         # COLLECTION:
@@ -191,7 +194,7 @@ module JbuilderSchema
       hash_or_array = _format_keys(hash_or_array)
       if hash_or_array.is_a?(Hash)
         hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
-          result = _schema(value)
+          result = _schema(key, value)
           result = _set_description(key, result) if models.any?
           a[key] = result
         end
@@ -248,8 +251,9 @@ module JbuilderSchema
       "#/#{JbuilderSchema.configuration.components_path}/#{component}"
     end
 
-    def _schema(value, **options)
+    def _schema(key, value, **options)
       options.merge!(_guess_type(value)) unless options[:type]
+      options.merge!(_set_enum(key.to_s)) if models.last&.defined_enums&.keys&.include?(key.to_s)
       options
     end
 
@@ -293,6 +297,11 @@ module JbuilderSchema
       end
     end
 
+    def _set_enum(key)
+      enums = models.last&.defined_enums & [key].keys
+      {enum: enums}
+    end
+
     def _make_array(collection, *args, **schema_options, &block)
       if collection.nil?
         []
@@ -320,7 +329,7 @@ module JbuilderSchema
 
     def _extract_hash_values(object, attributes, **schema_options)
       attributes.each do |key|
-        result = _schema(_format_keys(object.fetch(key)), **schema_options[key] || {})
+        result = _schema(key, _format_keys(object.fetch(key)), **schema_options[key] || {})
         result = _set_description(key, result) if models.any?
         _set_value key, result
       end
@@ -328,7 +337,7 @@ module JbuilderSchema
 
     def _extract_method_values(object, attributes, **schema_options)
       attributes.each do |key|
-        result = _schema(_format_keys(object.public_send(key)), **schema_options[key] || {})
+        result = _schema(key, _format_keys(object.public_send(key)), **schema_options[key] || {})
         result = _set_description(key, result) if models.any?
         _set_value key, result
       end

@@ -9,6 +9,10 @@ end
 class User
   attr_accessor :id, :email, :name
 
+  def self.defined_enums
+    {}
+  end
+
   def save!
     true
   end

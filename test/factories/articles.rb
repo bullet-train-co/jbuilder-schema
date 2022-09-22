@@ -20,6 +20,10 @@ class Article
 
   attr_accessor :id, :title, :body, :created_at, :updated_at, :user_id
 
+  def self.defined_enums
+    {}
+  end
+
   def user=(user)
     self.user_id = user.id
     define_singleton_method(:user) { user }

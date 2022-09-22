@@ -13,7 +13,7 @@ module JbuilderSchema
       # TODO: Need this for `required`, make it simpler:
       @model = options[:model]
       @title = options[:title]
-      @description = options[:description]
+      @description = options[:description] || ::I18n.t("#{model&.name&.underscore&.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
       @locals = options[:locals] || {}
       @format = options[:format]
       @paths = options[:paths] || ["app/views"]
@@ -92,6 +92,7 @@ module JbuilderSchema
     end
 
     def _create_required!
+      # TODO: Put this into Template
       # OPTIMIZE: It might be that there could be several models in required field, need to learn more about it.
       template.attributes.keys.select { |attribute|
         model.validators.grep(::ActiveRecord::Validations::PresenceValidator)
