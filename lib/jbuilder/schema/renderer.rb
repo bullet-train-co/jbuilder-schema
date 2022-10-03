@@ -12,16 +12,16 @@ module JbuilderSchema
     # Helpers don't work in Jbuilder itself, so no need to include them here!
     # ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| include Object.const_get("::#{helper.camelize}Helper") }
 
-    attr_reader :model, :locals
+    attr_reader :locals, :options
 
     def initialize(**options)
-      @model = options[:model]
-      @locals = options[:locals] || {}
+      @locals = options.delete(:locals) || {}
+      @options = options
       _define_locals!
     end
 
     def render(source)
-      Template.new(model: model) do |json|
+      Template.new(**options) do |json|
         # TODO: Get rid of 'eval'
         eval source.to_s # standard:disable Security/Eval
       end

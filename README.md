@@ -87,7 +87,7 @@ The output for it will be:
 
 Sometimes you would want to set you own data in generated JSON-Schema. All you need to do is just pass hash with it under `schema` keyword in your jbuilder template:
 
-    json.id article.id, schema: { type: :number }
+    json.id article.id, schema: { type: :number, description: "Custom ID description" }
     json.title article.title, schema: { minLength: 5, maxLength: 20 }
     json.body article.body, schema: { type: :text, maxLength: 500 }
     json.created_at article.created_at.strftime('%d/%m/%Y'), schema: { format: :date, pattern: /^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$/ }
@@ -97,7 +97,7 @@ This will produce the following:
     ...
       properties:
         id:
-          description: ID of an article
+          description: Custom ID description
           type: number
         title:
           description: Title of an article
@@ -125,7 +125,7 @@ You can customize output for multiple fields at once:
 When you have nested objects in jbuilder template, you have to pass it to `schema: {object: <nested_object>}` when the block starts:
 
     json.extract! article
-    json.author schema: {object: article.user} do
+    json.author schema: {object: article.user, object_title: "Author", object_description: "Authors are users who write articles"} do
       json.extract! article.user
     end
 
@@ -158,6 +158,8 @@ The result would be:
 The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
 
 ### Titles & Descriptions
+
+Custom titles and descriptions for objects can be specified when calling `jbuilder-schema` helper (see *[Usage](#usage)*), for fields and nested objects within `schema` attributes (see *[Customization](#simple)* and *[Nested objects](#nested-objects)*). If not set, they will be searched in locale files.
 
 Titles and descriptions for the models are supposed to be found in locale files under `<underscored_plural_model_name>.<title_name>` and `<underscored_plural_model_name>.<description_name>`, for example:
 
@@ -218,14 +220,6 @@ It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` hel
       }
 
       ...
-
-[//]: # (## Development)
-
-[//]: # ()
-[//]: # (After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.)
-
-[//]: # ()
-[//]: # (To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org]&#40;https://rubygems.org&#41;.)
 
 ## Contributing
 

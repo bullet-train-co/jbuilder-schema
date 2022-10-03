@@ -8,7 +8,7 @@ require "safe_parser"
 module JbuilderSchema
   # Template parser class
   class Template < ::JbuilderTemplate
-    attr_reader :attributes, :type, :models
+    attr_reader :attributes, :type, :models, :titles, :descriptions
 
     def initialize(*args, **options)
       @type = :object
@@ -16,6 +16,8 @@ module JbuilderSchema
       @collection = false
 
       @models = [options.delete(:model)]
+      @titles = [options.delete(:title)]
+      @descriptions = [options.delete(:description)]
 
       super(nil, *args)
 
@@ -23,7 +25,7 @@ module JbuilderSchema
     end
 
     def schema!
-      {type: type}.merge(type == :object ? _object(**attributes) : attributes)
+      {type: type}.merge(type == :object ? _object(**attributes.merge) : attributes)
     end
 
     def set!(key, value = BLANK, *args, **schema_options, &block)
@@ -38,9 +40,17 @@ module JbuilderSchema
           # json.comments { ... }
           # { "comments": ... }
           @inline_array = true
-          models << schema_options[:object].class if schema_options.key?(:object)
+          if schema_options.key?(:object)
+            models << schema_options[:object].class
+            titles << schema_options[:object_title] || nil
+            descriptions << schema_options[:object_description] || nil
+          end
           r = _merge_block(key) { yield self }
-          models.pop if schema_options.key?(:object)
+          if schema_options.key?(:object)
+            models.pop
+            titles.pop
+            descriptions.pop
+          end
           r
         end
       elsif args.empty?
@@ -73,8 +83,12 @@ module JbuilderSchema
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
 
         models << schema_options.delete(:object).class
+        titles << schema_options.delete(:object_title) || nil
+        descriptions << schema_options.delete(:object_description) || nil
         r = _merge_block(key) { extract! value, *args, **schema_options }
         models.pop
+        titles.pop
+        descriptions.pop
         r
       else
         _merge_block(key) { extract! value, *args, **schema_options }
@@ -167,8 +181,8 @@ module JbuilderSchema
     private
 
     def _object(**attrs)
-      title = ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.title_name}")
-      description = ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.description_name}")
+      title = titles.last || ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.title_name}")
+      description = descriptions.last || ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.description_name}")
       {
         type: :object,
         title: title,
