@@ -6,18 +6,16 @@ require "jbuilder/schema/renderer"
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    attr_reader :path, :template, :model, :title, :description, :locals, :format, :paths
+    attr_reader :path, :template, :model, :locals, :format, :paths
 
     def initialize(path, **options)
       @path = path
       # TODO: Need this for `required`, make it simpler:
       @model = options[:model]
-      @title = options[:title]
-      @description = options[:description] || ::I18n.t("#{model&.name&.underscore&.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
       @locals = options[:locals] || {}
       @format = options[:format]
       @paths = options[:paths] || ["app/views"]
-      @template = _render_template
+      @template = _render_template(**options)
     end
 
     def schema!
@@ -36,7 +34,7 @@ module JbuilderSchema
     private
 
     def _schema
-      {type: template.type}.merge(template.type == :object ? _object : _array)
+      template.schema!
     end
 
     def _stringified_schema
@@ -51,19 +49,6 @@ module JbuilderSchema
 
     def _json_schema
       JSON.dump(_stringified_schema).html_safe
-    end
-
-    def _object
-      {
-        title: title,
-        description: description,
-        required: _create_required!,
-        properties: template.attributes
-      }
-    end
-
-    def _array
-      template.attributes
     end
 
     def _find_template
@@ -87,18 +72,8 @@ module JbuilderSchema
       [prefix, controller, action, partial]
     end
 
-    def _render_template
-      Renderer.new(locals, model: model).render(_find_template)
-    end
-
-    def _create_required!
-      # TODO: Put this into Template
-      # OPTIMIZE: It might be that there could be several models in required field, need to learn more about it.
-      template.attributes.keys.select { |attribute|
-        model.validators.grep(::ActiveRecord::Validations::PresenceValidator)
-          .flat_map(&:attributes).unshift(:id)
-          .include?(attribute.to_s.underscore.to_sym)
-      }.uniq
+    def _render_template(**options)
+      Renderer.new(**options).render(_find_template)
     end
   end
 end

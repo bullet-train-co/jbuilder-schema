@@ -62,7 +62,7 @@ class TemplateTest < ActiveSupport::TestCase
       json.author { json.id 123 }
     end
 
-    assert_equal({author: {description: "test", type: :object, properties: {id: {description: "test", type: :integer}}}}, result.attributes)
+    assert_equal({author: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}}}}, result.attributes)
   end
 
   test "block with schema object attribute" do
@@ -72,7 +72,7 @@ class TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({author: {description: "test", type: :object, properties: {id: {description: "test", type: :integer}}}}, result.attributes)
+    assert_equal({author: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}}}}, result.attributes)
   end
 
   test "block with array" do
@@ -115,7 +115,7 @@ class TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({author: {description: "test", type: :object, properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result.attributes)
+    assert_equal({author: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result.attributes)
   end
 
   test "block with partial" do
@@ -176,7 +176,7 @@ class TemplateTest < ActiveSupport::TestCase
       }
     end
 
-    assert_equal({Id: {description: "test", type: :integer}, Title: {description: "test", type: :string}, Author: {description: "test", type: :object, properties: {Id: {description: "test", type: :integer}, Name: {description: "test", type: :string}}}}, result.attributes)
+    assert_equal({Id: {description: "test", type: :integer}, Title: {description: "test", type: :string}, Author: {type: :object, title: "test", description: "test", required: [:Id], properties: {Id: {description: "test", type: :integer}, Name: {description: "test", type: :string}}}}, result.attributes)
   end
 
   test "deep key format with array" do

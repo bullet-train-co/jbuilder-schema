@@ -12,11 +12,12 @@ module JbuilderSchema
     # Helpers don't work in Jbuilder itself, so no need to include them here!
     # ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| include Object.const_get("::#{helper.camelize}Helper") }
 
-    attr_reader :model
+    attr_reader :model, :locals
 
-    def initialize(locals, **options)
+    def initialize(**options)
       @model = options[:model]
-      _define_locals!(locals)
+      @locals = options[:locals] || {}
+      _define_locals!
     end
 
     def render(source)
@@ -40,7 +41,7 @@ module JbuilderSchema
 
     private
 
-    def _define_locals!(locals)
+    def _define_locals!
       locals.each do |k, v|
         # Setting instance variables (`@article`):
         instance_variable_set("@#{k}", v)

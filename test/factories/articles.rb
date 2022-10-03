@@ -20,8 +20,14 @@ class Article
 
   attr_accessor :id, :title, :body, :created_at, :updated_at, :user_id
 
-  def self.defined_enums
-    {}
+  class << self
+    def defined_enums
+      {}
+    end
+
+    def validators
+      []
+    end
   end
 
   def user=(user)

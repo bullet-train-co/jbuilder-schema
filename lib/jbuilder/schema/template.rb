@@ -7,63 +7,6 @@ require "safe_parser"
 
 module JbuilderSchema
   # Template parser class
-  # =====================
-  #
-  # Here we do the following:
-  #
-  # ✅ Direct fields definition:
-  #    json.title @article.title
-  #    json.url article_url(@article, format: :json)
-  #    json.custom 123
-  #
-  # ✅️ Main app helpers:
-  #    json.title human_title(@article.title)
-  #
-  # ✅ Relations:
-  #    json.user_name @article.user.name
-  #    json.comments @article.comments, :content, :created_at
-  #
-  # ✅ Collections:
-  #    json.comments @comments, :content, :created_at
-  #    json.people my_array
-  #
-  # ✅ Blocks:
-  #    json.author do
-  #      json.name @article.user.name
-  #      json.email @article.user.email
-  #      json.url url_for(@article.user, format: :json)
-  #    end
-  #
-  #    json.attachments @article.attachments do |attachment|
-  #      json.filename attachment.filename
-  #      json.url url_for(attachment)
-  #    end
-  #
-  # ✅️ Conditions:
-  #    if current_user.admin?
-  #      json.visitors calculate_visitors(@article)
-  #    end
-  #
-  # ✅️ Ruby code:
-  #    hash = { author: { name: "David" } }
-  #
-  # ✅ Jbuilder commands:
-  # ✅ json.set! :name, 'David'
-  # ✅ json.merge! { author: { name: "David" } }
-  # ✅ json.array! @articles, :id, :title
-  # ✅ json.array! @articles, partial: 'articles/article', as: :article
-  # ✅ json.partial! 'comments/comments', comments: @message.comments
-  # ✅ json.partial! partial: 'articles/article', collection: @articles, as: :article
-  # ✅ json.comments @article.comments, partial: 'comments/comment', as: :comment
-  # ✅ json.extract! @article, :id, :title, :content, :published_at
-  # ✅ json.key_format! camelize: :lower
-  # ✅ json.deep_format_keys!
-  #
-  # ✅ Ignore (?) some of them:
-  # ✅ json.ignore_nil!
-  # ✅ json.cache! ['v1', @person], expires_in: 10.minutes {}
-  # ✅ json.cache_if! !admin?, ['v1', @person], expires_in: 10.minutes {}
-  #
   class Template < ::JbuilderTemplate
     attr_reader :attributes, :type, :models
 
@@ -80,6 +23,7 @@ module JbuilderSchema
     end
 
     def schema!
+      {type: type}.merge(type == :object ? _object(**attributes) : attributes)
     end
 
     def set!(key, value = BLANK, *args, **schema_options, &block)
@@ -222,14 +166,29 @@ module JbuilderSchema
 
     private
 
+    def _object(**attrs)
+      title = ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.title_name}")
+      description = ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.description_name}")
+      {
+        type: :object,
+        title: title,
+        description: description,
+        required: _required!(**attrs),
+        properties: attrs
+      }
+    end
+
     def _args_and_schema_options(*args)
       schema_options = args.extract! { |a| a.is_a?(::Hash) && a.key?(:schema) }.first.try(:[], :schema) || {}
       [args, schema_options]
     end
 
     def _set_description(key, value)
-      description = ::I18n.t("#{models.last&.name&.underscore&.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
-      {description: description}.merge! value
+      unless value.key?(:description)
+        description = ::I18n.t("#{models.last&.name&.underscore&.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
+        value = {description: description}.merge! value
+      end
+      value
     end
 
     def _set_ref(component)
@@ -298,7 +257,7 @@ module JbuilderSchema
     end
 
     def _set_enum(key)
-      enums = models.last&.defined_enums & [key].keys
+      enums = models.last&.defined_enums[key].keys
       {enum: enums}
     end
 
@@ -317,6 +276,18 @@ module JbuilderSchema
     def _is_collection_array?(object)
       # TODO: Find better way to determine if all array elements are models
       object.is_a?(Array) && object.map { |a| _is_active_model?(a) }.uniq == [true]
+    end
+
+    def _required!(**attrs)
+      if Object.const_defined?('ActiveRecord')
+        attrs.keys.select { |attribute|
+          models.last&.validators.try(:grep, ::ActiveRecord::Validations::PresenceValidator)
+                .flat_map(&:attributes).unshift(_key(:id))
+                .include?(attribute.to_s.underscore.to_sym)
+        }.uniq
+      else
+        attrs.keys.include?(_key(:id)) ? [_key(:id)] : []
+      end
     end
 
     ###
@@ -353,8 +324,8 @@ module JbuilderSchema
 
       new_value = _scope { yield self }
       unless new_value.key?(:type) && new_value[:type] == :array || new_value.key?(:$ref)
-        new_value_data = new_value
-        new_value = {type: :object, properties: new_value_data}
+        new_value_properties = new_value
+        new_value = _object(**new_value_properties)
       end
       _merge_values(current_value, new_value)
     end
