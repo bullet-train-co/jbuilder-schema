@@ -29,11 +29,11 @@ Wherever you want to generate schemas, you should extend `JbuilderSchema`:
 Then you can use `jbuilder_schema` helper:
 
     jbuilder_schema('api/v1/articles/_article',
+                    title: 'Article',
+                    description: 'Article in the blog',
                     format: :yaml,
                     paths: view_paths.map(&:path),
                     model: Article,
-                    title: 'Article',
-                    description: 'Article in the blog',
                     locals: {
                       article: @article,
                       current_user: @user
@@ -41,10 +41,10 @@ Then you can use `jbuilder_schema` helper:
 
 `jbuilder_schema` helper takes `path` to Jbuilder template as a first argument and several optional arguments:
 
+- `title` and `description`: Title and description of schema, if not passed then they will be grabbed from locale files (see *[Titles & Descriptions](#titles--descriptions)*);
 - `format`: Desired output format, can be either `:yaml` or `:json`. If no `format` option is passed, the output will be the Ruby Hash object;
 - `paths`: If you need to scope any other paths than `app/views`, pass them as an array here;
 - `model`: Model described in template, this is needed to populate `required` field in schema;
-- `title` and `description`: Title and description of schema, if not passed then they will be grabbed from locale files (see *Titles & Descriptions*);
 - `locals`: Here you should pass all the locals which are met in the jbuilder template. Those could be any objects as long as they respond to methods called on them in template.
 
 Notice that partial templates should be prepended with an underscore just like in the name of the file (i.e. `_article` but not `article` an when using Jbuilder).
@@ -60,26 +60,26 @@ For example, if we have `_articles.json.jbilder` file:
 The output for it will be:
 
     type: object
-      title: Article
-      description: Article in the blog
-      required:
-        - id
-        - title
-        - body
-      properties:
-        id:
-          description: ID of an article
-          type: integer
-        title:
-          description: Title of an article
-          type: string
-        body:
-          description: Contents of an article
-          type: string
-        created_at:
-          description: Timestamp when article was created
-          type: string
-          format: date-time
+    title: Article
+    description: Article in the blog
+    required:
+      - id
+      - title
+      - body
+    properties:
+      id:
+        description: ID of an article
+        type: integer
+      title:
+        description: Title of an article
+        type: string
+      body:
+        description: Contents of an article
+        type: string
+      created_at:
+        description: Timestamp when article was created
+        type: string
+        format: date-time
 
 ### Customization
 
@@ -155,9 +155,16 @@ The result would be:
       items:
         $ref: #/components/schemas/article
     
-The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *Configuration* for more info.
+The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
 
 ### Titles & Descriptions
+
+Titles and descriptions for the models are supposed to be found in locale files under `<underscored_plural_model_name>.<title_name>` and `<underscored_plural_model_name>.<description_name>`, for example:
+
+    en:
+      articles:
+        title: Article
+        description: The main object on the blog
 
 Descriptions for the fields are supposed to be found in locale files under `<underscored_plural_model_name>.fields.<field_name>.<description_name>`, for example:
 
@@ -167,7 +174,7 @@ Descriptions for the fields are supposed to be found in locale files under `<und
           title:
             description: The title of an article
 
-`<description_name>` can be configured (see *Configuration*), it defaults to `description`.
+`<title_name>` and `<description_name>` can be configured (see *[Configuration](#configuration)*), it defaults to `title` and `description`.
 
 ### Configuration
 
