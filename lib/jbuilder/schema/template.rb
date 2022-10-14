@@ -266,6 +266,8 @@ module JbuilderSchema
         :number
       when :trueclass, :falseclass
         :boolean
+      when :integer
+        :integer
       else
         :string
       end
