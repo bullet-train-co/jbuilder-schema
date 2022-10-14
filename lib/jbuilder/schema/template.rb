@@ -259,9 +259,6 @@ module JbuilderSchema
 
     def _type(type)
       case type
-        # TODO: Check if we can delete this and handle every unknown type as a string
-        # when :time, :date, :datetime, :"activesupport::timewithzone", nil, :text, :nilclass, :"actiontext::richtext"
-        #   :string
       when :float, :bigdecimal
         :number
       when :trueclass, :falseclass
