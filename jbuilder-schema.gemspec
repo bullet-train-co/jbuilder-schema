@@ -35,9 +35,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "jbuilder"
   spec.add_dependency "safe_parser"
 
-  # spec.add_dependency 'actionpack', '>= 5.0.0'
-  # spec.add_dependency 'actionview', '>= 5.0.0'
-  # spec.add_dependency 'activesupport', '>= 5.0.0'
   spec.add_dependency "rails", ">= 5.0.0"
 
   # For more information and examples about making a new gem, check out our

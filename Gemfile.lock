@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    jbuilder-schema (1.0.2)
+    jbuilder-schema (1.0.3)
       jbuilder
       rails (>= 5.0.0)
       safe_parser
