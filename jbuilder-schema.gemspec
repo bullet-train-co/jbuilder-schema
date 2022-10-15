@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Generate JSON Schema from Jbuilder files"
   spec.description = spec.summary
-  spec.homepage = "https://github.com/newstler/jbuilder-schema"
+  spec.homepage = "https://github.com/bullet-train-co/jbuilder-schema"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 2.6.0"
 
