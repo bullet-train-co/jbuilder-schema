@@ -62,8 +62,8 @@ module JbuilderSchema
           _schema(key, _format_keys(value.attributes!), **schema_options)
         elsif _is_collection_array?(value)
           # ATTRIBUTE2:
-          # json.articles @articles
           _scope { array! value }
+        # json.articles @articles
         else
           # json.age 32
           # { "age": 32 }

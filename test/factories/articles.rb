@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require "active_model"
-require "active_model/naming"
-require "active_model/conversion"
 
 FactoryBot.define do
   factory :article do
