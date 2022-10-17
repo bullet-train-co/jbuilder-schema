@@ -8,13 +8,13 @@ module JbuilderSchema
   class Builder
     attr_reader :path, :template, :model, :locals, :format, :paths
 
-    def initialize(path, **options)
+    def initialize(path, model:, format: nil, paths: ["app/views"], locals: {})
       @path = path
-      # TODO: Need this for `required`, make it simpler:
-      @model = options[:model]
-      @locals = options[:locals] || {}
-      @format = options[:format]
-      @paths = options[:paths] || ["app/views"]
+      @model = model
+      @locals = locals
+      @format = format
+      @paths = paths
+
       @template = _render_template(**options)
     end
 
