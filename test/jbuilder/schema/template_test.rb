@@ -138,13 +138,15 @@ class TemplateTest < ActiveSupport::TestCase
 
   test "collections" do
     assert_equal({description: "test", type: :array, items: {id: {description: "test", type: :integer}, title: {description: "test", type: :string}}}, json.articles(articles, :id, :title))
-    assert_equal({description: "test", type: :array, items: {id: {description: "test", type: :integer},
-                                                             title: {description: "test", type: :string},
-                                                             body: {description: "test", type: :string},
-                                                             created_at: {description: "test", type: :string, format: "date-time"},
-                                                             updated_at: {description: "test", type: :string, format: "date-time"},
-                                                             user_id: {description: "test", type: :integer}}},
-      json.articles(articles))
+    assert_equal({
+      description: "test", type: :array,
+      items: {id: {description: "test", type: :integer},
+      title: {description: "test", type: :string},
+      body: {description: "test", type: :string},
+      created_at: {description: "test", type: :string, format: "date-time"},
+      updated_at: {description: "test", type: :string, format: "date-time"},
+      user_id: {description: "test", type: :integer}}
+    }, json.articles(articles))
   end
 
   test "jbuilder methods" do

@@ -1,3 +1,5 @@
+require "active_model"
+
 FactoryBot.define do
   factory :user do
     sequence(:id)
@@ -7,6 +9,8 @@ FactoryBot.define do
 end
 
 class User
+  include ActiveModel::Model
+
   attr_accessor :id, :email, :name
 
   class << self

@@ -8,14 +8,14 @@ module JbuilderSchema
   class Builder
     attr_reader :path, :template, :model, :locals, :format, :paths
 
-    def initialize(path, model:, format: nil, paths: ["app/views"], locals: {})
+    def initialize(path, model:, format: nil, paths: ["app/views"], locals: {}, **options)
       @path = path
       @model = model
       @locals = locals
       @format = format
       @paths = paths
 
-      @template = _render_template(**options)
+      @template = _render_template(locals: locals, **options)
     end
 
     def schema!
@@ -53,12 +53,10 @@ module JbuilderSchema
 
     def _find_template
       prefix, controller, action, partial = _resolve_path
-      found = nil
       paths.each do |path|
         found = Resolver.new("#{path}/#{prefix}").find_all(action, controller, partial)
-        break if found
+        return found if found
       end
-      found
     end
 
     def _resolve_path

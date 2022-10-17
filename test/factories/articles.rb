@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "active_model"
 require "active_model/naming"
 require "active_model/conversion"
 
@@ -15,8 +16,7 @@ FactoryBot.define do
 end
 
 class Article
-  extend ActiveModel::Naming
-  include ActiveModel::Conversion
+  include ActiveModel::Model
 
   attr_accessor :id, :title, :body, :created_at, :updated_at, :user_id
 
@@ -30,9 +30,11 @@ class Article
     end
   end
 
+  attr_reader :user
+
   def user=(user)
-    self.user_id = user.id
-    define_singleton_method(:user) { user }
+    @user_id = user.id
+    @user = user
   end
 
   def save!
@@ -40,7 +42,8 @@ class Article
   end
 
   def attribute_names
-    instance_variables.map(&:name).map { |v| v.delete_prefix "@" }
+    # TODO: Fix TemplateTest#test_collections relying on user not being an instance variable.
+    instance_variables.map(&:name).map { |v| v.delete_prefix "@" } - ["user"]
   end
 
   def as_json(options = nil)
