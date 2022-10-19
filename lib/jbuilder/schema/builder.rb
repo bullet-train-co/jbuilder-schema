@@ -27,20 +27,18 @@ module JbuilderSchema
       when :json
         _json_schema
       else
-        _schema
+        template.schema!
       end
     end
 
     private
 
-    def _schema
-      template.schema!
-    end
-
     def _stringified_schema
-      _schema.deep_stringify_keys
-        .deep_transform_values { |v| v.is_a?(Symbol) ? v.to_s : v }
-        .deep_transform_values { |v| v.is_a?(Regexp) ? v.source : v }
+      if schema = template.schema!
+        schema.deep_stringify_keys
+          .deep_transform_values { |v| v.is_a?(Symbol) ? v.to_s : v }
+          .deep_transform_values { |v| v.is_a?(Regexp) ? v.source : v }
+      end
     end
 
     def _yaml_schema
