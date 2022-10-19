@@ -24,7 +24,7 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
       properties: {
         id: {type: :integer},
         title: {type: :string},
-        body: {type: :string},
+        body: {type: :string, pattern: /\w+/},
         created_at: {type: :string, format: "date-time"},
         updated_at: {type: :string, format: "date-time"}
       }
@@ -57,6 +57,7 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
           type: string
         body:
           type: string
+          pattern: \"\\\\w+\"
         created_at:
           type: string
           format: date-time
@@ -86,7 +87,7 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
       properties: {
         id: {type: "integer"},
         title: {type: "string"},
-        body: {type: "string"},
+        body: {type: "string", pattern: "\\w+"},
         created_at: {type: "string", format: "date-time"},
         updated_at: {type: "string", format: "date-time"}
       }
