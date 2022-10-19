@@ -6,8 +6,6 @@ require "jbuilder/schema/renderer"
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    attr_reader :path, :template, :model, :locals, :format, :paths
-
     def initialize(path, model:, format: nil, paths: ["app/views"], locals: {}, **options)
       @path = path
       @model = model
@@ -19,17 +17,17 @@ module JbuilderSchema
     end
 
     def schema!
-      template&.schema!
+      @template&.schema!
     end
 
     private
 
     def _find_template
-      *prefixes, controller, action = path.split("/")
+      *prefixes, controller, action = @path.split("/")
       prefix = prefixes.join("/")
       partial = true if action.delete_prefix! "_"
 
-      paths.each do |path|
+      @paths.each do |path|
         found = Resolver.new("#{path}/#{prefix}").find(action, controller, partial)
         return found if found
       end
