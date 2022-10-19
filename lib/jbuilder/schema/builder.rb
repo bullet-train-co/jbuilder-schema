@@ -19,35 +19,10 @@ module JbuilderSchema
     end
 
     def schema!
-      return {} unless template
-
-      case format
-      when :yaml
-        _yaml_schema
-      when :json
-        _json_schema
-      else
-        template.schema!
-      end
+      template&.schema!
     end
 
     private
-
-    def _stringified_schema
-      if schema = template.schema!
-        schema.deep_stringify_keys
-          .deep_transform_values { |v| v.is_a?(Symbol) ? v.to_s : v }
-          .deep_transform_values { |v| v.is_a?(Regexp) ? v.source : v }
-      end
-    end
-
-    def _yaml_schema
-      YAML.dump(_stringified_schema).html_safe
-    end
-
-    def _json_schema
-      JSON.dump(_stringified_schema).html_safe
-    end
 
     def _find_template
       prefix, controller, action, partial = _resolve_path
