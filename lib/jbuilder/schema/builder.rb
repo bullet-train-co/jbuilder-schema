@@ -60,14 +60,10 @@ module JbuilderSchema
     end
 
     def _resolve_path
-      action = path.split("/").last
-      controller = path.split("/")[-2]
-      prefix = path.delete_suffix("/#{controller}/#{action}")
-      partial = action[0] == "_"
+      *prefixes, controller, action = path.split("/")
+      partial = true if action.delete_prefix! "_"
 
-      action.delete_prefix!("_") if action[0] == "_"
-
-      [prefix, controller, action, partial]
+      [prefixes.join("/"), controller, action, partial]
     end
 
     def _render_template(**options)
