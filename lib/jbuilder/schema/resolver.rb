@@ -7,7 +7,7 @@ module JbuilderSchema
   # It basically inherits from ActionView::FileSystemResolver as it does all the job for us.
   # We're just building our own template in the end of the search.
   class Resolver < ::ActionView::FileSystemResolver
-    def find_all(name, prefix = nil, partial = false)
+    def find(name, prefix = nil, partial = false)
       path = ActionView::TemplatePath.build(name, prefix, partial)
       template_source_from_path path unless path.name.include?(".")
     end

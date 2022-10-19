@@ -27,7 +27,7 @@ module JbuilderSchema
     def _find_template
       prefix, controller, action, partial = _resolve_path
       paths.each do |path|
-        found = Resolver.new("#{path}/#{prefix}").find_all(action, controller, partial)
+        found = Resolver.new("#{path}/#{prefix}").find(action, controller, partial)
         return found if found
       end
     end
