@@ -6,13 +6,12 @@ require "jbuilder/schema/renderer"
 module JbuilderSchema
   # Class that builds schema object from path
   class Builder
-    def initialize(path, model:, paths: ["app/views"], locals: {}, **options)
+    def initialize(path, model:, paths: ["app/views"], **options)
       @path = path
       @model = model
-      @locals = locals
       @paths = paths
 
-      @template = Renderer.new(locals: locals, **options).render(_find_template)
+      @template = Renderer.new(**options).render(_find_template)
     end
 
     def schema!
