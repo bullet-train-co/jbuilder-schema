@@ -25,18 +25,14 @@ module JbuilderSchema
     private
 
     def _find_template
-      prefix, controller, action, partial = _resolve_path
+      *prefixes, controller, action = path.split("/")
+      prefix = prefixes.join("/")
+      partial = true if action.delete_prefix! "_"
+
       paths.each do |path|
         found = Resolver.new("#{path}/#{prefix}").find(action, controller, partial)
         return found if found
       end
-    end
-
-    def _resolve_path
-      *prefixes, controller, action = path.split("/")
-      partial = true if action.delete_prefix! "_"
-
-      [prefixes.join("/"), controller, action, partial]
     end
   end
 end
