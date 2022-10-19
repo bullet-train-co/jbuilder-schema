@@ -13,7 +13,6 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
       title: "Article",
       description: "Article in the blog",
       paths: ["test/fixtures"],
-      model: Article,
       locals: { article: article, current_user: user }
 
     assert_equal({
@@ -40,7 +39,6 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
       description: "Article in the blog",
       format: :yaml,
       paths: ["test/fixtures"],
-      model: Article,
       locals: { article: article, current_user: user }
 
     assert_equal <<~YAML, schema
@@ -76,7 +74,6 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
       description: "Article in the blog",
       format: :json,
       paths: ["test/fixtures"],
-      model: Article,
       locals: { article: article, current_user: user }
 
     assert_equal({

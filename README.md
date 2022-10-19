@@ -33,7 +33,6 @@ Then you can use `jbuilder_schema` helper:
                     description: 'Article in the blog',
                     format: :yaml,
                     paths: view_paths.map(&:path),
-                    model: Article,
                     locals: {
                       article: @article,
                       current_user: @user
@@ -154,7 +153,7 @@ The result would be:
       type: array
       items:
         $ref: #/components/schemas/article
-    
+
 The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
 
 ### Titles & Descriptions
@@ -200,12 +199,11 @@ It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` hel
       config.swagger_docs = {
 
         ...
-      
+
         components: {
           schemas: {
             article: jbuilder_schema('api/v1/articles/_article',
                                      format: :yaml,
-                                     model: Article,
                                      title: 'Article',
                                      description: 'Article in the blog',
                                      locals: {
