@@ -15,7 +15,7 @@ module JbuilderSchema
       @format = format
       @paths = paths
 
-      @template = _render_template(locals: locals, **options)
+      @template = Renderer.new(locals: locals, **options).render(_find_template)
     end
 
     def schema!
@@ -64,10 +64,6 @@ module JbuilderSchema
       partial = true if action.delete_prefix! "_"
 
       [prefixes.join("/"), controller, action, partial]
-    end
-
-    def _render_template(**options)
-      Renderer.new(**options).render(_find_template)
     end
   end
 end
