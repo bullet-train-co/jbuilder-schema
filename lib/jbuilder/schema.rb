@@ -2,12 +2,14 @@
 
 require "jbuilder/schema/version"
 require "jbuilder/schema/configuration"
-require "jbuilder/schema/builder"
+require "jbuilder/schema/resolver"
+require "jbuilder/schema/renderer"
 
 # Main gem module with configuration and helper methods
 module JbuilderSchema
-  def jbuilder_schema(path, format: nil, **options)
-    schema = Builder.new(path, **options).schema!
+  def jbuilder_schema(path, format: nil, paths: ["app/views"], **options)
+    source = Resolver.find_template_source(paths, path)
+    schema = Renderer.new(**options).render(source)&.schema!
 
     if schema && format
       Serializer.serialize(schema, format).html_safe
