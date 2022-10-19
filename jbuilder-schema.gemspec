@@ -33,7 +33,6 @@ Gem::Specification.new do |spec|
 
   # Uncomment to register a new dependency of your gem
   spec.add_dependency "jbuilder"
-  spec.add_dependency "safe_parser"
 
   spec.add_dependency "rails", ">= 5.0.0"
 
