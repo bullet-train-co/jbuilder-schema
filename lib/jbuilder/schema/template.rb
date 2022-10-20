@@ -94,13 +94,11 @@ module JbuilderSchema
       _set_value key, result
     end
 
-    def extract!(object, *attributes, **schema_options)
-      schema_options = schema_options[:schema] if schema_options.key?(:schema)
-
+    def extract!(object, *attributes, schema: {})
       if ::Hash === object
-        _extract_hash_values(object, attributes, **schema_options)
+        _extract_hash_values(object, attributes, **schema)
       else
-        _extract_method_values(object, attributes, **schema_options)
+        _extract_method_values(object, attributes, schema: schema)
       end
     end
 
@@ -112,7 +110,7 @@ module JbuilderSchema
         @collection = true
         _set_ref(options[:partial].split("/").last)
       else
-        array = _make_array(collection, *args, **schema_options, &block)
+        array = _make_array(collection, *args, schema: schema_options, &block)
 
         if @inline_array
           @attributes = {}
@@ -248,13 +246,13 @@ module JbuilderSchema
       end
     end
 
-    def _make_array(collection, *args, **schema_options, &block)
+    def _make_array(collection, *args, schema: {}, &block)
       if collection.nil?
         []
       elsif block
         _map_collection(collection, &block)
       elsif args.any?
-        _map_collection(collection) { |element| extract! element, *args, **schema_options }
+        _map_collection(collection) { |element| extract! element, *args, schema: schema }
       else
         _format_keys(collection.to_a)
       end
@@ -278,17 +276,17 @@ module JbuilderSchema
       @key_formatter ? @key_formatter.format(key).to_sym : key.to_sym
     end
 
-    def _extract_hash_values(object, attributes, **schema_options)
+    def _extract_hash_values(object, attributes, schema:)
       attributes.each do |key|
-        result = _schema(key, _format_keys(object.fetch(key)), **schema_options[key] || {})
+        result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
         result = _set_description(key, result) if models.any?
         _set_value key, result
       end
     end
 
-    def _extract_method_values(object, attributes, **schema_options)
+    def _extract_method_values(object, attributes, schema:)
       attributes.each do |key|
-        result = _schema(key, _format_keys(object.public_send(key)), **schema_options[key] || {})
+        result = _schema(key, _format_keys(object.public_send(key)), **schema[key] || {})
         result = _set_description(key, result) if models.any?
         _set_value key, result
       end
