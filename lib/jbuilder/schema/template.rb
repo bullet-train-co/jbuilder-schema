@@ -216,7 +216,11 @@ module JbuilderSchema
 
     def _schema(key, value, **options)
       options.merge!(_guess_type(value)) unless options[:type]
-      options.merge!(_set_enum(key.to_s)) if models.last&.defined_enums&.keys&.include?(key.to_s)
+
+      if models.last&.defined_enums&.keys&.include?(key.to_s)
+        options[:enum] = models.last&.defined_enums[key.to_s].keys
+      end
+
       options
     end
 
@@ -247,11 +251,6 @@ module JbuilderSchema
       else
         :string
       end
-    end
-
-    def _set_enum(key)
-      enums = models.last&.defined_enums[key].keys
-      {enum: enums}
     end
 
     def _make_array(collection, *args, **schema_options, &block)
