@@ -9,14 +9,14 @@ module JbuilderSchema
   class Template < ::JbuilderTemplate
     attr_reader :attributes, :type, :models, :titles, :descriptions
 
-    def initialize(*args, **options)
+    def initialize(*args, model: nil, title: nil, description: nil)
       @type = :object
       @inline_array = false
       @collection = false
 
-      @models = [options.delete(:model)]
-      @titles = [options.delete(:title)]
-      @descriptions = [options.delete(:description)]
+      @models = [model]
+      @titles = [title]
+      @descriptions = [description]
 
       super(nil, *args)
 
