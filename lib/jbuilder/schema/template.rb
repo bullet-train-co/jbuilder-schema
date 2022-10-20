@@ -230,7 +230,7 @@ module JbuilderSchema
         end
       end
 
-      if models.last&.defined_enums&.keys&.include?(key.to_s)
+      if (model = models.last) && model.respond_to?(:defined_enums) && model.defined_enums&.keys&.include?(key.to_s)
         options[:enum] = models.last&.defined_enums[key.to_s].keys
       end
 
