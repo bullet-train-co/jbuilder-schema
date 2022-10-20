@@ -96,7 +96,7 @@ module JbuilderSchema
 
     def extract!(object, *attributes, schema: {})
       if ::Hash === object
-        _extract_hash_values(object, attributes, **schema)
+        _extract_hash_values(object, attributes, schema: schema)
       else
         _extract_method_values(object, attributes, schema: schema)
       end
