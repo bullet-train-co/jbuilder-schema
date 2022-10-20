@@ -198,22 +198,20 @@ module JbuilderSchema
     end
 
     def _set_ref(component)
+      component_path = "#/#{JbuilderSchema.configuration.components_path}/#{component}"
+
       if @inline_array
         if @collection
           _set_value(:type, :array)
-          _set_value(:items, {:$ref => _component_path(component)})
+          _set_value(:items, {:$ref => component_path})
         else
           _set_value(:type, :object)
-          _set_value(:$ref, _component_path(component))
+          _set_value(:$ref, component_path)
         end
       else
         @type = :array
-        _set_value(:items, {:$ref => _component_path(component)})
+        _set_value(:items, {:$ref => component_path})
       end
-    end
-
-    def _component_path(component)
-      "#/#{JbuilderSchema.configuration.components_path}/#{component}"
     end
 
     def _schema(key, value, **options)
