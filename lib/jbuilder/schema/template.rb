@@ -220,6 +220,11 @@ module JbuilderSchema
       unless options[:type]
         options.merge!(_guess_type(value))
 
+        if value.is_a?(Array) && (types = value.map { _primitive_type _1 }.uniq).any?
+          options[:minContains] = 0
+          options[:contains] = {type: types.many? ? types : types.first}
+        end
+
         if format = FORMATS[value.class]
           options[:format] = format
         end
@@ -237,11 +242,7 @@ module JbuilderSchema
     end
 
     def _guess_array_types(array)
-      if (types = array.map { _primitive_type _1 }.uniq).any?
-        {type: :array, minContains: 0, contains: {type: types.many? ? types : types.first}}
-      else
-        {type: :array}
-      end
+      {type: :array}
     end
 
     def _primitive_type(type)
