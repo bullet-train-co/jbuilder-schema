@@ -231,14 +231,7 @@ module JbuilderSchema
     end
 
     def _guess_type(value)
-      case value
-      when DateTime, ActiveSupport::TimeWithZone then {type: :string}
-      when Time then {type: :string}
-      when Date then {type: :string}
-      when Array then _guess_array_types(value)
-      else
-        {type: _primitive_type(value)}
-      end
+      value.is_a?(Array) ? _guess_array_types(value) : {type: _primitive_type(value)}
     end
 
     def _guess_array_types(array)
