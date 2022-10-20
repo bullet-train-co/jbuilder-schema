@@ -233,19 +233,19 @@ module JbuilderSchema
       when :array
         _guess_array_types(value)
       else
-        {type: _type(value)}
+        {type: _primitive_type(value)}
       end
     end
 
     def _guess_array_types(array)
-      if (types = array.map { _type _1 }.uniq).any?
+      if (types = array.map { _primitive_type _1 }.uniq).any?
         {type: :array, minContains: 0, contains: {type: types.many? ? types : types.first}}
       else
         {type: :array}
       end
     end
 
-    def _type(type)
+    def _primitive_type(type)
       case type
       when Float, BigDecimal then :number
       when true, false       then :boolean
