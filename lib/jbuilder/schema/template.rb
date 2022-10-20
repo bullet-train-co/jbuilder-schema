@@ -7,16 +7,17 @@ require "active_support/core_ext/hash/deep_transform_values"
 module JbuilderSchema
   # Template parser class
   class Template < ::JbuilderTemplate
-    attr_reader :attributes, :type, :models, :titles, :descriptions
+    attr_reader :attributes, :type
+
+    attr_reader :model_scope
+    ModelScope = Struct.new(:model, :title, :description)
 
     def initialize(*args, model: nil, title: nil, description: nil)
       @type = :object
       @inline_array = false
       @collection = false
 
-      @models = [model]
-      @titles = [title]
-      @descriptions = [description]
+      @model_scope = ModelScope.new(model, title, description)
 
       super(nil, *args)
 
@@ -39,14 +40,9 @@ module JbuilderSchema
           # json.comments { ... }
           # { "comments": ... }
           @inline_array = true
-          if schema_options.key?(:object)
-            models << schema_options[:object].class
-            titles << schema_options[:object_title]
-            descriptions << schema_options[:object_description]
-          end
 
-          _merge_block(key) { yield self }.tap do
-            [models, titles, descriptions].each(&:pop) if schema_options.key?(:object)
+          _with_model_scope(**schema_options) do
+            _merge_block(key) { yield self }
           end
         end
       elsif args.empty?
@@ -73,24 +69,16 @@ module JbuilderSchema
         @collection = true
 
         _scope { array! value, *args }
-      elsif schema_options.key?(:object)
+      else
         # EXTRACT!:
         # json.author @article.creator, :name, :email_address
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-
-        models << schema_options.delete(:object).class
-        titles << schema_options.delete(:object_title) || nil
-        descriptions << schema_options.delete(:object_description) || nil
-        r = _merge_block(key) { extract! value, *args, **schema_options }
-        models.pop
-        titles.pop
-        descriptions.pop
-        r
-      else
-        _merge_block(key) { extract! value, *args, **schema_options }
+        _with_model_scope(**schema_options) do
+          _merge_block(key) { extract! value, *args, **schema_options }
+        end
       end
 
-      result = _set_description key, result if models.any?
+      result = _set_description key, result if model_scope.model
       _set_value key, result
     end
 
@@ -147,7 +135,7 @@ module JbuilderSchema
       if hash_or_array.is_a?(Hash)
         hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
           result = _schema(key, value)
-          result = _set_description(key, result) if models.any?
+          result = _set_description(key, result) if model_scope.model
           a[key] = result
         end
       end
@@ -170,9 +158,16 @@ module JbuilderSchema
 
     private
 
+    def _with_model_scope(object: nil, object_title: nil, object_description: nil, **)
+      old_model_scope, @model_scope = @model_scope, ModelScope.new(object.class, object_title, object_description) if object
+      yield
+    ensure
+      @model_scope = old_model_scope if object
+    end
+
     def _object(**attributes)
-      title = titles.last || ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.title_name}")
-      description = descriptions.last || ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.description_name}")
+      title = model_scope.title || ::I18n.t("#{model_scope.model&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.title_name}")
+      description = model_scope.description || ::I18n.t("#{model_scope.model&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.description_name}")
       {
         type: :object,
         title: title,
@@ -189,7 +184,7 @@ module JbuilderSchema
 
     def _set_description(key, value)
       unless value.key?(:description)
-        description = ::I18n.t("#{models.last&.name&.underscore&.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
+        description = ::I18n.t("#{model_scope.model&.name&.underscore&.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
         value = {description: description}.merge! value
       end
       value
@@ -228,8 +223,8 @@ module JbuilderSchema
         end
       end
 
-      if (model = models.last) && model.respond_to?(:defined_enums) && model.defined_enums&.keys&.include?(key.to_s)
-        options[:enum] = models.last&.defined_enums[key.to_s].keys
+      if (model = model_scope.model) && model.respond_to?(:defined_enums) && model.defined_enums&.keys&.include?(key.to_s)
+        options[:enum] = model&.defined_enums[key.to_s].keys
       end
 
       options
@@ -263,7 +258,7 @@ module JbuilderSchema
     end
 
     def _required!(keys)
-      presence_validated_attributes = models.last.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
+      presence_validated_attributes = model_scope.model.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
       keys & [_key(:id), *presence_validated_attributes.map { _key _1 }]
     end
 
@@ -279,7 +274,7 @@ module JbuilderSchema
     def _extract_hash_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
-        result = _set_description(key, result) if models.any?
+        result = _set_description(key, result) if model_scope.model
         _set_value key, result
       end
     end
@@ -287,7 +282,7 @@ module JbuilderSchema
     def _extract_method_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.public_send(key)), **schema[key] || {})
-        result = _set_description(key, result) if models.any?
+        result = _set_description(key, result) if model_scope.model
         _set_value key, result
       end
     end
