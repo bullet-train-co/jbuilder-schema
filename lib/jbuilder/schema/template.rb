@@ -283,8 +283,7 @@ module JbuilderSchema
     end
 
     def _is_collection_array?(object)
-      # TODO: Find better way to determine if all array elements are models
-      object.is_a?(Array) && object.map { |a| _is_active_model?(a) }.uniq == [true]
+      object.is_a?(Array) && object.all? { _is_active_model? _1 }
     end
 
     def _required!(keys)
