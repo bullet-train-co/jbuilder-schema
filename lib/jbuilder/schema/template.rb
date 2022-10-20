@@ -214,8 +214,14 @@ module JbuilderSchema
       end
     end
 
+    FORMATS = {DateTime => "date-time", ActiveSupport::TimeWithZone => "date-time", Date => "date", Time => "time"}
+
     def _schema(key, value, **options)
       options.merge!(_guess_type(value)) unless options[:type]
+
+      if format = FORMATS[value.class]
+        options[:format] = format
+      end
 
       if models.last&.defined_enums&.keys&.include?(key.to_s)
         options[:enum] = models.last&.defined_enums[key.to_s].keys
@@ -226,9 +232,9 @@ module JbuilderSchema
 
     def _guess_type(value)
       case value
-      when DateTime, ActiveSupport::TimeWithZone then {type: :string, format: "date-time"}
-      when Time then {type: :string, format: "time"}
-      when Date then {type: :string, format: "date"}
+      when DateTime, ActiveSupport::TimeWithZone then {type: :string}
+      when Time then {type: :string}
+      when Date then {type: :string}
       when Array then _guess_array_types(value)
       else
         {type: _primitive_type(value)}
