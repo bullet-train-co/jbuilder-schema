@@ -4,8 +4,7 @@ require "test_helper"
 require "jbuilder/schema/template"
 
 class TemplateTest < ActiveSupport::TestCase
-  def setup
-    super
+  setup do
     I18n.stubs(:t).returns("test")
   end
 

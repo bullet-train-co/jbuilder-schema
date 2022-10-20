@@ -8,9 +8,26 @@ module JbuilderSchema
   # Template parser class
   class Template < ::JbuilderTemplate
     attr_reader :attributes, :type
-
     attr_reader :model_scope
-    ModelScope = Struct.new(:model, :title, :description)
+
+    ModelScope = Struct.new(:model, :title, :description) do
+      def initialize(*)
+        super
+        @scope = model&.name&.underscore&.pluralize
+      end
+
+      def i18n_title
+        title || ::I18n.t(JbuilderSchema.configuration.title_name, scope: @scope)
+      end
+
+      def i18n_description
+        description || ::I18n.t(JbuilderSchema.configuration.description_name, scope: @scope)
+      end
+
+      def translate_field(key)
+        ::I18n.t("fields.#{key}.#{JbuilderSchema.configuration.description_name}", scope: @scope)
+      end
+    end
 
     def initialize(*args, model: nil, title: nil, description: nil)
       @type = :object
@@ -166,13 +183,11 @@ module JbuilderSchema
     end
 
     def _object(**attributes)
-      title = model_scope.title || ::I18n.t("#{model_scope.model&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.title_name}")
-      description = model_scope.description || ::I18n.t("#{model_scope.model&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.description_name}")
       {
         type: :object,
-        title: title,
-        description: description,
-        required: _required!(attributes.keys),
+        title: model_scope.i18n_title,
+        description: model_scope.i18n_description,
+        required: _required!(**attributes),
         properties: attributes
       }
     end
@@ -184,7 +199,7 @@ module JbuilderSchema
 
     def _set_description(key, value)
       unless value.key?(:description)
-        description = ::I18n.t("#{model_scope.model&.name&.underscore&.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
+        description = model_scope.translate_field(key)
         value = {description: description}.merge! value
       end
       value
