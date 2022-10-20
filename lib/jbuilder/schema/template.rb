@@ -238,15 +238,11 @@ module JbuilderSchema
     end
 
     def _guess_array_types(array)
-      hash = {type: :array}
-      types = array.map { _type _1 }.uniq
-
-      unless types.empty?
-        hash[:contains] = {type: types.size > 1 ? types : types.first}
-        hash[:minContains] = 0
+      if (types = array.map { _type _1 }.uniq).any?
+        {type: :array, minContains: 0, contains: {type: types.many? ? types : types.first}}
+      else
+        {type: :array}
       end
-
-      hash
     end
 
     def _type(type)
