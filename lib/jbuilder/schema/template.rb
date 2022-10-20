@@ -188,7 +188,7 @@ module JbuilderSchema
     end
 
     def _args_and_schema_options(*args)
-      schema_options = args.extract! { |a| a.is_a?(::Hash) && a.key?(:schema) }.first.try(:[], :schema) || {}
+      schema_options = args.extract! { |a| a.is_a?(::Hash) && a.key?(:schema) }.first&.dig(:schema) || {}
       [args, schema_options]
     end
 
