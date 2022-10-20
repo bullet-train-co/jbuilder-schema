@@ -218,9 +218,9 @@ module JbuilderSchema
 
     def _schema(key, value, **options)
       unless options[:type]
-        options.merge!(_guess_type(value))
+        options[:type] = _primitive_type value
 
-        if value.is_a?(Array) && (types = value.map { _primitive_type _1 }.uniq).any?
+        if options[:type] == :array && (types = value.map { _primitive_type _1 }.uniq).any?
           options[:minContains] = 0
           options[:contains] = {type: types.many? ? types : types.first}
         end
@@ -237,16 +237,9 @@ module JbuilderSchema
       options
     end
 
-    def _guess_type(value)
-      value.is_a?(Array) ? _guess_array_types(value) : {type: _primitive_type(value)}
-    end
-
-    def _guess_array_types(array)
-      {type: :array}
-    end
-
     def _primitive_type(type)
       case type
+      when Array             then :array
       when Float, BigDecimal then :number
       when true, false       then :boolean
       when Integer           then :integer
