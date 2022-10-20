@@ -233,13 +233,13 @@ module JbuilderSchema
       when :array
         _guess_array_types(value)
       else
-        {type: _type(type)}
+        {type: _type(value)}
       end
     end
 
     def _guess_array_types(array)
       hash = {type: :array}
-      types = array.map { |a| _type(a.class.name&.downcase&.to_sym) }.uniq
+      types = array.map { _type _1 }.uniq
 
       unless types.empty?
         hash[:contains] = {type: types.size > 1 ? types : types.first}
@@ -251,12 +251,9 @@ module JbuilderSchema
 
     def _type(type)
       case type
-      when :float, :bigdecimal
-        :number
-      when :trueclass, :falseclass
-        :boolean
-      when :integer
-        :integer
+      when Float, BigDecimal then :number
+      when true, false       then :boolean
+      when Integer           then :integer
       else
         :string
       end
