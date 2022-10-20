@@ -41,16 +41,13 @@ module JbuilderSchema
           @inline_array = true
           if schema_options.key?(:object)
             models << schema_options[:object].class
-            titles << schema_options[:object_title] || nil
-            descriptions << schema_options[:object_description] || nil
+            titles << schema_options[:object_title]
+            descriptions << schema_options[:object_description]
           end
-          r = _merge_block(key) { yield self }
-          if schema_options.key?(:object)
-            models.pop
-            titles.pop
-            descriptions.pop
+
+          _merge_block(key) { yield self }.tap do
+            [models, titles, descriptions].each(&:pop) if schema_options.key?(:object)
           end
-          r
         end
       elsif args.empty?
         if ::Jbuilder === value
