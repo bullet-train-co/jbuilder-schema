@@ -217,10 +217,12 @@ module JbuilderSchema
     FORMATS = {DateTime => "date-time", ActiveSupport::TimeWithZone => "date-time", Date => "date", Time => "time"}
 
     def _schema(key, value, **options)
-      options.merge!(_guess_type(value)) unless options[:type]
+      unless options[:type]
+        options.merge!(_guess_type(value))
 
-      if format = FORMATS[value.class]
-        options[:format] = format
+        if format = FORMATS[value.class]
+          options[:format] = format
+        end
       end
 
       if models.last&.defined_enums&.keys&.include?(key.to_s)
