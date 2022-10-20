@@ -336,14 +336,13 @@ module JbuilderSchema
 end
 
 class Jbuilder
-  # Monkey-patch for Jbuilder::KeyFormatter to ignore schema keys
-  class KeyFormatter
-    alias_method :original_format, :format
+  module SkipFormatting
+    SCHEMA_KEYS = %i[type items properties]
 
     def format(key)
-      return key if %i[type items properties].include?(key)
-
-      original_format(key)
+      SCHEMA_KEYS.include?(key) ? key : super
     end
   end
+
+  KeyFormatter.prepend SkipFormatting
 end
