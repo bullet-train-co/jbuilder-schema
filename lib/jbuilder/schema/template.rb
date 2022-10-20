@@ -160,7 +160,7 @@ module JbuilderSchema
     end
 
     def cache!(key = nil, **options)
-      yield
+      yield # TODO: Our schema generation breaks Jbuilder's fragment caching.
     end
 
     def method_missing(*args, &block)
