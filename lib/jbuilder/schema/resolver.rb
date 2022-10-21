@@ -12,7 +12,7 @@ module JbuilderSchema
       prefix = prefixes.join("/")
       partial = true if action.delete_prefix! "_"
 
-      paths.each do |path|
+      paths.find do |path|
         found = new("#{path}/#{prefix}").find(action, controller, partial)
         return found if found
       end
