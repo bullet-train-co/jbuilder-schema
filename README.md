@@ -7,12 +7,12 @@ Generate JSON Schema compatible with OpenAPI 3 specs from Jbuilder files
 
 ## Installation
 
-In Gemfile put `gem "jbuilder-schema"` **before** `gem "jbuilder"`:
+In your Gemfile, put `gem "jbuilder-schema"` after Jbuilder:
 
-    gem "jbuilder-schema", require: "jbuilder/schema"
     gem "jbuilder"
+    gem "jbuilder-schema"
 
-And then execute:
+And run:
 
     $ bundle
 
