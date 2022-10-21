@@ -3,7 +3,7 @@
 require "test_helper"
 require "jbuilder/schema/template"
 
-class TemplateTest < ActiveSupport::TestCase
+class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   setup do
     I18n.stubs(:t).returns("test")
   end
