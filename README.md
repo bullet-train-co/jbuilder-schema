@@ -22,24 +22,22 @@ Or install it yourself as:
 
 ## Usage
 
-Wherever you want to generate schemas, you should extend `JbuilderSchema`:
+Wherever you want to generate schemas, call `Jbuilder::Schema.render`:
 
-    extend JbuilderSchema
+```ruby
+Jbuilder::Schema.render('api/v1/articles/_article',
+  title: 'Article',
+  description: 'Article in the blog',
+  format: :yaml,
+  paths: view_paths.map(&:path),
+  model: Article,
+  locals: {
+    article: @article,
+    current_user: @user
+  })
+```
 
-Then you can use `jbuilder_schema` helper:
-
-    jbuilder_schema('api/v1/articles/_article',
-                    title: 'Article',
-                    description: 'Article in the blog',
-                    format: :yaml,
-                    paths: view_paths.map(&:path),
-                    model: Article,
-                    locals: {
-                      article: @article,
-                      current_user: @user
-                    })
-
-`jbuilder_schema` helper takes `path` to Jbuilder template as a first argument and several optional arguments:
+`Jbuilder::Schema.render` takes the `path` to Jbuilder template and several optional arguments:
 
 - `title` and `description`: Title and description of schema, if not passed then they will be grabbed from locale files (see *[Titles & Descriptions](#titles--descriptions)*);
 - `format`: Desired output format, can be either `:yaml` or `:json`. If no `format` option is passed, the output will be the Ruby Hash object;
@@ -47,87 +45,99 @@ Then you can use `jbuilder_schema` helper:
 - `model`: Model described in template, this is needed to populate `required` field in schema;
 - `locals`: Here you should pass all the locals which are met in the jbuilder template. Those could be any objects as long as they respond to methods called on them in template.
 
-Notice that partial templates should be prepended with an underscore just like in the name of the file (i.e. `_article` but not `article` an when using Jbuilder).
+Notice that partial templates should be prepended with an underscore just like in the name of the file (i.e. `_article` but not `article` when using Jbuilder).
 
 ### Output
 
 JbuilderSchema automatically sets `description`, `type`, and `required` options in JSON-Schema.
 
-For example, if we have `_articles.json.jbilder` file:
+For example, if we have `_articles.json.jbuilder` file:
 
-    json.extract! article, :id, :title, :body, :created_at
+```ruby
+json.extract! article, :id, :title, :body, :created_at
+```
 
-The output for it will be:
+Which outputs:
 
-    type: object
-    title: Article
-    description: Article in the blog
-    required:
-      - id
-      - title
-      - body
-    properties:
-      id:
-        description: ID of an article
-        type: integer
-      title:
-        description: Title of an article
-        type: string
-      body:
-        description: Contents of an article
-        type: string
-      created_at:
-        description: Timestamp when article was created
-        type: string
-        format: date-time
+```yaml
+type: object
+title: Article
+description: Article in the blog
+required:
+  - id
+  - title
+  - body
+properties:
+  id:
+    description: ID of an article
+    type: integer
+  title:
+    description: Title of an article
+    type: string
+  body:
+    description: Contents of an article
+    type: string
+  created_at:
+    description: Timestamp when article was created
+    type: string
+    format: date-time
+```
 
 ### Customization
 
 #### Simple
 
-Sometimes you would want to set you own data in generated JSON-Schema. All you need to do is just pass hash with it under `schema` keyword in your jbuilder template:
+Sometimes you would want to set you own data in generated JSON-Schema. All you need to do is just pass hash with it under `schema` keyword in your Jbuilder template:
 
-    json.id article.id, schema: { type: :number, description: "Custom ID description" }
-    json.title article.title, schema: { minLength: 5, maxLength: 20 }
-    json.body article.body, schema: { type: :text, maxLength: 500 }
-    json.created_at article.created_at.strftime('%d/%m/%Y'), schema: { format: :date, pattern: /^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$/ }
+```ruby
+json.id article.id, schema: { type: :number, description: "Custom ID description" }
+json.title article.title, schema: { minLength: 5, maxLength: 20 }
+json.body article.body, schema: { type: :text, maxLength: 500 }
+json.created_at article.created_at.strftime('%d/%m/%Y'), schema: { format: :date, pattern: /^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$/ }
+```
 
 This will produce the following:
 
-    ...
-      properties:
-        id:
-          description: Custom ID description
-          type: number
-        title:
-          description: Title of an article
-          type: string
-          minLength: 5
-          maxLength: 20
-        body:
-          description: Contents of an article
-          type: string
-          maxLength: 500
-        created_at:
-          description: Timestamp when article was created
-          type: string
-          format: date
-          pattern: "^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$"
+```yaml
+...
+  properties:
+    id:
+      description: Custom ID description
+      type: number
+    title:
+      description: Title of an article
+      type: string
+      minLength: 5
+      maxLength: 20
+    body:
+      description: Contents of an article
+      type: string
+      maxLength: 500
+    created_at:
+      description: Timestamp when article was created
+      type: string
+      format: date
+      pattern: "^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$"
+```
 
 #### Bulk
 
 You can customize output for multiple fields at once:
 
-    json.extract! user, :id, :name, :email, schema: {id: {type: :string}, email: {type: :email, pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/}}
+```ruby
+json.extract! user, :id, :name, :email, schema: {id: {type: :string}, email: {type: :email, pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/}}
+```
 
 ### Nested objects
 
-When you have nested objects in jbuilder template, you have to pass it to `schema: {object: <nested_object>}` when the block starts:
+When you have nested objects in your Jbuilder template, you have to pass it to `schema: {object: <nested_object>}` when the block starts:
 
-    json.extract! article
-    json.author schema: {object: article.user, object_title: "Author", object_description: "Authors are users who write articles"} do
-      json.extract! article.user
-    end
+```ruby
+json.extract! article
+json.author schema: {object: article.user, object_title: "Author", object_description: "Authors are users who write articles"} do
+  json.extract! article.user
+end
+```
 
 This will help JbuilderSchema to process those fields right.
 
@@ -137,23 +147,27 @@ If an object or an array of objects is generated in template, either in root or 
 
 For example, if we have:
 
-    json.user do
-      json.partial! 'api/v1/users/user', user: user
-    end
+```ruby
+json.user do
+  json.partial! 'api/v1/users/user', user: user
+end
 
-    json.articles do
-      json.array! user.articles, partial: "api/v1/articles/article", as: :article
-    end
+json.articles do
+  json.array! user.articles, partial: "api/v1/articles/article", as: :article
+end
+```
 
 The result would be:
 
-    user:
-      type: object
-      $ref: #/components/schemas/user
-    articles:
-      type: array
-      items:
-        $ref: #/components/schemas/article
+```yaml
+user:
+  type: object
+  $ref: #/components/schemas/user
+articles:
+  type: array
+  items:
+    $ref: #/components/schemas/article
+```
 
 The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
 
@@ -163,18 +177,22 @@ Custom titles and descriptions for objects can be specified when calling `jbuild
 
 Titles and descriptions for the models are supposed to be found in locale files under `<underscored_plural_model_name>.<title_name>` and `<underscored_plural_model_name>.<description_name>`, for example:
 
-    en:
-      articles:
-        title: Article
-        description: The main object on the blog
+```yaml
+en:
+  articles:
+    title: Article
+    description: The main object on the blog
+```
 
 Descriptions for the fields are supposed to be found in locale files under `<underscored_plural_model_name>.fields.<field_name>.<description_name>`, for example:
 
-    en:
-      articles:
-        fields:
-          title:
-            description: The title of an article
+```yaml
+en:
+  articles:
+    fields:
+      title:
+        description: The title of an article
+```
 
 `<title_name>` and `<description_name>` can be configured (see *[Configuration](#configuration)*), it defaults to `title` and `description`.
 
@@ -182,44 +200,37 @@ Descriptions for the fields are supposed to be found in locale files under `<und
 
 You can configure some variables that JbuilderSchema uses (for example, in `config/initializers/jbuilder_schema.rb`):
 
-    JbuilderSchema.configure do |config|
-        config.components_path = "components/schemas"   # could be "definitions/schemas"
-        config.title_name = "title"                     # could be "label"
-        config.description_name = "description"         # could be "heading"
-    end
+```ruby
+JbuilderSchema.configure do |config|
+  config.components_path = "components/schemas"   # could be "definitions/schemas"
+  config.title_name = "title"                     # could be "label"
+  config.description_name = "description"         # could be "heading"
+end
+```
 
 ### RSwag
 
 It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` helper in `swagger_helper.rb` like this:
 
-    RSpec.configure do |config|
-      extend JbuilderSchema
-
-      ...
-
-      config.swagger_docs = {
-
-        ...
-
-        components: {
-          schemas: {
-            article: jbuilder_schema('api/v1/articles/_article',
-                                     format: :yaml,
-                                     model: Article,
-                                     title: 'Article',
-                                     description: 'Article in the blog',
-                                     locals: {
-                                       article: FactoryBot.build(:article, id: 1),
-                                       current_user: FactoryBot.build(:user, admin: true)
-                                     })
-          }
-        }
-
-        ...
-
+```ruby
+RSpec.configure do |config|
+  config.swagger_docs = {
+    components: {
+      schemas: {
+        article: Jbuilder::Schema.render('api/v1/articles/_article',
+          format: :yaml,
+          model: Article,
+          title: 'Article',
+          description: 'Article in the blog',
+          locals: {
+            article: FactoryBot.build(:article, id: 1),
+            current_user: FactoryBot.build(:user, admin: true)
+          })
       }
-
-      ...
+    }
+  }
+end
+```
 
 ## Contributing
 
