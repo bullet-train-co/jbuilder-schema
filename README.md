@@ -154,7 +154,7 @@ The result would be:
       type: array
       items:
         $ref: #/components/schemas/article
-    
+
 The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
 
 ### Titles & Descriptions
@@ -200,7 +200,7 @@ It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` hel
       config.swagger_docs = {
 
         ...
-      
+
         components: {
           schemas: {
             article: jbuilder_schema('api/v1/articles/_article',

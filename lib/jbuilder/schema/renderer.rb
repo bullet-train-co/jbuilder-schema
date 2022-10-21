@@ -14,8 +14,8 @@ module JbuilderSchema
 
     attr_reader :locals, :options
 
-    def initialize(**options)
-      @locals = options.delete(:locals) || {}
+    def initialize(locals: {}, **options)
+      @locals = locals
       @options = options
       _define_locals!
     end
