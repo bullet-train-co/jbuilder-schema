@@ -137,7 +137,7 @@ class Jbuilder::Schema
       if args.one? && _is_active_model?(args.first)
         # TODO: Find where it is being used
         _render_active_model_partial args.first
-      elsif args.first.is_a?(Hash)
+      elsif args.first.is_a?(::Hash)
         _set_ref(args.first[:partial].split("/").last)
       else
         @collection = true if args[1].key?(:collection)
@@ -148,7 +148,7 @@ class Jbuilder::Schema
     def merge!(object)
       hash_or_array = ::Jbuilder === object ? object.attributes! : object
       hash_or_array = _format_keys(hash_or_array)
-      if hash_or_array.is_a?(Hash)
+      if hash_or_array.is_a?(::Hash)
         hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
           result = _schema(key, value)
           result = _set_description(key, result) if model_scope.model
@@ -266,7 +266,7 @@ class Jbuilder::Schema
     end
 
     def _is_collection_array?(object)
-      object.is_a?(Array) && object.all? { _is_active_model? _1 }
+      object.is_a?(::Array) && object.all? { _is_active_model? _1 }
     end
 
     def _required!(keys)
