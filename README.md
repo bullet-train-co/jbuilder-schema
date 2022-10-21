@@ -33,6 +33,7 @@ Then you can use `jbuilder_schema` helper:
                     description: 'Article in the blog',
                     format: :yaml,
                     paths: view_paths.map(&:path),
+                    model: Article,
                     locals: {
                       article: @article,
                       current_user: @user
@@ -204,6 +205,7 @@ It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` hel
           schemas: {
             article: jbuilder_schema('api/v1/articles/_article',
                                      format: :yaml,
+                                     model: Article,
                                      title: 'Article',
                                      description: 'Article in the blog',
                                      locals: {
