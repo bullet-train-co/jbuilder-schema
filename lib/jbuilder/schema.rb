@@ -10,12 +10,8 @@ module JbuilderSchema
   def jbuilder_schema(path, format: nil, paths: ["app/views"], **options)
     source = Resolver.find_template_source(paths, path)
     schema = Renderer.new(**options).render(source)&.schema! if source
-
-    if schema && format
-      Serializer.serialize(schema, format).html_safe
-    else
-      schema
-    end
+    schema = Serializer.serialize(schema, format).html_safe if schema && format
+    schema
   end
 
   module Serializer
