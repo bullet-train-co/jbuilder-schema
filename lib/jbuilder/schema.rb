@@ -1,12 +1,18 @@
 # frozen_string_literal: true
 
 require "jbuilder/schema/version"
-require "jbuilder/schema/configuration"
 require "jbuilder/schema/resolver"
 require "jbuilder/schema/renderer"
 
 class Jbuilder::Schema
+  singleton_class.attr_accessor :components_path, :title_name, :description_name
+  @components_path, @title_name, @description_name = "components/schemas", "title", "description"
+
   class << self
+    def configure
+      yield self
+    end
+
     def yaml(path, **options)
       normalize(load(path, **options)).to_yaml
     end
