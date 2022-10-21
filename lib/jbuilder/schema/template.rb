@@ -292,7 +292,7 @@ module JbuilderSchema
     end
 
     def _required!(**attrs)
-      if Object.const_defined?('ActiveRecord')
+      if defined?(ActiveRecord::Base)
         attrs.keys.select { |attribute|
           models.last&.validators.try(:grep, ::ActiveRecord::Validations::PresenceValidator)
                 .flat_map(&:attributes).unshift(_key(:id))
