@@ -26,8 +26,8 @@ end
 class Article < ActiveRecord::Base
   belongs_to :user
 
-  def as_json(options = nil)
-    super({only: %i[id title body]}.merge(options || {}))
+  def as_json(options = {})
+    super(only: %i[id title body])
   end
 end
 
