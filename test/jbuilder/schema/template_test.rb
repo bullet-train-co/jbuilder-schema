@@ -77,7 +77,7 @@ class TemplateTest < ActiveSupport::TestCase
 
   test "block with array" do
     result = JbuilderSchema::Template.new(model: Article) do |json|
-      json.articles { json.array! FactoryBot.create_list(:article, 3), :id, :title }
+      json.articles { json.array! Article.first(3), :id, :title }
     end
 
     assert_equal({articles: {description: "test", type: :array, items: {id: {description: "test", type: :integer}, title: {description: "test", type: :string}}}}, result.attributes)
@@ -120,7 +120,7 @@ class TemplateTest < ActiveSupport::TestCase
 
   test "block with partial" do
     result = JbuilderSchema::Template.new(model: User) do |json|
-      json.user { json.partial! "api/v1/users/user", user: FactoryBot.create(:user) }
+      json.user { json.partial! "api/v1/users/user", user: User.first }
     end
 
     assert_equal({user: {:description => "test", :type => :object, :$ref => "#/components/schemas/user"}}, result.attributes)
@@ -218,6 +218,6 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   def articles
-    FactoryBot.create_list(:article, 3)
+    Article.first(3)
   end
 end
