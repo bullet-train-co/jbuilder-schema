@@ -3,7 +3,6 @@
 require "jbuilder/jbuilder_template"
 require "active_support/inflections"
 require "active_support/core_ext/hash/deep_transform_values"
-require "safe_parser"
 
 module JbuilderSchema
   # Template parser class
