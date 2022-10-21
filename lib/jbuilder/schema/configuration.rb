@@ -7,10 +7,6 @@ class Jbuilder::Schema
       @configuration ||= Configuration.new
     end
 
-    def reset
-      @configuration = Configuration.new
-    end
-
     def configure
       yield(configuration)
     end
