@@ -7,21 +7,20 @@ require "jbuilder/schema/renderer"
 
 class Jbuilder::Schema
   class << self
-    def render(path, format: nil, paths: ["app/views"], **options)
+    def yaml(path, **options)
+      normalize(load(path, **options)).to_yaml
+    end
+
+    def json(path, **options)
+      normalize(load(path, **options)).to_json
+    end
+
+    def load(path, format: nil, paths: ["app/views"], **options)
       source = Resolver.find_template_source(paths, path)
-      schema = Renderer.new(**options).render(source)&.schema! if source
-      schema = serialize(schema, format).html_safe if schema && format
-      schema
+      Renderer.new(**options).render(source)&.schema! if source
     end
 
     private
-
-    def serialize(schema, format)
-      case format
-      when :yaml then normalize(schema).to_yaml
-      when :json then normalize(schema).to_json
-      end
-    end
 
     def normalize(schema)
       schema.deep_stringify_keys

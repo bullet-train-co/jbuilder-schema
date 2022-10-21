@@ -22,13 +22,12 @@ Or install it yourself as:
 
 ## Usage
 
-Wherever you want to generate schemas, call `Jbuilder::Schema.render`:
+Wherever you want to generate schemas, call `Jbuilder::Schema.yaml` or `Jbuilder::Schema.json`:
 
 ```ruby
-Jbuilder::Schema.render('api/v1/articles/_article',
+Jbuilder::Schema.yaml('api/v1/articles/_article',
   title: 'Article',
   description: 'Article in the blog',
-  format: :yaml,
   paths: view_paths.map(&:path),
   model: Article,
   locals: {
@@ -37,13 +36,12 @@ Jbuilder::Schema.render('api/v1/articles/_article',
   })
 ```
 
-`Jbuilder::Schema.render` takes the `path` to Jbuilder template and several optional arguments:
+`Jbuilder::Schema.yaml`/`json` takes the `path` to your Jbuilder template and several optional arguments:
 
 - `title` and `description`: Title and description of schema, if not passed then they will be grabbed from locale files (see *[Titles & Descriptions](#titles--descriptions)*);
-- `format`: Desired output format, can be either `:yaml` or `:json`. If no `format` option is passed, the output will be the Ruby Hash object;
 - `paths`: If you need to scope any other paths than `app/views`, pass them as an array here;
 - `model`: Model described in template, this is needed to populate `required` field in schema;
-- `locals`: Here you should pass all the locals which are met in the jbuilder template. Those could be any objects as long as they respond to methods called on them in template.
+- `locals`: pass the locals needed in the Jbuilder template. Those could be any objects as long as they respond to methods called on them in template.
 
 Notice that partial templates should be prepended with an underscore just like in the name of the file (i.e. `_article` but not `article` when using Jbuilder).
 
