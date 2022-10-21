@@ -1,4 +1,4 @@
-# JbuilderSchema
+# Jbuilder::Schema
 
 Generate JSON Schema compatible with OpenAPI 3 specs from Jbuilder files
 
@@ -47,7 +47,7 @@ Notice that partial templates should be prepended with an underscore just like i
 
 ### Output
 
-JbuilderSchema automatically sets `description`, `type`, and `required` options in JSON-Schema.
+Jbuilder::Schema automatically sets `description`, `type`, and `required` options in JSON-Schema.
 
 For example, if we have `_articles.json.jbuilder` file:
 
@@ -137,7 +137,7 @@ json.author schema: {object: article.user, object_title: "Author", object_descri
 end
 ```
 
-This will help JbuilderSchema to process those fields right.
+This will help Jbuilder::Schema to process those fields right.
 
 ### Collections
 
@@ -196,10 +196,10 @@ en:
 
 ### Configuration
 
-You can configure some variables that JbuilderSchema uses (for example, in `config/initializers/jbuilder_schema.rb`):
+You can configure some variables that Jbuilder::Schema uses (for example, in `config/initializers/jbuilder_schema.rb`):
 
 ```ruby
-JbuilderSchema.configure do |config|
+Jbuilder::Schema.configure do |config|
   config.components_path = "components/schemas"   # could be "definitions/schemas"
   config.title_name = "title"                     # could be "label"
   config.description_name = "description"         # could be "heading"
@@ -208,7 +208,7 @@ end
 
 ### RSwag
 
-It's super easy to use JbuilderSchema with RSwag: just add `jbuilder_schema` helper in `swagger_helper.rb` like this:
+It's super easy to use Jbuilder::Schema with RSwag: just add `jbuilder_schema` helper in `swagger_helper.rb` like this:
 
 ```ruby
 RSpec.configure do |config|

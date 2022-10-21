@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
-module JbuilderSchema
-  VERSION = "1.0.3"
+class Jbuilder
+  class Schema
+    VERSION = "1.0.3"
+  end
 end

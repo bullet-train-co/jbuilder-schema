@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Configuration
-module JbuilderSchema
+class Jbuilder::Schema
   class << self
     def configuration
       @configuration ||= Configuration.new

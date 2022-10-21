@@ -4,7 +4,7 @@ require_relative "lib/jbuilder/schema/version"
 
 Gem::Specification.new do |spec|
   spec.name = "jbuilder-schema"
-  spec.version = JbuilderSchema::VERSION
+  spec.version = Jbuilder::Schema::VERSION
   spec.authors = ["Yuri Sidorov"]
   spec.email = ["hey@yurisidorov.com"]
 

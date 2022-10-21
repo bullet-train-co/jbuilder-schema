@@ -57,7 +57,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "json.extract! with hash" do
-    result = JbuilderSchema::Template.new(model: Hash) do |json|
+    result = Jbuilder::Schema::Template.new(model: Hash) do |json|
       json.extract!({id: 1, title: "sup", body: "somebody once told me the world…"}, :id, :title, :body)
     end
 
@@ -65,7 +65,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "json.extract! with hash and schema arguments" do
-    result = JbuilderSchema::Template.new(model: Hash) do |json|
+    result = Jbuilder::Schema::Template.new(model: Hash) do |json|
       json.extract!({id: 1, title: "sup", body: "somebody once told me the world…"}, :id, :title, :body, schema: {id: {type: :string}, body: {type: :text}})
     end
 

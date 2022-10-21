@@ -16,15 +16,15 @@ class Jbuilder::Schema
       end
 
       def i18n_title
-        title || ::I18n.t(JbuilderSchema.configuration.title_name, scope: @scope)
+        title || ::I18n.t(Jbuilder::Schema.configuration.title_name, scope: @scope)
       end
 
       def i18n_description
-        description || ::I18n.t(JbuilderSchema.configuration.description_name, scope: @scope)
+        description || ::I18n.t(Jbuilder::Schema.configuration.description_name, scope: @scope)
       end
 
       def translate_field(key)
-        ::I18n.t("fields.#{key}.#{JbuilderSchema.configuration.description_name}", scope: @scope)
+        ::I18n.t("fields.#{key}.#{Jbuilder::Schema.configuration.description_name}", scope: @scope)
       end
     end
 
@@ -205,7 +205,7 @@ class Jbuilder::Schema
     end
 
     def _set_ref(component)
-      component_path = "#/#{JbuilderSchema.configuration.components_path}/#{component}"
+      component_path = "#/#{Jbuilder::Schema.configuration.components_path}/#{component}"
 
       if @inline_array
         if @collection
@@ -221,7 +221,7 @@ class Jbuilder::Schema
       end
     end
 
-    FORMATS = {DateTime => "date-time", ActiveSupport::TimeWithZone => "date-time", Date => "date", Time => "time"}
+    FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
 
     def _schema(key, value, **options)
       unless options[:type]
@@ -244,10 +244,10 @@ class Jbuilder::Schema
 
     def _primitive_type(type)
       case type
-      when Array then :array
-      when Float, BigDecimal then :number
+      when ::Array then :array
+      when ::Float, ::BigDecimal then :number
       when true, false then :boolean
-      when Integer then :integer
+      when ::Integer then :integer
       else
         :string
       end
