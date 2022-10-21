@@ -4,8 +4,7 @@ require "jbuilder/jbuilder_template"
 require "active_support/inflections"
 require "active_support/core_ext/hash/deep_transform_values"
 
-module JbuilderSchema
-  # Template parser class
+class Jbuilder::Schema
   class Template < ::JbuilderTemplate
     attr_reader :attributes, :type
     attr_reader :model_scope
