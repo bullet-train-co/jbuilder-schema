@@ -3,6 +3,8 @@
 require "active_support/core_ext/hash/deep_transform_values"
 
 class Jbuilder::Schema
+  VERSION = JBUILDER_SCHEMA_VERSION # See `jbuilder/schema/version.rb`
+
   module IgnoreSchemaMeta
     ::Jbuilder.prepend self
 
