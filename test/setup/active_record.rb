@@ -40,5 +40,3 @@ end
 5.times do |n|
   Article.create! user: User.first, title: "Generic title #{n}", body: "Lorem ipsum… #{n}"
 end
-
-ActiveRecord::Base.logger = Logger.new(STDOUT)
