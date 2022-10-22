@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "jbuilder/schema/template"
+require "action_view"
 
 class Jbuilder::Schema
   # Resolver finds and returns Jbuilder template.
