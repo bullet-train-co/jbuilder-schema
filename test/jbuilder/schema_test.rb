@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class SchemaTest < ActiveSupport::TestCase
+class Jbuilder::SchemaTest < ActiveSupport::TestCase
   test "version" do
     refute_nil Jbuilder::Schema::VERSION
   end
