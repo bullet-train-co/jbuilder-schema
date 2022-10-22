@@ -5,6 +5,14 @@ require "jbuilder/schema/resolver"
 require "jbuilder/schema/renderer"
 
 class Jbuilder::Schema
+  module IgnoreSchemaMeta
+    ::Jbuilder.prepend self
+
+    def method_missing(*args, schema: nil, **options, &block) # standard:disable Style/MissingRespondToMissing
+      super(*args, **options, &block)
+    end
+  end
+
   singleton_class.attr_accessor :components_path, :title_name, :description_name
   @components_path, @title_name, @description_name = "components/schemas", "title", "description"
 
