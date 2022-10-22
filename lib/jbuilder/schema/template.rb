@@ -16,15 +16,15 @@ class Jbuilder::Schema
       end
 
       def i18n_title
-        title || ::I18n.t(Jbuilder::Schema.configuration.title_name, scope: @scope)
+        title || ::I18n.t(Jbuilder::Schema.title_name, scope: @scope)
       end
 
       def i18n_description
-        description || ::I18n.t(Jbuilder::Schema.configuration.description_name, scope: @scope)
+        description || ::I18n.t(Jbuilder::Schema.description_name, scope: @scope)
       end
 
       def translate_field(key)
-        ::I18n.t("fields.#{key}.#{Jbuilder::Schema.configuration.description_name}", scope: @scope)
+        ::I18n.t("fields.#{key}.#{Jbuilder::Schema.description_name}", scope: @scope)
       end
     end
 
@@ -205,7 +205,7 @@ class Jbuilder::Schema
     end
 
     def _set_ref(component)
-      component_path = "#/#{Jbuilder::Schema.configuration.components_path}/#{component}"
+      component_path = "#/#{Jbuilder::Schema.components_path}/#{component}"
 
       if @inline_array
         if @collection
