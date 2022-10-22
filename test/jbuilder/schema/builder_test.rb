@@ -8,6 +8,7 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
   setup do
     I18n.backend.store_translations "en", articles: {fields: {
       id: {description: "en.articles.fields.id.description"},
+      status: {description: "en.articles.fields.status.description"},
       title: {description: "en.articles.fields.title.description"},
       body: {description: "en.articles.fields.body.description"},
       created_at: {description: "en.articles.fields.created_at.description"},
@@ -35,6 +36,7 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
       required: [:id],
       properties: {
         id: {type: :integer, description: "en.articles.fields.id.description"},
+        status: {type: :string, description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
         title: {type: :string, description: "en.articles.fields.title.description"},
         body: {type: :string, description: "en.articles.fields.body.description", pattern: /\w+/},
         created_at: {type: :string, description: "en.articles.fields.created_at.description", format: "date-time"},
@@ -66,6 +68,13 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
         id:
           description: en.articles.fields.id.description
           type: integer
+        status:
+          description: en.articles.fields.status.description
+          type: string
+          enum:
+          - pending
+          - published
+          - archived
         title:
           description: en.articles.fields.title.description
           type: string
@@ -103,6 +112,7 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
       required: ["id"],
       properties: {
         id: {type: "integer", description: "en.articles.fields.id.description"},
+        status: {type: "string", description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
         title: {type: "string", description: "en.articles.fields.title.description"},
         body: {type: "string", description: "en.articles.fields.body.description", pattern: "\\w+"},
         created_at: {type: "string", description: "en.articles.fields.created_at.description", format: "date-time"},

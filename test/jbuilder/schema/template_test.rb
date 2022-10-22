@@ -156,6 +156,7 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({
       description: "test", type: :array,
       items: {id: {description: "test", type: :integer},
+              status: {description: "test", type: :string, enum: ["pending", "published", "archived"]},
               title: {description: "test", type: :string},
               body: {description: "test", type: :string},
               created_at: {description: "test", type: :string, format: "date-time"},

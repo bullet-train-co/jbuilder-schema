@@ -16,6 +16,7 @@ ActiveRecord::Schema.define do
 
   create_table :articles, force: true do |t|
     t.references :user
+    t.string :status, default: "pending", null: false
     t.string :title, null: false
     t.text :body, null: false
     t.timestamps null: false
@@ -31,6 +32,8 @@ end
 
 class Article < ActiveRecord::Base
   belongs_to :user
+
+  enum :status, %i[ pending published archived ]
 
   def as_json(options = {})
     super(only: %i[id title body])

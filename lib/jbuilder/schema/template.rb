@@ -237,7 +237,7 @@ module JbuilderSchema
       end
 
       if (model = model_scope.model) && (defined_enum = model.try(:defined_enums)&.dig(key.to_s))
-        options[:enum] = define_enum.keys
+        options[:enum] = defined_enum.keys
       end
 
       options
