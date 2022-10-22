@@ -4,8 +4,7 @@ require "test_helper"
 require "jbuilder/schema/template"
 
 class TemplateTest < ActiveSupport::TestCase
-  def setup
-    super
+  setup do
     I18n.stubs(:t).returns("test")
   end
 
@@ -52,6 +51,22 @@ class TemplateTest < ActiveSupport::TestCase
   test "json.extract! with schema arguments" do
     result = JbuilderSchema::Template.new(model: Article) do |json|
       json.extract!(articles.first, :id, :title, :body, schema: {id: {type: :string}, body: {type: :text}})
+    end
+
+    assert_equal({id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}, result.attributes)
+  end
+
+  test "json.extract! with hash" do
+    result = JbuilderSchema::Template.new(model: Hash) do |json|
+      json.extract!({id: 1, title: "sup", body: "somebody once told me the world…"}, :id, :title, :body)
+    end
+
+    assert_equal({id: {description: "test", type: :integer}, title: {description: "test", type: :string}, body: {description: "test", type: :string}}, result.attributes)
+  end
+
+  test "json.extract! with hash and schema arguments" do
+    result = JbuilderSchema::Template.new(model: Hash) do |json|
+      json.extract!({id: 1, title: "sup", body: "somebody once told me the world…"}, :id, :title, :body, schema: {id: {type: :string}, body: {type: :text}})
     end
 
     assert_equal({id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}, result.attributes)
@@ -141,11 +156,12 @@ class TemplateTest < ActiveSupport::TestCase
     assert_equal({
       description: "test", type: :array,
       items: {id: {description: "test", type: :integer},
-      title: {description: "test", type: :string},
-      body: {description: "test", type: :string},
-      created_at: {description: "test", type: :string, format: "date-time"},
-      updated_at: {description: "test", type: :string, format: "date-time"},
-      user_id: {description: "test", type: :integer}}
+              status: {description: "test", type: :string, enum: ["pending", "published", "archived"]},
+              title: {description: "test", type: :string},
+              body: {description: "test", type: :string},
+              created_at: {description: "test", type: :string, format: "date-time"},
+              updated_at: {description: "test", type: :string, format: "date-time"},
+              user_id: {description: "test", type: :integer}}
     }, json.articles(articles))
   end
 

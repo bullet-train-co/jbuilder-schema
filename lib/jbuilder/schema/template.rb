@@ -7,16 +7,34 @@ require "active_support/core_ext/hash/deep_transform_values"
 module JbuilderSchema
   # Template parser class
   class Template < ::JbuilderTemplate
-    attr_reader :attributes, :type, :models, :titles, :descriptions
+    attr_reader :attributes, :type
+    attr_reader :model_scope
 
-    def initialize(*args, **options)
+    ModelScope = Struct.new(:model, :title, :description) do
+      def initialize(*)
+        super
+        @scope = model&.name&.underscore&.pluralize
+      end
+
+      def i18n_title
+        title || ::I18n.t(JbuilderSchema.configuration.title_name, scope: @scope)
+      end
+
+      def i18n_description
+        description || ::I18n.t(JbuilderSchema.configuration.description_name, scope: @scope)
+      end
+
+      def translate_field(key)
+        ::I18n.t("fields.#{key}.#{JbuilderSchema.configuration.description_name}", scope: @scope)
+      end
+    end
+
+    def initialize(*args, model: nil, title: nil, description: nil)
       @type = :object
       @inline_array = false
       @collection = false
 
-      @models = [options.delete(:model)]
-      @titles = [options.delete(:title)]
-      @descriptions = [options.delete(:description)]
+      @model_scope = ModelScope.new(model, title, description)
 
       super(nil, *args)
 
@@ -39,18 +57,10 @@ module JbuilderSchema
           # json.comments { ... }
           # { "comments": ... }
           @inline_array = true
-          if schema_options.key?(:object)
-            models << schema_options[:object].class
-            titles << schema_options[:object_title] || nil
-            descriptions << schema_options[:object_description] || nil
+
+          _with_model_scope(**schema_options) do
+            _merge_block(key) { yield self }
           end
-          r = _merge_block(key) { yield self }
-          if schema_options.key?(:object)
-            models.pop
-            titles.pop
-            descriptions.pop
-          end
-          r
         end
       elsif args.empty?
         if ::Jbuilder === value
@@ -76,34 +86,24 @@ module JbuilderSchema
         @collection = true
 
         _scope { array! value, *args }
-      elsif schema_options.key?(:object)
+      else
         # EXTRACT!:
         # json.author @article.creator, :name, :email_address
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-
-        models << schema_options.delete(:object).class
-        titles << schema_options.delete(:object_title) || nil
-        descriptions << schema_options.delete(:object_description) || nil
-        r = _merge_block(key) { extract! value, *args, **schema_options }
-        models.pop
-        titles.pop
-        descriptions.pop
-        r
-      else
-        _merge_block(key) { extract! value, *args, **schema_options }
+        _with_model_scope(**schema_options) do
+          _merge_block(key) { extract! value, *args, **schema_options }
+        end
       end
 
-      result = _set_description key, result if models.any?
+      result = _set_description key, result if model_scope.model
       _set_value key, result
     end
 
-    def extract!(object, *attributes, **schema_options)
-      schema_options = schema_options[:schema] if schema_options.key?(:schema)
-
+    def extract!(object, *attributes, schema: {})
       if ::Hash === object
-        _extract_hash_values(object, attributes, **schema_options)
+        _extract_hash_values(object, attributes, schema: schema)
       else
-        _extract_method_values(object, attributes, **schema_options)
+        _extract_method_values(object, attributes, schema: schema)
       end
     end
 
@@ -115,7 +115,7 @@ module JbuilderSchema
         @collection = true
         _set_ref(options[:partial].split("/").last)
       else
-        array = _make_array(collection, *args, **schema_options, &block)
+        array = _make_array(collection, *args, schema: schema_options, &block)
 
         if @inline_array
           @attributes = {}
@@ -152,7 +152,7 @@ module JbuilderSchema
       if hash_or_array.is_a?(Hash)
         hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
           result = _schema(key, value)
-          result = _set_description(key, result) if models.any?
+          result = _set_description(key, result) if model_scope.model
           a[key] = result
         end
       end
@@ -160,10 +160,10 @@ module JbuilderSchema
     end
 
     def cache!(key = nil, **options)
-      yield
+      yield # TODO: Our schema generation breaks Jbuilder's fragment caching.
     end
 
-    def method_missing(*args, &block)
+    def method_missing(*args, &block) # standard:disable Style/MissingRespondToMissing
       args, schema_options = _args_and_schema_options(*args)
 
       if block
@@ -173,126 +173,105 @@ module JbuilderSchema
       end
     end
 
-    def respond_to_missing?(method_name, include_private = false)
-      super
-    end
-
     private
 
+    def _with_model_scope(object: nil, object_title: nil, object_description: nil, **)
+      old_model_scope, @model_scope = @model_scope, ModelScope.new(object.class, object_title, object_description) if object
+      yield
+    ensure
+      @model_scope = old_model_scope if object
+    end
+
     def _object(**attributes)
-      title = titles.last || ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.title_name}")
-      description = descriptions.last || ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.description_name}")
       {
         type: :object,
-        title: title,
-        description: description,
+        title: model_scope.i18n_title,
+        description: model_scope.i18n_description,
         required: _required!(attributes.keys),
         properties: attributes
       }
     end
 
     def _args_and_schema_options(*args)
-      schema_options = args.extract! { |a| a.is_a?(::Hash) && a.key?(:schema) }.first.try(:[], :schema) || {}
+      schema_options = args.extract! { |a| a.is_a?(::Hash) && a.key?(:schema) }.first&.dig(:schema) || {}
       [args, schema_options]
     end
 
     def _set_description(key, value)
       unless value.key?(:description)
-        description = ::I18n.t("#{models.last&.name&.underscore&.pluralize}.fields.#{key}.#{JbuilderSchema.configuration.description_name}")
+        description = model_scope.translate_field(key)
         value = {description: description}.merge! value
       end
       value
     end
 
     def _set_ref(component)
+      component_path = "#/#{JbuilderSchema.configuration.components_path}/#{component}"
+
       if @inline_array
         if @collection
           _set_value(:type, :array)
-          _set_value(:items, {:$ref => _component_path(component)})
+          _set_value(:items, {:$ref => component_path})
         else
           _set_value(:type, :object)
-          _set_value(:$ref, _component_path(component))
+          _set_value(:$ref, component_path)
         end
       else
         @type = :array
-        _set_value(:items, {:$ref => _component_path(component)})
+        _set_value(:items, {:$ref => component_path})
       end
     end
 
-    def _component_path(component)
-      "#/#{JbuilderSchema.configuration.components_path}/#{component}"
-    end
+    FORMATS = {DateTime => "date-time", ActiveSupport::TimeWithZone => "date-time", Date => "date", Time => "time"}
 
     def _schema(key, value, **options)
-      options.merge!(_guess_type(value)) unless options[:type]
-      options.merge!(_set_enum(key.to_s)) if models.last&.defined_enums&.keys&.include?(key.to_s)
+      unless options[:type]
+        options[:type] = _primitive_type value
+
+        if options[:type] == :array && (types = value.map { _primitive_type _1 }.uniq).any?
+          options[:minContains] = 0
+          options[:contains] = {type: types.many? ? types : types.first}
+        end
+
+        format = FORMATS[value.class] and options[:format] ||= format
+      end
+
+      if (model = model_scope.model) && (defined_enum = model.try(:defined_enums)&.dig(key.to_s))
+        options[:enum] = defined_enum.keys
+      end
+
       options
     end
 
-    def _guess_type(value)
-      type = value.class.name&.downcase&.to_sym
-
+    def _primitive_type(type)
       case type
-      when :datetime, :"activesupport::timewithzone"
-        {type: :string, format: "date-time"}
-      when :time, :date
-        {type: :string, format: type.to_s}
-      when :array
-        _guess_array_types(value)
-      else
-        {type: _type(type)}
-      end
-    end
-
-    def _guess_array_types(array)
-      hash = {type: :array}
-      types = array.map { |a| _type(a.class.name&.downcase&.to_sym) }.uniq
-
-      unless types.empty?
-        hash[:contains] = {type: types.size > 1 ? types : types.first}
-        hash[:minContains] = 0
-      end
-
-      hash
-    end
-
-    def _type(type)
-      case type
-      when :float, :bigdecimal
-        :number
-      when :trueclass, :falseclass
-        :boolean
-      when :integer
-        :integer
+      when Array then :array
+      when Float, BigDecimal then :number
+      when true, false then :boolean
+      when Integer then :integer
       else
         :string
       end
     end
 
-    def _set_enum(key)
-      enums = models.last&.defined_enums[key].keys
-      {enum: enums}
-    end
-
-    def _make_array(collection, *args, **schema_options, &block)
+    def _make_array(collection, *args, schema: {}, &block)
       if collection.nil?
         []
       elsif block
         _map_collection(collection, &block)
       elsif args.any?
-        _map_collection(collection) { |element| extract! element, *args, **schema_options }
+        _map_collection(collection) { |element| extract! element, *args, schema: schema }
       else
         _format_keys(collection.to_a)
       end
     end
 
     def _is_collection_array?(object)
-      # TODO: Find better way to determine if all array elements are models
-      object.is_a?(Array) && object.map { |a| _is_active_model?(a) }.uniq == [true]
+      object.is_a?(Array) && object.all? { _is_active_model? _1 }
     end
 
     def _required!(keys)
-      presence_validated_attributes = models.last.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
+      presence_validated_attributes = model_scope.model.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
       keys & [_key(:id), *presence_validated_attributes.map { _key _1 }]
     end
 
@@ -301,21 +280,22 @@ module JbuilderSchema
     ###
 
     def _key(key)
+      # TODO: Plain Jbuilder generates string keys, are we doing something here that'll bite us later?
       @key_formatter ? @key_formatter.format(key).to_sym : key.to_sym
     end
 
-    def _extract_hash_values(object, attributes, **schema_options)
+    def _extract_hash_values(object, attributes, schema:)
       attributes.each do |key|
-        result = _schema(key, _format_keys(object.fetch(key)), **schema_options[key] || {})
-        result = _set_description(key, result) if models.any?
+        result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
+        result = _set_description(key, result) if model_scope.model
         _set_value key, result
       end
     end
 
-    def _extract_method_values(object, attributes, **schema_options)
+    def _extract_method_values(object, attributes, schema:)
       attributes.each do |key|
-        result = _schema(key, _format_keys(object.public_send(key)), **schema_options[key] || {})
-        result = _set_description(key, result) if models.any?
+        result = _schema(key, _format_keys(object.public_send(key)), **schema[key] || {})
+        result = _set_description(key, result) if model_scope.model
         _set_value key, result
       end
     end
@@ -339,14 +319,13 @@ module JbuilderSchema
 end
 
 class Jbuilder
-  # Monkey-patch for Jbuilder::KeyFormatter to ignore schema keys
-  class KeyFormatter
-    alias_method :original_format, :format
+  module SkipFormatting
+    SCHEMA_KEYS = %i[type items properties]
 
     def format(key)
-      return key if %i[type items properties].include?(key)
-
-      original_format(key)
+      SCHEMA_KEYS.include?(key) ? key : super
     end
   end
+
+  KeyFormatter.prepend SkipFormatting
 end
