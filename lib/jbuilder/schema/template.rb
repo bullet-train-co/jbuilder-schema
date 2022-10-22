@@ -179,15 +179,15 @@ module JbuilderSchema
 
     private
 
-    def _object(**attrs)
+    def _object(**attributes)
       title = titles.last || ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.title_name}")
       description = descriptions.last || ::I18n.t("#{models&.last&.name&.underscore&.pluralize}.#{JbuilderSchema.configuration.description_name}")
       {
         type: :object,
         title: title,
         description: description,
-        required: _required!(**attrs),
-        properties: attrs
+        required: _required!(attributes.keys),
+        properties: attributes
       }
     end
 
@@ -291,16 +291,9 @@ module JbuilderSchema
       object.is_a?(Array) && object.map { |a| _is_active_model?(a) }.uniq == [true]
     end
 
-    def _required!(**attrs)
-      if Object.const_defined?('ActiveRecord')
-        attrs.keys.select { |attribute|
-          models.last&.validators.try(:grep, ::ActiveRecord::Validations::PresenceValidator)
-                .flat_map(&:attributes).unshift(_key(:id))
-                .include?(attribute.to_s.underscore.to_sym)
-        }.uniq
-      else
-        attrs.keys.include?(_key(:id)) ? [_key(:id)] : []
-      end
+    def _required!(keys)
+      presence_validated_attributes = models.last.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
+      keys & [_key(:id), *presence_validated_attributes.map { _key _1 }]
     end
 
     ###
