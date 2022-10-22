@@ -245,10 +245,10 @@ module JbuilderSchema
 
     def _primitive_type(type)
       case type
-      when Array             then :array
+      when Array then :array
       when Float, BigDecimal then :number
-      when true, false       then :boolean
-      when Integer           then :integer
+      when true, false then :boolean
+      when Integer then :integer
       else
         :string
       end
