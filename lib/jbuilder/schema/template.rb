@@ -187,7 +187,7 @@ module JbuilderSchema
         type: :object,
         title: model_scope.i18n_title,
         description: model_scope.i18n_description,
-        required: _required!(**attributes),
+        required: _required!(attributes.keys),
         properties: attributes
       }
     end
