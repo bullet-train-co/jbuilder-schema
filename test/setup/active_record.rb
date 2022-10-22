@@ -2,6 +2,11 @@ require "active_record"
 
 ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
 
+# Set so Active Record casts created_at/updated_at to ActiveSupport::TimeWithZone.
+# (Mathces Rails apps' default, but its assigned via Active Record's railtie.)
+Time.zone = "UTC"
+ActiveRecord::Base.time_zone_aware_attributes = true
+
 ActiveRecord::Schema.define do
   create_table :users, force: true do |t|
     t.string :name, null: false
