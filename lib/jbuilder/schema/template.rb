@@ -233,7 +233,7 @@ module JbuilderSchema
           options[:contains] = {type: types.many? ? types : types.first}
         end
 
-        options[:format] ||= FORMATS[value.class]
+        format = FORMATS[value.class] and options[:format] ||= format
       end
 
       if (model = model_scope.model) && model.respond_to?(:defined_enums) && model.defined_enums&.keys&.include?(key.to_s)
