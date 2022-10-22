@@ -236,8 +236,8 @@ module JbuilderSchema
         format = FORMATS[value.class] and options[:format] ||= format
       end
 
-      if (model = model_scope.model) && model.respond_to?(:defined_enums) && model.defined_enums&.keys&.include?(key.to_s)
-        options[:enum] = model&.defined_enums[key.to_s].keys
+      if (model = model_scope.model) && (defined_enum = model.try(:defined_enums)&.dig(key.to_s))
+        options[:enum] = define_enum.keys
       end
 
       options
