@@ -163,7 +163,7 @@ module JbuilderSchema
       yield # TODO: Our schema generation breaks Jbuilder's fragment caching.
     end
 
-    def method_missing(*args, &block)
+    def method_missing(*args, &block) # standard:disable Style/MissingRespondToMissing
       args, schema_options = _args_and_schema_options(*args)
 
       if block
