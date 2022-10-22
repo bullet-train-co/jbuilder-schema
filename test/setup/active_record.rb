@@ -6,14 +6,14 @@ ActiveRecord::Schema.define do
   create_table :users, force: true do |t|
     t.string :name, null: false
     t.string :email, null: false
-    t.timestamps
+    t.timestamps null: false
   end
 
   create_table :articles, force: true do |t|
     t.references :user
     t.string :title, null: false
     t.text :body, null: false
-    t.timestamps
+    t.timestamps null: false
   end
 end
 
