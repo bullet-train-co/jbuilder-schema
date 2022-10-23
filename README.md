@@ -55,7 +55,7 @@ For example, if we have `_articles.json.jbuilder` file:
 json.extract! article, :id, :title, :body, :created_at
 ```
 
-Which outputs:
+Will output:
 
 ```yaml
 type: object
