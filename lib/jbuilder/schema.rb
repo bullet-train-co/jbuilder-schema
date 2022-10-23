@@ -34,8 +34,7 @@ class Jbuilder::Schema
     end
 
     def load(path, paths: ["app/views"], **options)
-      source = Resolver.find_template_source(paths, path)
-      Renderer.new(**options).render(source)&.schema! if source
+      Renderer.new(**options).render(Resolver.find_template_source(paths, path)).schema!
     end
 
     private
