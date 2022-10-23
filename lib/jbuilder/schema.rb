@@ -33,7 +33,7 @@ class Jbuilder::Schema
       normalize(load(path, **options)).to_json
     end
 
-    def load(path, format: nil, paths: ["app/views"], **options)
+    def load(path, paths: ["app/views"], **options)
       source = Resolver.find_template_source(paths, path)
       Renderer.new(**options).render(source)&.schema! if source
     end
