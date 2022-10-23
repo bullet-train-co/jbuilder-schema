@@ -16,8 +16,6 @@ class Jbuilder::Schema
   singleton_class.attr_accessor :components_path, :title_name, :description_name
   @components_path, @title_name, @description_name = "components/schemas", "title", "description"
 
-  autoload :Resolver, "jbuilder/schema/resolver"
-  autoload :Renderer, "jbuilder/schema/renderer"
   autoload :Template, "jbuilder/schema/template"
 
   ActiveSupport.on_load :action_view do
