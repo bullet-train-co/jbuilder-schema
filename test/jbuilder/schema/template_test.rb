@@ -3,7 +3,7 @@
 require "test_helper"
 require "jbuilder/schema/template"
 
-class TemplateTest < ActiveSupport::TestCase
+class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   setup do
     I18n.stubs(:t).returns("test")
   end
@@ -41,7 +41,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "json.extract!" do
-    result = JbuilderSchema::Template.new(model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.extract!(articles.first, :id, :title, :body)
     end
 
@@ -49,7 +49,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "json.extract! with schema arguments" do
-    result = JbuilderSchema::Template.new(model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.extract!(articles.first, :id, :title, :body, schema: {id: {type: :string}, body: {type: :text}})
     end
 
@@ -57,7 +57,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "json.extract! with hash" do
-    result = JbuilderSchema::Template.new(model: Hash) do |json|
+    result = Jbuilder::Schema::Template.new(model: Hash) do |json|
       json.extract!({id: 1, title: "sup", body: "somebody once told me the world…"}, :id, :title, :body)
     end
 
@@ -65,7 +65,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "json.extract! with hash and schema arguments" do
-    result = JbuilderSchema::Template.new(model: Hash) do |json|
+    result = Jbuilder::Schema::Template.new(model: Hash) do |json|
       json.extract!({id: 1, title: "sup", body: "somebody once told me the world…"}, :id, :title, :body, schema: {id: {type: :string}, body: {type: :text}})
     end
 
@@ -73,7 +73,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "simple block" do
-    result = JbuilderSchema::Template.new(model: User) do |json|
+    result = Jbuilder::Schema::Template.new(model: User) do |json|
       json.author { json.id 123 }
     end
 
@@ -81,7 +81,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "block with schema object attribute" do
-    result = JbuilderSchema::Template.new(model: User) do |json|
+    result = Jbuilder::Schema::Template.new(model: User) do |json|
       json.author schema: {object: articles.first.user} do
         json.id 123
       end
@@ -91,7 +91,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "block with array" do
-    result = JbuilderSchema::Template.new(model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.articles { json.array! Article.first(3), :id, :title }
     end
 
@@ -99,7 +99,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "array with block" do
-    result = JbuilderSchema::Template.new(model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.array! articles do |article|
         json.id article.id
         json.title article.title
@@ -111,7 +111,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "array with block with schema attributes" do
-    result = JbuilderSchema::Template.new(model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.array! articles do |article|
         json.id article.id, schema: {type: :string}
         json.title article.title
@@ -123,7 +123,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "block with merge" do
-    result = JbuilderSchema::Template.new(model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.author do
         json.id 123
         json.merge!({name: "David"})
@@ -134,7 +134,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "block with partial" do
-    result = JbuilderSchema::Template.new(model: User) do |json|
+    result = Jbuilder::Schema::Template.new(model: User) do |json|
       json.user { json.partial! "api/v1/users/user", user: User.first }
     end
 
@@ -142,7 +142,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "block with array with partial" do
-    result = JbuilderSchema::Template.new(model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.articles schema: {object: articles.first} do
         json.array! articles, partial: "api/v1/articles/article", as: :article
       end
@@ -173,7 +173,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "key format" do
-    result = JbuilderSchema::Template.new(model: User) do |json|
+    result = Jbuilder::Schema::Template.new(model: User) do |json|
       json.key_format! camelize: :upper
       json.id 123
       json.name "David"
@@ -183,7 +183,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "deep key format" do
-    result = JbuilderSchema::Template.new(model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.key_format! camelize: :upper
       json.deep_format_keys!
       json.id 123
@@ -198,7 +198,7 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "deep key format with array" do
-    result = JbuilderSchema::Template.new(model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.key_format! camelize: :upper
       json.deep_format_keys!
       json.id 123
@@ -210,27 +210,28 @@ class TemplateTest < ActiveSupport::TestCase
   end
 
   test "schematize type" do
-    json = JbuilderSchema::Template.new
+    json = Jbuilder::Schema::Template.new
+    def json._schema(...) = super # We're marking it public on the singleton, but can't use `public` since we're ultimately a BasicObject.
 
-    assert_equal({type: :integer}, json.send(:_schema, nil, 1))
-    assert_equal({type: :number}, json.send(:_schema, nil, 1.5))
-    assert_equal({type: :number}, json.send(:_schema, nil, BigDecimal("1.5", 1)))
-    assert_equal({type: :string}, json.send(:_schema, nil, "String"))
-    assert_equal({type: :string}, json.send(:_schema, nil, nil))
-    assert_equal({type: :string, format: "date"}, json.send(:_schema, nil, Date.new(2012, 12, 0o1)))
-    assert_equal({type: :string, format: "time"}, json.send(:_schema, nil, Time.now))
-    assert_equal({type: :string, format: "date-time"}, json.send(:_schema, nil, DateTime.new(2012, 12, 0o1)))
-    assert_equal({type: :string, format: "date-time"}, json.send(:_schema, nil, ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample)))
-    assert_equal({type: :boolean}, json.send(:_schema, nil, true))
-    assert_equal({type: :boolean}, json.send(:_schema, nil, false))
-    assert_equal({type: :array, contains: {type: :string}, minContains: 0}.as_json, json.send(:_schema, nil, %w[a b c d]).as_json)
-    assert_equal({type: :array, contains: {type: %i[string integer number boolean]}, minContains: 0}.as_json, json.send(:_get_type, ["a", 1, 1.5, false]).as_json)
+    assert_equal({type: :integer}, json._schema(nil, 1))
+    assert_equal({type: :number}, json._schema(nil, 1.5))
+    assert_equal({type: :number}, json._schema(nil, BigDecimal("1.5", 1)))
+    assert_equal({type: :string}, json._schema(nil, "String"))
+    assert_equal({type: :string}, json._schema(nil, nil))
+    assert_equal({type: :string, format: "date"}, json._schema(nil, Date.new(2012, 12, 0o1)))
+    assert_equal({type: :string, format: "time"}, json._schema(nil, Time.now))
+    assert_equal({type: :string, format: "date-time"}, json._schema(nil, DateTime.new(2012, 12, 0o1)))
+    assert_equal({type: :string, format: "date-time"}, json._schema(nil, ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample)))
+    assert_equal({type: :boolean}, json._schema(nil, true))
+    assert_equal({type: :boolean}, json._schema(nil, false))
+    assert_equal({type: :array, contains: {type: :string}, minContains: 0}.as_json, json._schema(nil, %w[a b c d]).as_json)
+    assert_equal({type: :array, contains: {type: %i[string integer number boolean]}, minContains: 0}.as_json, json._get_type(["a", 1, 1.5, false]).as_json)
   end
 
   private
 
   def json
-    JbuilderSchema::Template.new(model: Article)
+    Jbuilder::Schema::Template.new(model: Article)
   end
 
   def articles

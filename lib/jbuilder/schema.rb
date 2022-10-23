@@ -1,28 +1,45 @@
 # frozen_string_literal: true
 
-require "jbuilder/schema/version"
-require "jbuilder/schema/configuration"
-require "jbuilder/schema/resolver"
-require "jbuilder/schema/renderer"
+require "active_support/core_ext/hash/deep_transform_values"
 
-# Main gem module with configuration and helper methods
-module JbuilderSchema
-  def jbuilder_schema(path, format: nil, paths: ["app/views"], **options)
-    source = Resolver.find_template_source(paths, path)
-    schema = Renderer.new(**options).render(source)&.schema! if source
-    schema = Serializer.serialize(schema, format).html_safe if schema && format
-    schema
+class Jbuilder::Schema
+  VERSION = JBUILDER_SCHEMA_VERSION # See `jbuilder/schema/version.rb`
+
+  module IgnoreSchemaMeta
+    ::Jbuilder.prepend self
+
+    def method_missing(*args, schema: nil, **options, &block) # standard:disable Style/MissingRespondToMissing
+      super(*args, **options, &block)
+    end
   end
 
-  module Serializer
-    def self.serialize(schema, format)
-      case format
-      when :yaml then normalize(schema).to_yaml
-      when :json then normalize(schema).to_json
-      end
+  singleton_class.attr_accessor :components_path, :title_name, :description_name
+  @components_path, @title_name, @description_name = "components/schemas", "title", "description"
+
+  autoload :Resolver, "jbuilder/schema/resolver"
+  autoload :Renderer, "jbuilder/schema/renderer"
+  autoload :Template, "jbuilder/schema/template"
+
+  class << self
+    def configure
+      yield self
     end
 
-    def self.normalize(schema)
+    def yaml(path, **options)
+      normalize(load(path, **options)).to_yaml
+    end
+
+    def json(path, **options)
+      normalize(load(path, **options)).to_json
+    end
+
+    def load(path, paths: ["app/views"], **options)
+      Renderer.new(**options).render(Resolver.find_template_source(paths, path)).schema!
+    end
+
+    private
+
+    def normalize(schema)
       schema.deep_stringify_keys
         .deep_transform_values { |v| v.is_a?(Symbol) ? v.to_s : v }
         .deep_transform_values { |v| v.is_a?(Regexp) ? v.source : v }

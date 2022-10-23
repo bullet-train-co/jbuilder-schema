@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "jbuilder/schema/template"
+require "action_view"
 
-module JbuilderSchema
+class Jbuilder::Schema
   # Resolver finds and returns Jbuilder template.
   # It basically inherits from ActionView::FileSystemResolver as it does all the job for us.
   # We're just building our own template in the end of the search.

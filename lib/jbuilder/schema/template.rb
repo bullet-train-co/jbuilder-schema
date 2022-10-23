@@ -2,30 +2,28 @@
 
 require "jbuilder/jbuilder_template"
 require "active_support/inflections"
-require "active_support/core_ext/hash/deep_transform_values"
 
-module JbuilderSchema
-  # Template parser class
+class Jbuilder::Schema
   class Template < ::JbuilderTemplate
     attr_reader :attributes, :type
     attr_reader :model_scope
 
-    ModelScope = Struct.new(:model, :title, :description) do
+    ModelScope = ::Struct.new(:model, :title, :description) do
       def initialize(*)
         super
         @scope = model&.name&.underscore&.pluralize
       end
 
       def i18n_title
-        title || ::I18n.t(JbuilderSchema.configuration.title_name, scope: @scope)
+        title || ::I18n.t(::Jbuilder::Schema.title_name, scope: @scope)
       end
 
       def i18n_description
-        description || ::I18n.t(JbuilderSchema.configuration.description_name, scope: @scope)
+        description || ::I18n.t(::Jbuilder::Schema.description_name, scope: @scope)
       end
 
       def translate_field(key)
-        ::I18n.t("fields.#{key}.#{JbuilderSchema.configuration.description_name}", scope: @scope)
+        ::I18n.t("fields.#{key}.#{::Jbuilder::Schema.description_name}", scope: @scope)
       end
     end
 
@@ -138,7 +136,7 @@ module JbuilderSchema
       if args.one? && _is_active_model?(args.first)
         # TODO: Find where it is being used
         _render_active_model_partial args.first
-      elsif args.first.is_a?(Hash)
+      elsif args.first.is_a?(::Hash)
         _set_ref(args.first[:partial].split("/").last)
       else
         @collection = true if args[1].key?(:collection)
@@ -149,7 +147,7 @@ module JbuilderSchema
     def merge!(object)
       hash_or_array = ::Jbuilder === object ? object.attributes! : object
       hash_or_array = _format_keys(hash_or_array)
-      if hash_or_array.is_a?(Hash)
+      if hash_or_array.is_a?(::Hash)
         hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
           result = _schema(key, value)
           result = _set_description(key, result) if model_scope.model
@@ -206,7 +204,7 @@ module JbuilderSchema
     end
 
     def _set_ref(component)
-      component_path = "#/#{JbuilderSchema.configuration.components_path}/#{component}"
+      component_path = "#/#{::Jbuilder::Schema.components_path}/#{component}"
 
       if @inline_array
         if @collection
@@ -222,7 +220,7 @@ module JbuilderSchema
       end
     end
 
-    FORMATS = {DateTime => "date-time", ActiveSupport::TimeWithZone => "date-time", Date => "date", Time => "time"}
+    FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
 
     def _schema(key, value, **options)
       unless options[:type]
@@ -245,10 +243,10 @@ module JbuilderSchema
 
     def _primitive_type(type)
       case type
-      when Array then :array
-      when Float, BigDecimal then :number
+      when ::Array then :array
+      when ::Float, ::BigDecimal then :number
       when true, false then :boolean
-      when Integer then :integer
+      when ::Integer then :integer
       else
         :string
       end
@@ -267,7 +265,7 @@ module JbuilderSchema
     end
 
     def _is_collection_array?(object)
-      object.is_a?(Array) && object.all? { _is_active_model? _1 }
+      object.is_a?(::Array) && object.all? { _is_active_model? _1 }
     end
 
     def _required!(keys)

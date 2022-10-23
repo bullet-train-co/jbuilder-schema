@@ -2,9 +2,7 @@
 
 require "test_helper"
 
-class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
-  include JbuilderSchema
-
+class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
   setup do
     I18n.backend.store_translations "en", articles: {fields: {
       id: {description: "en.articles.fields.id.description"},
@@ -22,7 +20,7 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
     user = User.new(id: 1, email: "someone@example.org", name: "Someone")
     article = Article.new(id: 1, user: user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
 
-    schema = jbuilder_schema "api/v1/articles/_article",
+    schema = Jbuilder::Schema.load "api/v1/articles/_article",
       title: "Article",
       model: Article,
       description: "Article in the blog",
@@ -49,11 +47,10 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
     user = User.new(id: 1, email: "someone@example.org", name: "Someone")
     article = Article.new(id: 1, user: user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
 
-    schema = jbuilder_schema "api/v1/articles/_article",
+    schema = Jbuilder::Schema.yaml "api/v1/articles/_article",
       title: "Article",
       model: Article,
       description: "Article in the blog",
-      format: :yaml,
       paths: ["test/fixtures"],
       locals: {article: article, current_user: user}
 
@@ -97,11 +94,10 @@ class JbuilderSchema::BuilderTest < ActiveSupport::TestCase
     user = User.new(id: 1, email: "someone@example.org", name: "Someone")
     article = Article.new(id: 1, user: user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
 
-    schema = jbuilder_schema "api/v1/articles/_article",
+    schema = Jbuilder::Schema.json "api/v1/articles/_article",
       title: "Article",
       model: Article,
       description: "Article in the blog",
-      format: :json,
       paths: ["test/fixtures"],
       locals: {article: article, current_user: user}
 

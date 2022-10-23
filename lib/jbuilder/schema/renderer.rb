@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
-require "jbuilder/schema/template"
 # TODO: Find a better way to load main app's helpers:
 # Helpers don't work in Jbuilder itself, so no need to include them here!
 # ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| require "./app/helpers/#{helper}_helper" }
 
-module JbuilderSchema
+class Jbuilder::Schema
   # Here we initialize all the variables needed for template and pass them to it
   class Renderer
     # TODO: Find a better way to load main app's helpers:
