@@ -5,6 +5,8 @@ require "bundler/setup"
 require "rails"
 
 require "jbuilder"
+Jbuilder::Railtie.run_initializers
+
 require "jbuilder/schema"
 
 require "active_support/testing/autorun"

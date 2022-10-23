@@ -20,12 +20,11 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
     user = User.new(id: 1, email: "someone@example.org", name: "Someone")
     article = Article.new(id: 1, user: user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
 
-    schema = Jbuilder::Schema.load "api/v1/articles/_article",
+    schema = Jbuilder::Schema.load article,
       title: "Article",
-      model: Article,
       description: "Article in the blog",
-      paths: ["test/fixtures"],
-      locals: {article: article, current_user: user}
+      paths: ["test/fixtures/api/v1"],
+      locals: {current_user: user}
 
     assert_equal({
       type: :object,
@@ -47,12 +46,11 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
     user = User.new(id: 1, email: "someone@example.org", name: "Someone")
     article = Article.new(id: 1, user: user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
 
-    schema = Jbuilder::Schema.yaml "api/v1/articles/_article",
+    schema = Jbuilder::Schema.yaml article,
       title: "Article",
-      model: Article,
       description: "Article in the blog",
-      paths: ["test/fixtures"],
-      locals: {article: article, current_user: user}
+      paths: ["test/fixtures/api/v1"],
+      locals: {current_user: user}
 
     assert_equal <<~YAML, schema
       ---
@@ -94,12 +92,11 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
     user = User.new(id: 1, email: "someone@example.org", name: "Someone")
     article = Article.new(id: 1, user: user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
 
-    schema = Jbuilder::Schema.json "api/v1/articles/_article",
+    schema = Jbuilder::Schema.json article,
       title: "Article",
-      model: Article,
       description: "Article in the blog",
-      paths: ["test/fixtures"],
-      locals: {article: article, current_user: user}
+      paths: ["test/fixtures/api/v1"],
+      locals: {current_user: user}
 
     assert_equal({
       type: "object",

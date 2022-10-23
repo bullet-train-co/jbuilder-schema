@@ -20,21 +20,40 @@ class Jbuilder::Schema
   autoload :Renderer, "jbuilder/schema/renderer"
   autoload :Template, "jbuilder/schema/template"
 
+  ActiveSupport.on_load :action_view do
+    ActionView::Template.register_template_handler :jbuilder, JbuilderHandler
+  end
+
+  require "jbuilder/jbuilder_template" # Hack to load ::JbuilderHandler.
+
+  class JbuilderHandler < ::JbuilderHandler
+    def self.call(template, source = nil)
+      super.sub("JbuilderTemplate", "Jbuilder::Schema::Template").sub("target!", "schema!") # lol
+    end
+  end
+
   class << self
     def configure
       yield self
     end
 
-    def yaml(path, **options)
-      normalize(load(path, **options)).to_yaml
+    def yaml(object = nil, **options)
+      normalize(load(object, **options)).to_yaml
     end
 
-    def json(path, **options)
-      normalize(load(path, **options)).to_json
+    def json(object = nil, **options)
+      normalize(load(object, **options)).to_json
     end
 
-    def load(path, paths: ["app/views"], **options)
-      Renderer.new(**options).render(Resolver.find_template_source(paths, path)).schema!
+    @@view_renderer = ActionView::Base.with_empty_template_cache
+
+    def load(object = nil, paths: ["app/views"], title: nil, description: nil, **options)
+      $jbuilder_details = { model: object&.class, title: title, description: description }
+
+      options.merge! partial: object.to_partial_path, object: object if object
+      @@view_renderer.with_view_paths(paths).render(**options)
+    ensure
+      $jbuilder_details = nil
     end
 
     private
