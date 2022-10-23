@@ -215,8 +215,7 @@ RSpec.configure do |config|
   config.swagger_docs = {
     components: {
       schemas: {
-        article: Jbuilder::Schema.render('api/v1/articles/_article',
-          format: :yaml,
+        article: Jbuilder::Schema.yaml('api/v1/articles/_article',
           model: Article,
           title: 'Article',
           description: 'Article in the blog',
