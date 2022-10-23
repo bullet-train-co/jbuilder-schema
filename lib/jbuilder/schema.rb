@@ -47,5 +47,3 @@ class Jbuilder::Schema
     end
   end
 end
-
-JbuilderSchema = ActiveSupport::Deprecation::DeprecatedConstantProxy.new "JbuilderSchema", "Jbuilder::Schema"
