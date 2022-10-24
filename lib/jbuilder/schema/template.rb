@@ -274,11 +274,6 @@ class Jbuilder::Schema
     # Jbuilder methods
     ###
 
-    def _key(key)
-      # TODO: Plain Jbuilder generates string keys, are we doing something here that'll bite us later?
-      @key_formatter ? @key_formatter.format(key).to_sym : key.to_sym
-    end
-
     def _extract_hash_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
