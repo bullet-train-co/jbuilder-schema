@@ -1,56 +1,37 @@
-# frozen_string_literal: true
+require "active_support/core_ext/hash/deep_transform_values"
+require_relative "template"
 
-# TODO: Find a better way to load main app's helpers:
-# Helpers don't work in Jbuilder itself, so no need to include them here!
-# ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| require "./app/helpers/#{helper}_helper" }
+class Jbuilder::Schema::Renderer
+  @@view_renderer = ActionView::Base.with_empty_template_cache
 
-class Jbuilder::Schema
-  # Here we initialize all the variables needed for template and pass them to it
-  class Renderer
-    # TODO: Find a better way to load main app's helpers:
-    # Helpers don't work in Jbuilder itself, so no need to include them here!
-    # ActionController::Base.all_helpers_from_path('app/helpers').each { |helper| include Object.const_get("::#{helper.camelize}Helper") }
+  def initialize(paths, default_locals = nil)
+    @view_renderer = @@view_renderer.with_view_paths(paths)
+    @default_locals = default_locals
+  end
 
-    attr_reader :locals, :options
+  def yaml(...)
+    normalize(render(...)).to_yaml
+  end
 
-    def initialize(locals: {}, **options)
-      @locals = locals
-      @options = options
-      _define_locals!
-    end
+  def json(...)
+    normalize(render(...)).to_json
+  end
 
-    def render(source)
-      Template.new(**options) do |json|
-        # TODO: Get rid of 'eval'
-        eval source.to_s # standard:disable Security/Eval
-      end
-    end
+  def render(object = nil, title: nil, description: nil, **options)
+    options.merge! partial: object.to_partial_path, object: object if object
 
-    def method_missing(method, *args)
-      if method.to_s.end_with?("_path", "_url")
-        method.to_s
-      else
-        super
-      end
-    end
+    options[:locals] ||= {}
+    options[:locals].merge! @default_locals if @default_locals
+    options[:locals][:__jbuilder_schema_options] = { model: object&.class, title: title, description: description }
 
-    def respond_to_missing?(method_name, include_private = false)
-      method_name.to_s.end_with?("_path", "_url") || super
-    end
+    @view_renderer.render(options)
+  end
 
-    private
+  private
 
-    def _define_locals!
-      locals.each do |k, v|
-        # Setting instance variables (`@article`):
-        instance_variable_set("@#{k}", v)
-
-        # Setting local variables (`article`):
-        # We can define method:
-        # define_singleton_method(k) { v }
-        # or set attr_reader on an instance, this feels better:
-        singleton_class.instance_eval { attr_reader k }
-      end
-    end
+  def normalize(schema)
+    schema.deep_stringify_keys
+      .deep_transform_values { |v| v.is_a?(Symbol) ? v.to_s : v }
+      .deep_transform_values { |v| v.is_a?(Regexp) ? v.source : v }
   end
 end

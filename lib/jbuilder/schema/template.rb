@@ -8,8 +8,18 @@ class Jbuilder::Schema
     attr_reader :attributes, :type
     attr_reader :model_scope
 
-    ModelScope = ::Struct.new(:model, :title, :description) do
-      def initialize(*)
+    class Handler < ::JbuilderHandler
+      def self.call(template, source = nil)
+        super.sub("JbuilderTemplate.new(self", "Jbuilder::Schema::Template.new(self, **__jbuilder_schema_options").sub("target!", "schema!")
+      end
+    end
+
+    ::ActiveSupport.on_load :action_view do
+      ::ActionView::Template.register_template_handler :jbuilder, ::Jbuilder::Schema::Template::Handler
+    end
+
+    ModelScope = ::Struct.new(:model, :title, :description, keyword_init: true) do
+      def initialize(**)
         super
         @scope = model&.name&.underscore&.pluralize
       end
@@ -27,14 +37,14 @@ class Jbuilder::Schema
       end
     end
 
-    def initialize(*args, model: nil, title: nil, description: nil)
+    def initialize(context, **options)
       @type = :object
       @inline_array = false
       @collection = false
 
-      @model_scope = ModelScope.new(model, title, description)
+      @model_scope = ModelScope.new(**options)
 
-      super(nil, *args)
+      super(context)
 
       @ignore_nil = false
     end
@@ -166,7 +176,7 @@ class Jbuilder::Schema
     private
 
     def _with_model_scope(object: nil, object_title: nil, object_description: nil, **)
-      old_model_scope, @model_scope = @model_scope, ModelScope.new(object.class, object_title, object_description) if object
+      old_model_scope, @model_scope = @model_scope, ModelScope.new(model: object.class, title: object_title, description: object_description) if object
       yield
     ensure
       @model_scope = old_model_scope if object

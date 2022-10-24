@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/hash/deep_transform_values"
+require "active_support/core_ext/module/delegation"
 
 class Jbuilder::Schema
   VERSION = JBUILDER_SCHEMA_VERSION # See `jbuilder/schema/version.rb`
@@ -13,36 +13,18 @@ class Jbuilder::Schema
     end
   end
 
+  singleton_class.alias_method :configure, :tap
   singleton_class.attr_accessor :components_path, :title_name, :description_name
   @components_path, @title_name, @description_name = "components/schemas", "title", "description"
 
-  autoload :Resolver, "jbuilder/schema/resolver"
   autoload :Renderer, "jbuilder/schema/renderer"
-  autoload :Template, "jbuilder/schema/template"
 
-  class << self
-    def configure
-      yield self
-    end
-
-    def yaml(path, **options)
-      normalize(load(path, **options)).to_yaml
-    end
-
-    def json(path, **options)
-      normalize(load(path, **options)).to_json
-    end
-
-    def load(path, paths: ["app/views"], **options)
-      Renderer.new(**options).render(Resolver.find_template_source(paths, path)).schema!
-    end
-
-    private
-
-    def normalize(schema)
-      schema.deep_stringify_keys
-        .deep_transform_values { |v| v.is_a?(Symbol) ? v.to_s : v }
-        .deep_transform_values { |v| v.is_a?(Regexp) ? v.source : v }
+  def self.renderer(paths = nil, locals: nil)
+    if paths.nil? && locals.nil?
+      @renderer ||= Renderer.new("app/views")
+    else
+      Renderer.new(paths, locals)
     end
   end
+  delegate :yaml, :json, :render, to: :renderer
 end
