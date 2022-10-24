@@ -16,19 +16,7 @@ class Jbuilder::Schema
   singleton_class.attr_accessor :components_path, :title_name, :description_name
   @components_path, @title_name, @description_name = "components/schemas", "title", "description"
 
-  autoload :Template, "jbuilder/schema/template"
-
-  ActiveSupport.on_load :action_view do
-    ActionView::Template.register_template_handler :jbuilder, JbuilderHandler
-  end
-
-  require "jbuilder/jbuilder_template" # Hack to load ::JbuilderHandler.
-
-  class JbuilderHandler < ::JbuilderHandler
-    def self.call(template, source = nil)
-      super.sub("JbuilderTemplate", "Jbuilder::Schema::Template").sub("target!", "schema!") # lol
-    end
-  end
+  autoload :Renderer, "jbuilder/schema/renderer"
 
   class << self
     def configure
@@ -43,13 +31,11 @@ class Jbuilder::Schema
       normalize(load(object, **options)).to_json
     end
 
-    @@view_renderer = ActionView::Base.with_empty_template_cache
-
     def load(object = nil, paths: ["app/views"], title: nil, description: nil, **options)
       $jbuilder_details = { model: object&.class, title: title, description: description }
 
       options.merge! partial: object.to_partial_path, object: object if object
-      @@view_renderer.with_view_paths(paths).render(**options)
+      Renderer.new(paths).render(**options)
     ensure
       $jbuilder_details = nil
     end

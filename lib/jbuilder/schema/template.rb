@@ -8,6 +8,16 @@ class Jbuilder::Schema
     attr_reader :attributes, :type
     attr_reader :model_scope
 
+    class Handler < ::JbuilderHandler
+      def self.call(template, source = nil)
+        super.sub("JbuilderTemplate", "Jbuilder::Schema::Template").sub("target!", "schema!")
+      end
+    end
+
+    ::ActiveSupport.on_load :action_view do
+      ::ActionView::Template.register_template_handler :jbuilder, ::Jbuilder::Schema::Template::Handler
+    end
+
     ModelScope = ::Struct.new(:model, :title, :description, keyword_init: true) do
       def initialize(**)
         super
