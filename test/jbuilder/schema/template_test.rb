@@ -73,7 +73,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   end
 
   test "object without schema attributes" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.user User.first, :id, :name
     end
 
@@ -81,7 +81,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   end
 
   test "object with schema attributes" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
       json.user User.first, :id, :name, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
     end
 
