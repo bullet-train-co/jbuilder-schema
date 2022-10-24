@@ -25,12 +25,16 @@ class Jbuilder::Schema
       yield self
     end
 
+    def hash(path, **options)
+      normalize(load(path, **options))
+    end
+
     def yaml(path, **options)
-      normalize(load(path, **options)).to_yaml
+      hash(path, **options).to_yaml
     end
 
     def json(path, **options)
-      normalize(load(path, **options)).to_json
+      hash(path, **options).to_json
     end
 
     def load(path, paths: ["app/views"], **options)
