@@ -43,7 +43,7 @@ class Jbuilder::Schema
       {type: type}.merge(type == :object ? _object(**attributes.merge) : attributes)
     end
 
-    def set!(key, value = BLANK, *args, **schema_options, &block)
+    def set!(key, value = BLANK, *args, schema: {}, **options, &block)
       result = if block
         if !_blank?(value)
           # OBJECTS ARRAY:
@@ -56,7 +56,7 @@ class Jbuilder::Schema
           # { "comments": ... }
           @inline_array = true
 
-          _with_model_scope(**schema_options) do
+          _with_model_scope(**schema) do
             _merge_block(key) { yield self }
           end
         end
@@ -66,7 +66,7 @@ class Jbuilder::Schema
           # json.age 32
           # json.person another_jbuilder
           # { "age": 32, "person": { ...  }
-          _schema(key, _format_keys(value.attributes!), **schema_options)
+          _schema(key, _format_keys(value.attributes!), **schema)
         elsif _is_collection_array?(value)
           # ATTRIBUTE2:
           _scope { array! value }
@@ -74,7 +74,7 @@ class Jbuilder::Schema
         else
           # json.age 32
           # { "age": 32 }
-          _schema(key, _format_keys(value), **schema_options)
+          _schema(key, _format_keys(value), **schema)
         end
       elsif _is_collection?(value)
         # COLLECTION:
@@ -88,8 +88,8 @@ class Jbuilder::Schema
         # EXTRACT!:
         # json.author @article.creator, :name, :email_address
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-        _with_model_scope(**schema_options) do
-          _merge_block(key) { extract! value, *args, **schema_options }
+        _with_model_scope(**schema) do
+          _merge_block(key) { extract! value, *args, schema: schema }
         end
       end
 
@@ -161,14 +161,9 @@ class Jbuilder::Schema
       yield # TODO: Our schema generation breaks Jbuilder's fragment caching.
     end
 
-    def method_missing(*args, &block) # standard:disable Style/MissingRespondToMissing
-      args, schema_options = _args_and_schema_options(*args)
-
-      if block
-        set!(*args, **schema_options, &block)
-      else
-        set!(*args, **schema_options)
-      end
+    def method_missing(*args, **options, &block) # standard:disable Style/MissingRespondToMissing
+      # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
+      set!(*args, **options, &block)
     end
 
     private
