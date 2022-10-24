@@ -105,15 +105,12 @@ class Jbuilder::Schema
       end
     end
 
-    def array!(collection = [], *args, &block)
-      args, schema_options = _args_and_schema_options(*args)
-      options = args.first
-
-      if args.one? && _partial_options?(options)
+    def array!(collection = [], *args, schema: {}, **options, &block)
+      if _partial_options?(options)
         @collection = true
         _set_ref(options[:partial].split("/").last)
       else
-        array = _make_array(collection, *args, schema: schema_options, &block)
+        array = _make_array(collection, *args, schema: schema, &block)
 
         if @inline_array
           @attributes = {}
@@ -183,11 +180,6 @@ class Jbuilder::Schema
         required: _required!(attributes.keys),
         properties: attributes
       }
-    end
-
-    def _args_and_schema_options(*args)
-      schema_options = args.extract! { |a| a.is_a?(::Hash) && a.key?(:schema) }.first&.dig(:schema) || {}
-      [args, schema_options]
     end
 
     def _set_description(key, value)
