@@ -214,19 +214,17 @@ end
 
 ### RSwag
 
-It's super easy to use Jbuilder::Schema with RSwag: just add `jbuilder_schema` helper in `swagger_helper.rb` like this:
+You can use the `yaml`/`json` methods in your `swagger_helper.rb` like this:
 
 ```ruby
 RSpec.configure do |config|
   config.swagger_docs = {
     components: {
       schemas: {
-        article: Jbuilder::Schema.yaml('api/v1/articles/_article',
-          model: Article,
+        article: Jbuilder::Schema.yaml(FactoryBot.build(:article, id: 1),
           title: 'Article',
           description: 'Article in the blog',
           locals: {
-            article: FactoryBot.build(:article, id: 1),
             current_user: FactoryBot.build(:user, admin: true)
           })
       }
