@@ -25,37 +25,43 @@ Or install it yourself as:
 Wherever you want to generate schemas, call `Jbuilder::Schema.yaml` or `Jbuilder::Schema.json`:
 
 ```ruby
-Jbuilder::Schema.yaml('api/v1/articles/_article',
-  title: 'Article',
-  description: 'Article in the blog',
-  paths: view_paths.map(&:path),
-  model: Article,
-  locals: {
-    article: @article,
-    current_user: @user
-  })
+Jbuilder::Schema.yaml(@article, title: 'Article', description: 'Article in the blog', locals: { current_user: @user })
 ```
 
-`Jbuilder::Schema.yaml`/`json` takes the `path` to your Jbuilder template and several optional arguments:
+Under the hood `Jbuilder::Schema.yaml`/`json` will use Action View's `render` method and support the same arguments.
 
-- `title` and `description`: Title and description of schema, if not passed then they will be grabbed from locale files (see *[Titles & Descriptions](#titles--descriptions)*);
-- `paths`: If you need to scope any other paths than `app/views`, pass them as an array here;
-- `model`: Model described in template, this is needed to populate `required` field in schema;
-- `locals`: pass the locals needed in the Jbuilder template. Those could be any objects as long as they respond to methods called on them in template.
+So in the above example, the `@article`'s `to_partial_path` path is used to find and render a `articles/_article.json.jbuilder` template, and `article` is available in the partial.
 
-Notice that partial templates should be prepended with an underscore just like in the name of the file (i.e. `_article` but not `article` when using Jbuilder).
+Additionally, we can pass any needed `locals:`.
+
+The `title` and `description` set the title and description of the schema — though they can also come from locale files (see *[Titles & Descriptions](#titles--descriptions)*);
+
+### Use with a directory within app/views
+
+If you have a directory within app/views where your Jbuilder templates are, you can use `renderer` to capture that along with any `locals:` common to the templates you'll render:
+
+```ruby
+jbuilder = Jbuilder::Schema.renderer('app/views/api/v1', locals: { current_user: @user })
+jbuilder.yaml @article, title: 'Article', description: 'Article in the blog'
+```
+
+This means you don't have to write out the partial path, which gets tedious with multiple schema renders:
+
+```ruby
+Jbuilder::Schema.yaml(partial: 'api/v1/articles/article', locals: { article: @article, current_user: @user }, title: 'Article', description: 'Article in the blog')
+```
 
 ### Output
 
 Jbuilder::Schema automatically sets `description`, `type`, and `required` options in JSON-Schema.
 
-For example, if we have `_articles.json.jbuilder` file:
+For example, if we have a `_article.json.jbuilder` file:
 
 ```ruby
 json.extract! article, :id, :title, :body, :created_at
 ```
 
-Will output:
+This will produce the following:
 
 ```yaml
 type: object
@@ -85,7 +91,7 @@ properties:
 
 #### Simple
 
-Sometimes you would want to set you own data in generated JSON-Schema. All you need to do is just pass hash with it under `schema` keyword in your Jbuilder template:
+To set your own data in the generated JSON-Schema pass a `schema:` hash:
 
 ```ruby
 json.id article.id, schema: { type: :number, description: "Custom ID description" }
