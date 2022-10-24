@@ -72,6 +72,22 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     assert_equal({id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}, result.attributes)
   end
 
+  test "object without schema attributes" do
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
+      json.user User.first, :id, :name
+    end
+
+    assert_equal({user: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result.attributes)
+  end
+
+  test "object with schema attributes" do
+    result = Jbuilder::Schema::Template.new(model: Article) do |json|
+      json.user User.first, :id, :name, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
+    end
+
+    assert_equal({user: {type: :object, title: "User", description: "User writes articles", required: [:id], properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result.attributes)
+  end
+
   test "simple block" do
     result = Jbuilder::Schema::Template.new(model: User) do |json|
       json.author { json.id 123 }
