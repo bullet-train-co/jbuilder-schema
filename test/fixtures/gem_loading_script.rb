@@ -12,4 +12,4 @@ end
 
 article = Struct.new(:id, :status, :title, :body, :created_at, :updated_at).new(1, "pending", "yo", "sup", Time.now, Time.now)
 
-puts Jbuilder::Schema.yaml partial: "articles/article", paths: ["test/fixtures/api/v1"], object: article
+puts Jbuilder::Schema.renderer("test/fixtures/api/v1").yaml partial: "articles/article", object: article

@@ -12,19 +12,17 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       created_at: {description: "en.articles.fields.created_at.description"},
       updated_at: {description: "en.articles.fields.updated_at.description"}
     }}
+
+    @user = User.new(id: 1, email: "someone@example.org", name: "Someone")
+    @article = Article.new(id: 1, user: @user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
+
+    @renderer = Jbuilder::Schema.renderer("test/fixtures/api/v1", locals: { current_user: @user })
   end
 
   teardown { I18n.reload! }
 
   test "renders a schema from a fixture" do
-    user = User.new(id: 1, email: "someone@example.org", name: "Someone")
-    article = Article.new(id: 1, user: user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
-
-    schema = Jbuilder::Schema.load article,
-      title: "Article",
-      description: "Article in the blog",
-      paths: ["test/fixtures/api/v1"],
-      locals: {current_user: user}
+    schema = @renderer.render @article, title: "Article", description: "Article in the blog"
 
     assert_equal({
       type: :object,
@@ -43,16 +41,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
   end
 
   test "renders a schema from a fixture to yaml" do
-    user = User.new(id: 1, email: "someone@example.org", name: "Someone")
-    article = Article.new(id: 1, user: user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
-
-    schema = Jbuilder::Schema.yaml article,
-      title: "Article",
-      description: "Article in the blog",
-      paths: ["test/fixtures/api/v1"],
-      locals: {current_user: user}
-
-    assert_equal <<~YAML, schema
+    assert_equal <<~YAML, @renderer.yaml(@article, title: "Article", description: "Article in the blog")
       ---
       type: object
       title: Article
@@ -89,14 +78,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
   end
 
   test "renders a schema from a fixture to json" do
-    user = User.new(id: 1, email: "someone@example.org", name: "Someone")
-    article = Article.new(id: 1, user: user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
-
-    schema = Jbuilder::Schema.json article,
-      title: "Article",
-      description: "Article in the blog",
-      paths: ["test/fixtures/api/v1"],
-      locals: {current_user: user}
+    schema = @renderer.json @article, title: "Article", description: "Article in the blog"
 
     assert_equal({
       type: "object",
