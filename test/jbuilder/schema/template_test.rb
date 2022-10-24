@@ -41,81 +41,81 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   end
 
   test "json.extract!" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.extract!(articles.first, :id, :title, :body)
     end
 
-    assert_equal({id: {description: "test", type: :integer}, title: {description: "test", type: :string}, body: {description: "test", type: :string}}, result.attributes)
+    assert_equal({id: {description: "test", type: :integer}, title: {description: "test", type: :string}, body: {description: "test", type: :string}}, result)
   end
 
   test "json.extract! with schema arguments" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.extract!(articles.first, :id, :title, :body, schema: {id: {type: :string}, body: {type: :text}})
     end
 
-    assert_equal({id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}, result.attributes)
+    assert_equal({id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}, result)
   end
 
   test "json.extract! with hash" do
-    result = Jbuilder::Schema::Template.new(nil, model: Hash) do |json|
+    result = json_for(Hash) do |json|
       json.extract!({id: 1, title: "sup", body: "somebody once told me the world…"}, :id, :title, :body)
     end
 
-    assert_equal({id: {description: "test", type: :integer}, title: {description: "test", type: :string}, body: {description: "test", type: :string}}, result.attributes)
+    assert_equal({id: {description: "test", type: :integer}, title: {description: "test", type: :string}, body: {description: "test", type: :string}}, result)
   end
 
   test "json.extract! with hash and schema arguments" do
-    result = Jbuilder::Schema::Template.new(nil, model: Hash) do |json|
+    result = json_for(Hash) do |json|
       json.extract!({id: 1, title: "sup", body: "somebody once told me the world…"}, :id, :title, :body, schema: {id: {type: :string}, body: {type: :text}})
     end
 
-    assert_equal({id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}, result.attributes)
+    assert_equal({id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}, result)
   end
 
   test "object without schema attributes" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.user User.first, :id, :name
     end
 
-    assert_equal({user: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result.attributes)
+    assert_equal({user: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result)
   end
 
   test "object with schema attributes" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.user User.first, :id, :name, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
     end
 
-    assert_equal({user: {type: :object, title: "User", description: "User writes articles", required: [:id], properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result.attributes)
+    assert_equal({user: {type: :object, title: "User", description: "User writes articles", required: [:id], properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result)
   end
 
   test "simple block" do
-    result = Jbuilder::Schema::Template.new(nil, model: User) do |json|
+    result = json_for(User) do |json|
       json.author { json.id 123 }
     end
 
-    assert_equal({author: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}}}}, result.attributes)
+    assert_equal({author: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}}}}, result)
   end
 
   test "block with schema object attribute" do
-    result = Jbuilder::Schema::Template.new(nil, model: User) do |json|
+    result = json_for(User) do |json|
       json.author schema: {object: articles.first.user} do
         json.id 123
       end
     end
 
-    assert_equal({author: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}}}}, result.attributes)
+    assert_equal({author: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}}}}, result)
   end
 
   test "block with array" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.articles { json.array! Article.first(3), :id, :title }
     end
 
-    assert_equal({articles: {description: "test", type: :array, items: {id: {description: "test", type: :integer}, title: {description: "test", type: :string}}}}, result.attributes)
+    assert_equal({articles: {description: "test", type: :array, items: {id: {description: "test", type: :integer}, title: {description: "test", type: :string}}}}, result)
   end
 
   test "array with block" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.array! articles do |article|
         json.id article.id
         json.title article.title
@@ -123,11 +123,11 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({items: {id: {description: "test", type: :integer}, title: {description: "test", type: :string}, body: {description: "test", type: :string}}}, result.attributes)
+    assert_equal({items: {id: {description: "test", type: :integer}, title: {description: "test", type: :string}, body: {description: "test", type: :string}}}, result)
   end
 
   test "array with block with schema attributes" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.array! articles do |article|
         json.id article.id, schema: {type: :string}
         json.title article.title
@@ -135,36 +135,36 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({items: {id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}}, result.attributes)
+    assert_equal({items: {id: {description: "test", type: :string}, title: {description: "test", type: :string}, body: {description: "test", type: :text}}}, result)
   end
 
   test "block with merge" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.author do
         json.id 123
         json.merge!({name: "David"})
       end
     end
 
-    assert_equal({author: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result.attributes)
+    assert_equal({author: {type: :object, title: "test", description: "test", required: [:id], properties: {id: {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result)
   end
 
   test "block with partial" do
-    result = Jbuilder::Schema::Template.new(nil, model: User) do |json|
+    result = json_for(User) do |json|
       json.user { json.partial! "api/v1/users/user", user: User.first }
     end
 
-    assert_equal({user: {:description => "test", :type => :object, :$ref => "#/components/schemas/user"}}, result.attributes)
+    assert_equal({user: {:description => "test", :type => :object, :$ref => "#/components/schemas/user"}}, result)
   end
 
   test "block with array with partial" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.articles schema: {object: articles.first} do
         json.array! articles, partial: "api/v1/articles/article", as: :article
       end
     end
 
-    assert_equal({articles: {description: "test", type: :array, items: {:$ref => "#/components/schemas/article"}}}, result.attributes)
+    assert_equal({articles: {description: "test", type: :array, items: {:$ref => "#/components/schemas/article"}}}, result)
   end
 
   test "collections" do
@@ -189,17 +189,17 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   end
 
   test "key format" do
-    result = Jbuilder::Schema::Template.new(nil, model: User) do |json|
+    result = json_for(User) do |json|
       json.key_format! camelize: :upper
       json.id 123
       json.name "David"
     end
 
-    assert_equal({Id: {description: "test", type: :integer}, Name: {description: "test", type: :string}}, result.attributes)
+    assert_equal({Id: {description: "test", type: :integer}, Name: {description: "test", type: :string}}, result)
   end
 
   test "deep key format" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.key_format! camelize: :upper
       json.deep_format_keys!
       json.id 123
@@ -210,11 +210,11 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       }
     end
 
-    assert_equal({Id: {description: "test", type: :integer}, Title: {description: "test", type: :string}, Author: {type: :object, title: "test", description: "test", required: [:Id], properties: {Id: {description: "test", type: :integer}, Name: {description: "test", type: :string}}}}, result.attributes)
+    assert_equal({Id: {description: "test", type: :integer}, Title: {description: "test", type: :string}, Author: {type: :object, title: "test", description: "test", required: [:Id], properties: {Id: {description: "test", type: :integer}, Name: {description: "test", type: :string}}}}, result)
   end
 
   test "deep key format with array" do
-    result = Jbuilder::Schema::Template.new(nil, model: Article) do |json|
+    result = json_for(Article) do |json|
       json.key_format! camelize: :upper
       json.deep_format_keys!
       json.id 123
@@ -222,7 +222,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.articles articles, :title, :created_at
     end
 
-    assert_equal({Id: {description: "test", type: :integer}, Name: {description: "test", type: :string}, Articles: {description: "test", type: :array, items: {Title: {description: "test", type: :string}, CreatedAt: {description: "test", type: :string, format: "date-time"}}}}, result.attributes)
+    assert_equal({Id: {description: "test", type: :integer}, Name: {description: "test", type: :string}, Articles: {description: "test", type: :array, items: {Title: {description: "test", type: :string}, CreatedAt: {description: "test", type: :string, format: "date-time"}}}}, result)
   end
 
   test "schematize type" do
@@ -245,6 +245,10 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   end
 
   private
+
+  def json_for(model, **options, &block)
+    Jbuilder::Schema::Template.new(nil, model: model, **options, &block).attributes
+  end
 
   def json
     Jbuilder::Schema::Template.new(nil, model: Article)
