@@ -32,12 +32,9 @@ class Jbuilder::Schema
     end
 
     def load(object = nil, paths: ["app/views"], title: nil, description: nil, **options)
-      $jbuilder_details = { model: object&.class, title: title, description: description }
-
       options.merge! partial: object.to_partial_path, object: object if object
+      (options[:locals] ||= {})[:__jbuilder_schema_options] = { model: object&.class, title: title, description: description }
       Renderer.new(paths).render(**options)
-    ensure
-      $jbuilder_details = nil
     end
 
     private

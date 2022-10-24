@@ -10,7 +10,7 @@ class Jbuilder::Schema
 
     class Handler < ::JbuilderHandler
       def self.call(template, source = nil)
-        super.sub("JbuilderTemplate", "Jbuilder::Schema::Template").sub("target!", "schema!")
+        super.sub("JbuilderTemplate.new(self", "Jbuilder::Schema::Template.new(self, **__jbuilder_schema_options").sub("target!", "schema!")
       end
     end
 
@@ -42,7 +42,7 @@ class Jbuilder::Schema
       @inline_array = false
       @collection = false
 
-      @model_scope = ModelScope.new(**$jbuilder_details.to_h.merge(options))
+      @model_scope = ModelScope.new(**options)
 
       super(context)
 
