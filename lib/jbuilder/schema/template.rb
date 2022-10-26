@@ -77,10 +77,7 @@ class Jbuilder::Schema
           # json.comments { ... }
           # { "comments": ... }
           @inline_array = true
-
-          _with_model_scope(**schema) do
-            _merge_block(key) { yield self }
-          end
+          _merge_schema_block(key, **schema) { yield self }
         end
       elsif args.empty?
         if ::Jbuilder === value
@@ -110,9 +107,7 @@ class Jbuilder::Schema
         # EXTRACT!:
         # json.author @article.creator, :name, :email_address
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-        _with_model_scope(**schema) do
-          _merge_block(key) { extract! value, *args, schema: schema }
-        end
+        _merge_schema_block(key, **schema) { extract! value, *args, schema: schema }
       end
 
       _set_description key, result
@@ -184,13 +179,6 @@ class Jbuilder::Schema
     end
 
     private
-
-    def _with_model_scope(object: nil, object_title: nil, object_description: nil, **)
-      old_model_scope, @model_scope = @model_scope, ModelScope.new(model: object.class, title: object_title, description: object_description) if object
-      yield
-    ensure
-      @model_scope = old_model_scope if object
-    end
 
     def _object(**attributes)
       {
@@ -299,6 +287,13 @@ class Jbuilder::Schema
 
     def _map_collection(collection)
       super.first
+    end
+
+    def _merge_schema_block(key, object: nil, object_title: nil, object_description: nil, **, &block)
+      old_model_scope, @model_scope = @model_scope, ModelScope.new(model: object.class, title: object_title, description: object_description) if object
+      _merge_block(key, &block)
+    ensure
+      @model_scope = old_model_scope if object
     end
 
     def _merge_block(key)
