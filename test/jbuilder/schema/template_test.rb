@@ -146,7 +146,8 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: :string}}}}, result)
+    # TODO: should the merged name be a symbol or string here? E.g. should it pass through `_key`?
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result)
   end
 
   test "block with partial" do
@@ -168,8 +169,8 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   end
 
   test "collections" do
-    assert_equal({description: "test", type: :array, items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}, json.articles(articles, :id, :title))
-    assert_equal({description: "test", type: :array, items: {
+    assert_equal({description: "test", "type" => :array, "items" => {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}, json.articles(articles, :id, :title))
+    assert_equal({description: "test", "type" => :array, "items" => {
       "id" => {description: "test", type: :integer},
       "status" => {description: "test", type: :string, enum: ["pending", "published", "archived"]},
       "title" => {description: "test", type: :string},
@@ -209,7 +210,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       }
     end
 
-    assert_equal({"Id" => {description: "test", type: :integer}, "Title" => {description: "test", type: :string}, "Author" => {type: :object, title: "test", description: "test", required: [:Id], properties: {"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string}}}}, result)
+    assert_equal({"Id" => {description: "test", type: :integer}, "Title" => {description: "test", type: :string}, "Author" => {type: :object, title: "test", description: "test", required: ["Id"], properties: {"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string}}}}, result)
   end
 
   test "deep key format with array" do
