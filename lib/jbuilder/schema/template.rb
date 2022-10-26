@@ -115,7 +115,7 @@ class Jbuilder::Schema
         end
       end
 
-      result = _set_description key, result if model_scope.model
+      result = _set_description key, result
       _set_value key, result
     end
 
@@ -169,7 +169,7 @@ class Jbuilder::Schema
       if hash_or_array.is_a?(::Hash)
         hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
           result = _schema(key, value)
-          result = _set_description(key, result) if model_scope.model
+          result = _set_description(key, result)
           a[key] = result
         end
       end
@@ -205,7 +205,7 @@ class Jbuilder::Schema
     end
 
     def _set_description(key, value)
-      unless value.key?(:description)
+      if !value.key?(:description) && model_scope.model
         description = model_scope.translate_field(key)
         value = {description: description}.merge! value
       end
@@ -289,7 +289,7 @@ class Jbuilder::Schema
     def _extract_hash_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
-        result = _set_description(key, result) if model_scope.model
+        result = _set_description(key, result)
         _set_value key, result
       end
     end
@@ -297,7 +297,7 @@ class Jbuilder::Schema
     def _extract_method_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.public_send(key)), **schema[key] || {})
-        result = _set_description(key, result) if model_scope.model
+        result = _set_description(key, result)
         _set_value key, result
       end
     end
