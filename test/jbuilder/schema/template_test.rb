@@ -77,7 +77,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.user User.first, :id, :name
     end
 
-    assert_equal({"user" => {type: :object, title: "test", description: "test", required: [:id], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: :string}}}}, result)
+    assert_equal({"user" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: :string}}}}, result)
   end
 
   test "object with schema attributes" do
@@ -85,7 +85,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.user User.first, :id, :name, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
     end
 
-    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: [:id], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: :string}}}}, result)
+    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: :string}}}}, result)
   end
 
   test "simple block" do
@@ -93,7 +93,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.author { json.id 123 }
     end
 
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: [:id], properties: {"id" => {description: "test", type: :integer}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}}}}, result)
   end
 
   test "block with schema object attribute" do
@@ -103,7 +103,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: [:id], properties: {"id" => {description: "test", type: :integer}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}}}}, result)
   end
 
   test "block with array" do
@@ -146,7 +146,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: [:id], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: :string}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: :string}}}}, result)
   end
 
   test "block with partial" do
