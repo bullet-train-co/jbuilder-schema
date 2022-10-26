@@ -168,9 +168,7 @@ class Jbuilder::Schema
       hash_or_array = _format_keys(hash_or_array)
       if hash_or_array.is_a?(::Hash)
         hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
-          result = _schema(key, value)
-          result = _set_description(key, result)
-          a[key] = result
+          a[key] = _schema(key, value)
         end
       end
       @attributes = _merge_values(@attributes, hash_or_array)
@@ -247,7 +245,7 @@ class Jbuilder::Schema
         options[:enum] = defined_enum.keys
       end
 
-      options
+      _set_description key, options
     end
 
     def _primitive_type(type)
@@ -289,7 +287,6 @@ class Jbuilder::Schema
     def _extract_hash_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
-        result = _set_description(key, result)
         _set_value key, result
       end
     end
@@ -297,7 +294,6 @@ class Jbuilder::Schema
     def _extract_method_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.public_send(key)), **schema[key] || {})
-        result = _set_description(key, result)
         _set_value key, result
       end
     end
