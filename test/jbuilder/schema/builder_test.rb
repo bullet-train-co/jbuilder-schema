@@ -28,14 +28,14 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       type: :object,
       title: "Article",
       description: "Article in the blog",
-      required: [:id],
+      required: ["id"],
       properties: {
-        id: {type: :integer, description: "en.articles.fields.id.description"},
-        status: {type: :string, description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
-        title: {type: :string, description: "en.articles.fields.title.description"},
-        body: {type: :string, description: "en.articles.fields.body.description", pattern: /\w+/},
-        created_at: {type: :string, description: "en.articles.fields.created_at.description", format: "date-time"},
-        updated_at: {type: :string, description: "en.articles.fields.updated_at.description", format: "date-time"}
+        "id" => {type: :integer, description: "en.articles.fields.id.description"},
+        "status" => {type: :string, description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
+        "title" => {type: :string, description: "en.articles.fields.title.description"},
+        "body" => {type: :string, description: "en.articles.fields.body.description", pattern: /\w+/},
+        "created_at" => {type: :string, description: "en.articles.fields.created_at.description", format: "date-time"},
+        "updated_at" => {type: :string, description: "en.articles.fields.updated_at.description", format: "date-time"}
       }
     }, schema)
   end
