@@ -206,10 +206,10 @@ class Jbuilder::Schema
 
     def _set_description(key, value)
       if !value.key?(:description) && model_scope.model
-        description = model_scope.translate_field(key)
-        value = {description: description}.merge! value
+        {description: model_scope.translate_field(key)}.merge! value
+      else
+        value
       end
-      value
     end
 
     def _set_ref(component)
