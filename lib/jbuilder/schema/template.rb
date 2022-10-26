@@ -115,7 +115,7 @@ class Jbuilder::Schema
         end
       end
 
-      result = _set_description key, result
+      _set_description key, result
       _set_value key, result
     end
 
@@ -204,9 +204,7 @@ class Jbuilder::Schema
 
     def _set_description(key, value)
       if !value.key?(:description) && model_scope.model
-        {description: model_scope.translate_field(key)}.merge! value
-      else
-        value
+        value[:description] = model_scope.translate_field(key)
       end
     end
 
@@ -246,6 +244,7 @@ class Jbuilder::Schema
       end
 
       _set_description key, options
+      options
     end
 
     def _primitive_type(type)
