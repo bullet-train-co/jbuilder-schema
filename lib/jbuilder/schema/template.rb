@@ -274,11 +274,6 @@ class Jbuilder::Schema
     # Jbuilder methods
     ###
 
-    def _key(key)
-      # TODO: Plain Jbuilder generates string keys, are we doing something here that'll bite us later?
-      @key_formatter ? @key_formatter.format(key).to_sym : key.to_sym
-    end
-
     def _extract_hash_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
@@ -303,12 +298,9 @@ class Jbuilder::Schema
       current_value = _blank? ? BLANK : @attributes.fetch(_key(key), BLANK)
       raise NullError.build(key) if current_value.nil?
 
-      new_value = _scope { yield self }
-      unless new_value.key?(:type) && new_value[:type] == :array || new_value.key?(:$ref)
-        new_value_properties = new_value
-        new_value = _object(**new_value_properties)
-      end
-      _merge_values(current_value, new_value)
+      value = _scope { yield self }
+      value = _object(**value) unless value.values_at("type", :type).any?(:array) || value.key?(:$ref) || value.key?("$ref")
+      _merge_values(current_value, value)
     end
   end
 end
