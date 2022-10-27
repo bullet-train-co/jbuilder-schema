@@ -138,7 +138,7 @@ class Jbuilder::Schema
         # TODO: Find where it is being used
         _render_active_model_partial model
       else
-        _set_ref((partial || model)&.split("/")&.last, collection: collection)
+        _set_ref(partial || model, collection: collection)
       end
     end
 
@@ -180,8 +180,8 @@ class Jbuilder::Schema
       end
     end
 
-    def _set_ref(component, collection:)
-      component_path = "#/#{::Jbuilder::Schema.components_path}/#{component}"
+    def _set_ref(part, collection:)
+      component_path = "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"
 
       if @inline_array
         if collection&.any?
