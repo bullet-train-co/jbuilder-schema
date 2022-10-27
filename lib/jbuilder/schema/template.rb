@@ -143,15 +143,15 @@ class Jbuilder::Schema
       end
     end
 
-    def partial!(*args)
-      if args.one? && _is_active_model?(args.first)
+    def partial!(model = nil, *args, partial: nil, collection: nil, **options)
+      if args.none? && _is_active_model?(model)
         # TODO: Find where it is being used
-        _render_active_model_partial args.first
-      elsif args.first.is_a?(::Hash)
-        _set_ref(args.first[:partial].split("/").last)
+        _render_active_model_partial model
+      elsif partial
+        _set_ref(partial.split("/").last)
       else
-        @collection = true if args[1].key?(:collection)
-        _set_ref(args.first&.split("/")&.last)
+        @collection = true if collection
+        _set_ref(model&.split("/")&.last)
       end
     end
 
