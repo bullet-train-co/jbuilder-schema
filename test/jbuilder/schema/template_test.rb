@@ -111,7 +111,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.articles { json.array! Article.first(3), :id, :title }
     end
 
-    assert_equal({"articles" => {description: "test", "type" => :array, "items" => {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}}, result)
+    assert_equal({"articles" => {description: "test", type: :array, items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}}, result)
   end
 
   test "array with block" do
@@ -123,7 +123,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({"items" => {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :string}}}, result)
+    assert_equal({items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :string}}}, result)
   end
 
   test "array with block with schema attributes" do
@@ -135,7 +135,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({"items" => {"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :text}}}, result)
+    assert_equal({items: {"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :text}}}, result)
   end
 
   test "block with merge" do
@@ -169,8 +169,8 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   end
 
   test "collections" do
-    assert_equal({description: "test", "type" => :array, "items" => {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}, json.articles(articles, :id, :title))
-    assert_equal({description: "test", "type" => :array, "items" => {
+    assert_equal({description: "test", type: :array, items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}, json.articles(articles, :id, :title))
+    assert_equal({description: "test", type: :array, items: {
       "id" => {description: "test", type: :integer},
       "status" => {description: "test", type: :string, enum: ["pending", "published", "archived"]},
       "title" => {description: "test", type: :string},
