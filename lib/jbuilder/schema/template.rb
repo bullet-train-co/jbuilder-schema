@@ -26,7 +26,7 @@ class Jbuilder::Schema
       end
     end
 
-    ModelScope = ::Struct.new(:model, :title, :description, keyword_init: true) do
+    class ModelScope < ::Struct.new(:model, :title, :description, keyword_init: true)
       def initialize(**)
         super
         @scope = model&.name&.underscore&.pluralize
