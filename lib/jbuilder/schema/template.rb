@@ -120,18 +120,13 @@ class Jbuilder::Schema
       if _partial_options?(options)
         partial!(collection: collection, **options)
       else
-        array = _make_array(collection, *args, schema: schema, &block)
+        @type = :array
 
-        if @inline_array
-          @attributes = {} if _blank?
-          @attributes.merge! type: :array, items: array
-        elsif _is_collection_array?(array)
-          @inline_array = true
-          array! array, *array.first&.attribute_names(&:to_sym)
-        else
-          @type = :array
-          @attributes[:items] = array
-        end
+        @attributes = {} if _blank?
+        @attributes[:type] = :array unless ::Kernel.block_given?
+
+        args = collection.first.attribute_names if args.none? && _is_collection_array?(collection)
+        @attributes[:items] = _make_array(collection, *args, schema: schema, &block)
       end
     end
 
