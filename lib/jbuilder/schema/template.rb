@@ -47,6 +47,8 @@ class Jbuilder::Schema
 
     def initialize(context, **options)
       @type = :object
+      @inline_array = false
+
       @configuration = Configuration.new(**options)
 
       super(context)
@@ -73,6 +75,7 @@ class Jbuilder::Schema
           # BLOCK:
           # json.comments { ... }
           # { "comments": ... }
+          @inline_array = true
           _merge_schema_block(key, **schema) { yield self }
         end
       elsif args.empty?
@@ -95,6 +98,7 @@ class Jbuilder::Schema
         # COLLECTION:
         # json.comments @article.comments, :content, :created_at
         # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+        @inline_array = true
         _scope { array! value, *args }
       else
         # EXTRACT!:
@@ -119,15 +123,18 @@ class Jbuilder::Schema
       if _partial_options?(options)
         partial!(collection: collection, **options)
       else
-        if args.none? && _is_collection_array?(collection)
-          args = collection.first.attribute_names
+        array = _make_array(collection, *args, schema: schema, &block)
+
+        if @inline_array
+          @attributes = {} if _blank?
+          @attributes.merge! type: :array, items: array
+        elsif _is_collection_array?(array)
+          @inline_array = true
+          array! array, *array.first&.attribute_names(&:to_sym)
+        else
+          @type = :array
+          @attributes[:items] = array
         end
-
-        @type = :array
-
-        @attributes = {} if _blank?
-        @attributes[:type] = :array unless block
-        @attributes[:items] = _make_array(collection, *args, schema: schema, &block)
       end
     end
 
@@ -181,12 +188,17 @@ class Jbuilder::Schema
     def _set_ref(component, collection:)
       component_path = "#/#{::Jbuilder::Schema.components_path}/#{component}"
 
-      if collection&.any?
-        _set_value(:type, :array)
-        _set_value(:items, {:$ref => component_path})
+      if @inline_array
+        if collection&.any?
+          _set_value(:type, :array)
+          _set_value(:items, {:$ref => component_path})
+        else
+          _set_value(:type, :object)
+          _set_value(:$ref, component_path)
+        end
       else
-        _set_value(:type, :object)
-        _set_value(:$ref, component_path)
+        @type = :array
+        _set_value(:items, {:$ref => component_path})
       end
     end
 
