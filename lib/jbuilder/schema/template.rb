@@ -5,8 +5,6 @@ require "active_support/inflections"
 
 class Jbuilder::Schema
   class Template < ::JbuilderTemplate
-    attr_reader :configuration
-
     class Handler < ::JbuilderHandler
       def self.call(template, source = nil)
         super.sub("JbuilderTemplate.new(self", "Jbuilder::Schema::Template.build(self, local_assigns")
@@ -171,16 +169,16 @@ class Jbuilder::Schema
     def _object(**attributes)
       {
         type: :object,
-        title: configuration.title,
-        description: configuration.description,
+        title: @configuration.title,
+        description: @configuration.description,
         required: _required!(attributes.keys),
         properties: attributes
       }
     end
 
     def _set_description(key, value)
-      if !value.key?(:description) && configuration.model
-        value[:description] = configuration.translate_field(key)
+      if !value.key?(:description) && @configuration.model
+        value[:description] = @configuration.translate_field(key)
       end
     end
 
@@ -214,7 +212,7 @@ class Jbuilder::Schema
         format = FORMATS[value.class] and options[:format] ||= format
       end
 
-      if (model = configuration.model) && (defined_enum = model.try(:defined_enums)&.dig(key.to_s))
+      if (model = @configuration.model) && (defined_enum = model.try(:defined_enums)&.dig(key.to_s))
         options[:enum] = defined_enum.keys
       end
 
@@ -250,7 +248,7 @@ class Jbuilder::Schema
     end
 
     def _required!(keys)
-      presence_validated_attributes = configuration.model.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
+      presence_validated_attributes = @configuration.model.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
       keys & [_key(:id), *presence_validated_attributes.map { _key _1 }]
     end
 

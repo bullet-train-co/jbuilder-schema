@@ -188,25 +188,33 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     assert_equal({"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}}, json.array!(articles, :id, :title, schema: {id: {type: :string}}))
   end
 
-  test "key format" do
+  test "pass through of internal instance variables" do
     result = json_for(User) do |json|
-      json.key_format! camelize: :upper
-      json.id 123
-      json.name "David"
-
       # Test our internal options don't bar someone from adding them to their JSON.
       json.type :array
       json.items [1]
       json.properties id: {type: :string}
       json.attributes yo: :sup
+      json.configuration "guess what"
     end
 
-    assert_equal({"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string},
-      "Type" => {type: :string, description: "test"},
-      "Items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"},
-      "Properties" => {type: :string, description: "test"},
-      "Attributes" => {type: :string, description: "test"}},
-      result)
+    assert_equal({
+      "type" => {type: :string, description: "test"},
+      "items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"},
+      "properties" => {type: :string, description: "test"},
+      "attributes" => {type: :string, description: "test"},
+      "configuration" => {type: :string, description: "test"},
+    }, result)
+  end
+
+  test "key format" do
+    result = json_for(User) do |json|
+      json.key_format! camelize: :upper
+      json.id 123
+      json.name "David"
+    end
+
+    assert_equal({"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string}}, result)
   end
 
   test "deep key format" do
