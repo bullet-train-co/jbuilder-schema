@@ -130,17 +130,14 @@ class Jbuilder::Schema
         array = _make_array(collection, *args, schema: schema, &block)
 
         if @inline_array
-          @attributes = {}
           _set_value(:type, :array)
           _set_value(:items, array)
         elsif _is_collection_array?(array)
-          @attributes = {}
           @inline_array = true
           @collection = true
           array! array, *array.first&.attribute_names(&:to_sym)
         else
           @type = :array
-          @attributes = {}
           _set_value(:items, array)
         end
       end
