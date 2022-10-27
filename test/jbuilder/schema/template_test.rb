@@ -155,7 +155,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.user { json.partial! "api/v1/users/user", user: User.first }
     end
 
-    assert_equal({"user" => {description: "test", "type" => :object, "$ref" => "#/components/schemas/user"}}, result)
+    assert_equal({"user" => {description: "test", type: :object, "$ref": "#/components/schemas/user"}}, result)
   end
 
   test "block with array with partial" do
@@ -165,7 +165,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({"articles" => {description: "test", "type" => :array, "items" => {:$ref => "#/components/schemas/article"}}}, result)
+    assert_equal({"articles" => {description: "test", type: :array, items: {"$ref": "#/components/schemas/article"}}}, result)
   end
 
   test "collections" do
