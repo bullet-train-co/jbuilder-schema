@@ -289,15 +289,3 @@ class Jbuilder::Schema
     end
   end
 end
-
-class Jbuilder
-  module SkipFormatting
-    SCHEMA_KEYS = %i[type items properties]
-
-    def format(key)
-      SCHEMA_KEYS.include?(key) ? key : super
-    end
-  end
-
-  KeyFormatter.prepend SkipFormatting
-end
