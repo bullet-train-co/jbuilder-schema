@@ -253,7 +253,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   private
 
   def json_for(model, **options, &block)
-    Jbuilder::Schema::Template.new(nil, model: model, **options, &block).attributes
+    Jbuilder::Schema::Template.new(nil, model: model, **options, &block).attributes!
   end
 
   def json
