@@ -124,8 +124,7 @@ class Jbuilder::Schema
 
     def array!(collection = [], *args, schema: {}, **options, &block)
       if _partial_options?(options)
-        @collection = true
-        _set_ref(options[:partial].split("/").last)
+        partial!(collection: collection, **options)
       else
         array = _make_array(collection, *args, schema: schema, &block)
 
@@ -147,11 +146,9 @@ class Jbuilder::Schema
       if args.none? && _is_active_model?(model)
         # TODO: Find where it is being used
         _render_active_model_partial model
-      elsif partial
-        _set_ref(partial.split("/").last)
       else
-        @collection = true if collection
-        _set_ref(model&.split("/")&.last)
+        @collection = true if collection&.any?
+        _set_ref((partial || model)&.split("/")&.last)
       end
     end
 
