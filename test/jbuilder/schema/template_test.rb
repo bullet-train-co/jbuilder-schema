@@ -198,10 +198,15 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.type :array
       json.items [1]
       json.properties id: {type: :string}
+      json.attributes yo: :sup
     end
 
     assert_equal({"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string},
-      "Type" => {type: :string, description: "test"}, "Items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"}, "Properties" => {type: :string, description: "test"}}, result)
+      "Type" => {type: :string, description: "test"},
+      "Items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"},
+      "Properties" => {type: :string, description: "test"},
+      "Attributes" => {type: :string, description: "test"}},
+      result)
   end
 
   test "deep key format" do
