@@ -32,12 +32,12 @@ class Jbuilder::Schema
         @scope = model&.name&.underscore&.pluralize
       end
 
-      def i18n_title
-        title || ::I18n.t(::Jbuilder::Schema.title_name, scope: @scope)
+      def title
+        super || ::I18n.t(::Jbuilder::Schema.title_name, scope: @scope)
       end
 
-      def i18n_description
-        description || ::I18n.t(::Jbuilder::Schema.description_name, scope: @scope)
+      def description
+        super || ::I18n.t(::Jbuilder::Schema.description_name, scope: @scope)
       end
 
       def translate_field(key)
@@ -183,8 +183,8 @@ class Jbuilder::Schema
     def _object(**attributes)
       {
         type: :object,
-        title: model_scope.i18n_title,
-        description: model_scope.i18n_description,
+        title: model_scope.title,
+        description: model_scope.description,
         required: _required!(attributes.keys),
         properties: attributes
       }
