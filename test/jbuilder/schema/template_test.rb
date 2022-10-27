@@ -193,12 +193,15 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.key_format! camelize: :upper
       json.id 123
       json.name "David"
-      # json.type :array # TODO: Make this testable by not adding a type method to Jbuilder::Schema::Template
+
+      # Test our internal options don't bar someone from adding them to their JSON.
+      json.type :array
       json.items [1]
       json.properties id: {type: :string}
     end
 
-    assert_equal({"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string}, "Items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"}, "Properties" => {type: :string, description: "test"}}, result)
+    assert_equal({"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string},
+      "Type" => {type: :string, description: "test"}, "Items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"}, "Properties" => {type: :string, description: "test"}}, result)
   end
 
   test "deep key format" do
