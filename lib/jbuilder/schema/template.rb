@@ -6,7 +6,7 @@ require "active_support/inflections"
 class Jbuilder::Schema
   class Template < ::JbuilderTemplate
     attr_reader :attributes, :type
-    attr_reader :model_scope
+    attr_reader :configuration
 
     class Handler < ::JbuilderHandler
       def self.call(template, source = nil)
@@ -26,7 +26,7 @@ class Jbuilder::Schema
       end
     end
 
-    class ModelScope < ::Struct.new(:model, :title, :description, keyword_init: true)
+    class Configuration < ::Struct.new(:model, :title, :description, keyword_init: true)
       def title
         super || translate(Jbuilder::Schema.title_name)
       end
@@ -50,7 +50,7 @@ class Jbuilder::Schema
       @inline_array = false
       @collection = false
 
-      @model_scope = ModelScope.new(**options)
+      @configuration = Configuration.new(**options)
 
       super(context)
 
@@ -183,16 +183,16 @@ class Jbuilder::Schema
     def _object(**attributes)
       {
         type: :object,
-        title: model_scope.title,
-        description: model_scope.description,
+        title: configuration.title,
+        description: configuration.description,
         required: _required!(attributes.keys),
         properties: attributes
       }
     end
 
     def _set_description(key, value)
-      if !value.key?(:description) && model_scope.model
-        value[:description] = model_scope.translate_field(key)
+      if !value.key?(:description) && configuration.model
+        value[:description] = configuration.translate_field(key)
       end
     end
 
@@ -227,7 +227,7 @@ class Jbuilder::Schema
         format = FORMATS[value.class] and options[:format] ||= format
       end
 
-      if (model = model_scope.model) && (defined_enum = model.try(:defined_enums)&.dig(key.to_s))
+      if (model = configuration.model) && (defined_enum = model.try(:defined_enums)&.dig(key.to_s))
         options[:enum] = defined_enum.keys
       end
 
@@ -263,7 +263,7 @@ class Jbuilder::Schema
     end
 
     def _required!(keys)
-      presence_validated_attributes = model_scope.model.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
+      presence_validated_attributes = configuration.model.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
       keys & [_key(:id), *presence_validated_attributes.map { _key _1 }]
     end
 
@@ -290,10 +290,10 @@ class Jbuilder::Schema
     end
 
     def _merge_schema_block(key, object: nil, object_title: nil, object_description: nil, **, &block)
-      old_model_scope, @model_scope = @model_scope, ModelScope.new(model: object.class, title: object_title, description: object_description) if object
+      old_configuration, @configuration = @configuration, Configuration.new(model: object.class, title: object_title, description: object_description) if object
       _merge_block(key, &block)
     ensure
-      @model_scope = old_model_scope if object
+      @configuration = old_configuration if object
     end
 
     def _merge_block(key)
