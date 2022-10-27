@@ -48,7 +48,6 @@ class Jbuilder::Schema
     def initialize(context, **options)
       @type = :object
       @inline_array = false
-      @collection = false
 
       @configuration = Configuration.new(**options)
 
@@ -100,8 +99,6 @@ class Jbuilder::Schema
         # json.comments @article.comments, :content, :created_at
         # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
         @inline_array = true
-        @collection = true
-
         _scope { array! value, *args }
       else
         # EXTRACT!:
@@ -133,7 +130,6 @@ class Jbuilder::Schema
           _set_value(:items, array)
         elsif _is_collection_array?(array)
           @inline_array = true
-          @collection = true
           array! array, *array.first&.attribute_names(&:to_sym)
         else
           @type = :array
@@ -147,8 +143,7 @@ class Jbuilder::Schema
         # TODO: Find where it is being used
         _render_active_model_partial model
       else
-        @collection = true if collection&.any?
-        _set_ref((partial || model)&.split("/")&.last)
+        _set_ref((partial || model)&.split("/")&.last, collection: collection)
       end
     end
 
@@ -190,11 +185,11 @@ class Jbuilder::Schema
       end
     end
 
-    def _set_ref(component)
+    def _set_ref(component, collection:)
       component_path = "#/#{::Jbuilder::Schema.components_path}/#{component}"
 
       if @inline_array
-        if @collection
+        if collection&.any?
           _set_value(:type, :array)
           _set_value(:items, {:$ref => component_path})
         else
