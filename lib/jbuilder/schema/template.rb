@@ -27,21 +27,21 @@ class Jbuilder::Schema
     end
 
     class ModelScope < ::Struct.new(:model, :title, :description, keyword_init: true)
-      def initialize(**)
-        super
-        @scope = model&.name&.underscore&.pluralize
-      end
-
       def title
-        super || ::I18n.t(::Jbuilder::Schema.title_name, scope: @scope)
+        super || translate(Jbuilder::Schema.title_name)
       end
 
       def description
-        super || ::I18n.t(::Jbuilder::Schema.description_name, scope: @scope)
+        super || translate(Jbuilder::Schema.description_name)
       end
 
       def translate_field(key)
-        ::I18n.t("fields.#{key}.#{::Jbuilder::Schema.description_name}", scope: @scope)
+        translate("fields.#{key}.#{Jbuilder::Schema.description_name}")
+      end
+
+      private
+      def translate(key)
+        I18n.t(key, scope: @scope ||= model&.name&.underscore&.pluralize)
       end
     end
 
