@@ -58,7 +58,7 @@ class Jbuilder::Schema
     end
 
     def schema!
-      {type: @type}.merge(@type == :object ? _object(attributes!.merge) : attributes!)
+      @type == :object ? _object(attributes!.merge) : attributes!
     end
 
     def set!(key, value = BLANK, *args, schema: {}, **options, &block)
