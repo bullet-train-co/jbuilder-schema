@@ -75,7 +75,7 @@ class Jbuilder::Schema
         end
       elsif args.empty?
         if value.respond_to?(:all?) && value.all? { _is_active_model? _1 }
-          # json.articles @articles
+          # json.articles @articles # TODO: Jbuilder doesn't automatically extract keys from a collection, should we add this feature?
           _scope { array! value, *value.first.attribute_names }
         else
           # json.age 32
