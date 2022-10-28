@@ -99,26 +99,28 @@ class Jbuilder::Schema
       _set_value key, result
     end
 
-    def extract!(object, *attributes, schema: {})
+    def extract!(object, *attributes, schema: nil)
       _with_schema_overrides(schema) { super(object, *attributes) }
     end
 
     def _with_schema_overrides(overrides)
-      old_schema_overrides, @schema_overrides = @schema_overrides, overrides
+      old_schema_overrides, @schema_overrides = @schema_overrides, overrides if overrides
       yield
     ensure
-      @schema_overrides = old_schema_overrides
+      @schema_overrides = old_schema_overrides if overrides
     end
 
-    def array!(collection = [], *args, schema: {}, **options, &block)
+    def array!(collection = [], *args, schema: nil, **options, &block)
       if _partial_options?(options)
         partial!(collection: collection, **options)
       else
         @type = :array
 
-        @attributes = {} if _blank?
-        @attributes[:type] = :array unless ::Kernel.block_given?
-        @attributes[:items] = _make_array(collection, *args, schema: schema, &block)
+        _with_schema_overrides(schema) do
+          @attributes = {} if blank?
+          @attributes[:type] = :array unless ::Kernel.block_given?
+          @attributes[:items] = _scope { super(collection, *args, &block) }
+        end
       end
     end
 
@@ -223,18 +225,6 @@ class Jbuilder::Schema
     def _set_value(key, value)
       value = _schema(key, value) unless value.is_a?(::Hash) && value.key?(:type)
       super
-    end
-
-    def _make_array(collection, *args, schema: {}, &block)
-      if collection.nil?
-        []
-      elsif block
-        _map_collection(collection, &block)
-      elsif args.any?
-        _map_collection(collection) { |element| extract! element, *args, schema: schema }
-      else
-        _format_keys(collection.to_a)
-      end
     end
 
     def _required!(keys)
