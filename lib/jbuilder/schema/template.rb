@@ -76,7 +76,7 @@ class Jbuilder::Schema
           _merge_schema_block(key, **schema) { yield self }
         end
       elsif args.empty?
-        if _is_collection_array?(value)
+        if value.respond_to?(:all?) && value.all? { _is_active_model? _1 }
           # json.articles @articles
           _scope { array! value, *value.first.attribute_names }
         else
@@ -239,10 +239,6 @@ class Jbuilder::Schema
       else
         _format_keys(collection.to_a)
       end
-    end
-
-    def _is_collection_array?(object)
-      object.is_a?(::Array) && object.all? { _is_active_model? _1 }
     end
 
     def _required!(keys)
