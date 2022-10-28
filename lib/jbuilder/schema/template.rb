@@ -64,12 +64,10 @@ class Jbuilder::Schema
     def set!(key, value = BLANK, *args, schema: {}, **options, &block)
       result = if block
         if !_blank?(value)
-          # OBJECTS ARRAY:
           # json.comments @article.comments { |comment| ... }
           # { "comments": [ { ... }, { ... } ] }
           _scope { array! value, &block }
         else
-          # BLOCK:
           # json.comments { ... }
           # { "comments": ... }
           @inline_array = true
@@ -87,13 +85,11 @@ class Jbuilder::Schema
           _schema(key, _format_keys(value), **schema)
         end
       elsif _is_collection?(value)
-        # COLLECTION:
         # json.comments @article.comments, :content, :created_at
         # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
         @inline_array = true
         _scope { array! value, *args }
       else
-        # EXTRACT!:
         # json.author @article.creator, :name, :email_address
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
         _merge_schema_block(key, **schema) { extract! value, *args, schema: schema }
