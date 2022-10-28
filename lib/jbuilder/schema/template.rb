@@ -58,7 +58,7 @@ class Jbuilder::Schema
     end
 
     def schema!
-      {type: @type}.merge(@type == :object ? _object(**attributes!.merge) : attributes!)
+      {type: @type}.merge(@type == :object ? _object(attributes!.merge) : attributes!)
     end
 
     def set!(key, value = BLANK, *args, schema: {}, **options, &block)
@@ -155,7 +155,7 @@ class Jbuilder::Schema
       @schema_overrides = old_schema_overrides if overrides
     end
 
-    def _object(**attributes)
+    def _object(attributes)
       {
         type: :object,
         title: @configuration.title,
@@ -252,7 +252,7 @@ class Jbuilder::Schema
       raise NullError.build(key) if current_value.nil?
 
       value = _scope { yield self }
-      value = _object(**value) unless value[:type] == :array || value.key?(:$ref)
+      value = _object(value) unless value[:type] == :array || value.key?(:$ref)
       _merge_values(current_value, value)
     end
   end
