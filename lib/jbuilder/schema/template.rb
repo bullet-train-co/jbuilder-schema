@@ -117,13 +117,6 @@ class Jbuilder::Schema
       _with_schema_overrides(schema) { super(object, *attributes) }
     end
 
-    def _with_schema_overrides(overrides)
-      old_schema_overrides, @schema_overrides = @schema_overrides, overrides if overrides
-      yield
-    ensure
-      @schema_overrides = old_schema_overrides if overrides
-    end
-
     def partial!(model = nil, *args, partial: nil, collection: nil, **options)
       if args.none? && _is_active_model?(model)
         # TODO: Find where it is being used
@@ -154,6 +147,13 @@ class Jbuilder::Schema
     end
 
     private
+
+    def _with_schema_overrides(overrides)
+      old_schema_overrides, @schema_overrides = @schema_overrides, overrides if overrides
+      yield
+    ensure
+      @schema_overrides = old_schema_overrides if overrides
+    end
 
     def _object(**attributes)
       {
