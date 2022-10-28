@@ -109,11 +109,14 @@ class Jbuilder::Schema
     end
 
     def extract!(object, *attributes, schema: {})
-      if ::Hash === object
-        _extract_hash_values(object, attributes, schema: schema)
-      else
-        _extract_method_values(object, attributes, schema: schema)
-      end
+      _with_schema_overrides(schema) { super(object, *attributes) }
+    end
+
+    def _with_schema_overrides(overrides)
+      old_schema_overrides, @schema_overrides = @schema_overrides, overrides
+      yield
+    ensure
+      @schema_overrides = old_schema_overrides
     end
 
     def array!(collection = [], *args, schema: {}, **options, &block)
@@ -196,6 +199,8 @@ class Jbuilder::Schema
     FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
 
     def _schema(key, value, **options)
+      options = @schema_overrides&.dig(key).to_h if options.empty?
+
       unless options[:type]
         options[:type] = _primitive_type value
 
@@ -226,6 +231,11 @@ class Jbuilder::Schema
       end
     end
 
+    def _set_value(key, value)
+      value = _schema(key, value) unless value.is_a?(::Hash) && value.key?(:type)
+      super
+    end
+
     def _make_array(collection, *args, schema: {}, &block)
       if collection.nil?
         []
@@ -250,20 +260,6 @@ class Jbuilder::Schema
     ###
     # Jbuilder methods
     ###
-
-    def _extract_hash_values(object, attributes, schema:)
-      attributes.each do |key|
-        result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
-        _set_value key, result
-      end
-    end
-
-    def _extract_method_values(object, attributes, schema:)
-      attributes.each do |key|
-        result = _schema(key, _format_keys(object.public_send(key)), **schema[key] || {})
-        _set_value key, result
-      end
-    end
 
     def _map_collection(collection)
       super.first
