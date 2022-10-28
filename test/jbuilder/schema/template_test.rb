@@ -193,8 +193,8 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       # Test our internal options don't bar someone from adding them to their JSON.
       json.type :array
       json.items [1]
-      json.properties id: {type: :string}
-      json.attributes yo: :sup
+      json.properties "hm"
+      json.attributes "ya"
       json.configuration "guess what"
     end
 
