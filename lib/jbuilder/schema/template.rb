@@ -84,8 +84,8 @@ class Jbuilder::Schema
           _schema(key, _format_keys(value.attributes!), **schema)
         elsif _is_collection_array?(value)
           # ATTRIBUTE2:
-          _scope { array! value }
-        # json.articles @articles
+          # json.articles @articles
+          _scope { array! value, *value.first.attribute_names }
         else
           # json.age 32
           # { "age": 32 }
@@ -127,8 +127,6 @@ class Jbuilder::Schema
 
         @attributes = {} if _blank?
         @attributes[:type] = :array unless ::Kernel.block_given?
-
-        args = collection.first.attribute_names if args.none? && _is_collection_array?(collection)
         @attributes[:items] = _make_array(collection, *args, schema: schema, &block)
       end
     end
