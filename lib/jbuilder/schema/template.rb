@@ -71,7 +71,7 @@ class Jbuilder::Schema
           # json.comments { ... }
           # { "comments": ... }
           @inline_array = true
-          _merge_schema_block(key, **schema) { yield self }
+          _merge_block_with_configuration(key, **schema) { yield self }
         end
       elsif args.empty?
         if value.respond_to?(:all?) && value.all? { _is_active_model? _1 }
@@ -92,7 +92,7 @@ class Jbuilder::Schema
       else
         # json.author @article.creator, :name, :email_address
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-        _merge_schema_block(key, **schema) { extract! value, *args, schema: schema }
+        _merge_block_with_configuration(key, **schema) { extract! value, *args, schema: schema }
       end
 
       _set_description key, result
@@ -240,7 +240,7 @@ class Jbuilder::Schema
       super.first
     end
 
-    def _merge_schema_block(key, object: nil, object_title: nil, object_description: nil, **, &block)
+    def _merge_block_with_configuration(key, object: nil, object_title: nil, object_description: nil, **, &block)
       old_configuration, @configuration = @configuration, Configuration.new(model: object.class, title: object_title, description: object_description) if object
       _merge_block(key, &block)
     ensure
