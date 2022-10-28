@@ -76,19 +76,14 @@ class Jbuilder::Schema
           _merge_schema_block(key, **schema) { yield self }
         end
       elsif args.empty?
-        if ::Jbuilder === value
-          # ATTRIBUTE1:
-          # json.age 32
-          # json.person another_jbuilder
-          # { "age": 32, "person": { ...  }
-          _schema(key, _format_keys(value.attributes!), **schema)
-        elsif _is_collection_array?(value)
-          # ATTRIBUTE2:
+        if _is_collection_array?(value)
           # json.articles @articles
           _scope { array! value, *value.first.attribute_names }
         else
           # json.age 32
-          # { "age": 32 }
+          # json.person another_jbuilder
+          # { "age": 32, "person": { ...  }
+          value = ::Jbuilder === value ? value.attributes! : value
           _schema(key, _format_keys(value), **schema)
         end
       elsif _is_collection?(value)
