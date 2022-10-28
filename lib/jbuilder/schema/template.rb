@@ -99,17 +99,6 @@ class Jbuilder::Schema
       _set_value key, result
     end
 
-    def extract!(object, *attributes, schema: nil)
-      _with_schema_overrides(schema) { super(object, *attributes) }
-    end
-
-    def _with_schema_overrides(overrides)
-      old_schema_overrides, @schema_overrides = @schema_overrides, overrides if overrides
-      yield
-    ensure
-      @schema_overrides = old_schema_overrides if overrides
-    end
-
     def array!(collection = [], *args, schema: nil, **options, &block)
       if _partial_options?(options)
         partial!(collection: collection, **options)
@@ -122,6 +111,17 @@ class Jbuilder::Schema
           @attributes[:items] = _scope { super(collection, *args, &block) }
         end
       end
+    end
+
+    def extract!(object, *attributes, schema: nil)
+      _with_schema_overrides(schema) { super(object, *attributes) }
+    end
+
+    def _with_schema_overrides(overrides)
+      old_schema_overrides, @schema_overrides = @schema_overrides, overrides if overrides
+      yield
+    ensure
+      @schema_overrides = old_schema_overrides if overrides
     end
 
     def partial!(model = nil, *args, partial: nil, collection: nil, **options)
