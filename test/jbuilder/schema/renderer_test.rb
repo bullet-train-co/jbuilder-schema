@@ -21,7 +21,7 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
 
   teardown { I18n.reload! }
 
-  test "renderers with default renderer" do
+  test "renders with default renderer" do
     I18n.backend.store_translations "en", users: {
       title: "User title",
       description: "User in the blog",
