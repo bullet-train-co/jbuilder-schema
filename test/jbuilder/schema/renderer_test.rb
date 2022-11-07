@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
+class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
   setup do
     I18n.backend.store_translations "en", articles: {fields: {
       id: {description: "en.articles.fields.id.description"},
