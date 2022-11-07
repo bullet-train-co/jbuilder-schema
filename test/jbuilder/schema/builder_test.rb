@@ -52,6 +52,28 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
     end
   end
 
+  test "renders a template with view assigns" do
+    Dir.chdir("./test/fixtures") do
+      schema = Jbuilder::Schema.render template: "articles/index", assigns: { articles: Article.all }, title: "Article", description: "Article in the blog"
+
+      assert_equal({
+        type: :object,
+        title: "Article",
+        description: "Article in the blog",
+        required: [],
+        properties: {
+          "articles" => {
+            "type" => :array,
+            "items" => {
+              "id" => {type: :integer},
+              "title" => {type: :string}
+            }
+          }
+        }
+      }, schema)
+    end
+  end
+
   test "renders a schema from a fixture" do
     schema = @renderer.render @article, title: "Article", description: "Article in the blog"
 

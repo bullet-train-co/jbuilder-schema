@@ -51,6 +51,20 @@ This means you don't have to write out the partial path, which gets tedious with
 Jbuilder::Schema.yaml(partial: 'api/v1/articles/article', locals: { article: @article, current_user: @user }, title: 'Article', description: 'Article in the blog')
 ```
 
+### Rendering a template
+
+If you're rendering a template like `app/views/articles/index.jbuilder`:
+
+```ruby
+json.articles @articles, :id, :title
+```
+
+You'll need to pass the relative template path in `template:` and any needed instance variables in `assigns:` like so:
+
+```ruby
+Jbuilder::Schema.yaml(template: "articles/index", assigns: { articles: Article.first(3) })
+```
+
 ### Output
 
 Jbuilder::Schema automatically sets `description`, `type`, and `required` options in JSON-Schema.
