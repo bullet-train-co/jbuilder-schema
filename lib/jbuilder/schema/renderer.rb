@@ -17,13 +17,14 @@ class Jbuilder::Schema::Renderer
     normalize(render(...)).to_json
   end
 
-  def render(object = nil, title: nil, description: nil, **options)
+  def render(object = nil, title: nil, description: nil, assigns: nil, **options)
     options.merge! partial: object.to_partial_path, object: object if object
 
     options[:locals] ||= {}
     options[:locals].merge! @default_locals if @default_locals
     options[:locals][:__jbuilder_schema_options] = { model: object&.class, title: title, description: description }
 
+    @view_renderer.assign assigns if assigns
     @view_renderer.render(options)
   end
 
