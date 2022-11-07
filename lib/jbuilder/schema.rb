@@ -26,5 +26,5 @@ class Jbuilder::Schema
       Renderer.new(paths, locals)
     end
   end
-  delegate :yaml, :json, :render, to: :renderer
+  singleton_class.delegate :yaml, :json, :render, to: :renderer
 end
