@@ -21,6 +21,37 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
 
   teardown { I18n.reload! }
 
+  test "renderers with default renderer" do
+    I18n.backend.store_translations "en", users: {
+      title: "User title",
+      description: "User in the blog",
+      fields: {
+        id: {description: "en.users.fields.id.description"},
+        name: {description: "en.users.fields.name.description"},
+      }
+    }
+
+    Dir.chdir("./test/fixtures") do
+      schema = Jbuilder::Schema.yaml @user
+
+      assert_equal <<~YAML, schema
+        ---
+        type: object
+        title: User title
+        description: User in the blog
+        required:
+        - id
+        properties:
+          id:
+            description: en.users.fields.id.description
+            type: integer
+          name:
+            description: en.users.fields.name.description
+            type: string
+      YAML
+    end
+  end
+
   test "renders a schema from a fixture" do
     schema = @renderer.render @article, title: "Article", description: "Article in the blog"
 
