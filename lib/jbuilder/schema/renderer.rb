@@ -18,7 +18,8 @@ class Jbuilder::Schema::Renderer
   end
 
   def render(object = nil, title: nil, description: nil, assigns: nil, **options)
-    options.merge! partial: object.to_partial_path, object: object if object
+    partial_path = object.respond_to?(:to_partial_path_for_jbuilder_schema) ? object.to_partial_path_for_jbuilder_schema : object.to_partial_path
+    options.merge! partial: partial_path, object: object if object
 
     options[:locals] ||= {}
     options[:locals].merge! @default_locals if @default_locals
