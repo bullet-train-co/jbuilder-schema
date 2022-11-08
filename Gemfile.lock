@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    jbuilder-schema (2.0.2)
+    jbuilder-schema (2.0.3)
       jbuilder
       rails (>= 5.0.0)
 
