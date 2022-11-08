@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 require "active_support/core_ext/module/delegation"
+require "jbuilder/schema/version"
 
 class Jbuilder::Schema
-  VERSION = JBUILDER_SCHEMA_VERSION # See `jbuilder/schema/version.rb`
+  VERSION = "2.0.1" # TODO Fix this. It's throwing errors when including the Ruby gem in downstream projects.
 
   module IgnoreSchemaMeta
     ::Jbuilder.prepend self
