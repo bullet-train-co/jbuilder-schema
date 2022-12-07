@@ -10,12 +10,20 @@ class Jbuilder::Schema
 
     class Handler < ::JbuilderHandler
       def self.call(template, source = nil)
-        super.sub("JbuilderTemplate.new(self", "Jbuilder::Schema::Template.new(self, **__jbuilder_schema_options").sub("target!", "schema!")
+        super.sub("JbuilderTemplate.new(self", "Jbuilder::Schema::Template.build(self, local_assigns")
       end
     end
 
     ::ActiveSupport.on_load :action_view do
       ::ActionView::Template.register_template_handler :jbuilder, ::Jbuilder::Schema::Template::Handler
+    end
+
+    def self.build(view_context, local_assigns)
+      if (options = local_assigns[:__jbuilder_schema_options])
+        new(view_context, **options)
+      else
+        ::JbuilderTemplate.new(view_context)
+      end
     end
 
     ModelScope = ::Struct.new(:model, :title, :description, keyword_init: true) do
@@ -47,6 +55,10 @@ class Jbuilder::Schema
       super(context)
 
       @ignore_nil = false
+    end
+
+    def target!
+      schema!
     end
 
     def schema!
