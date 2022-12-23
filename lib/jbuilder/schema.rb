@@ -5,7 +5,7 @@ require "jbuilder/schema/version"
 require "active_support/core_ext/module/delegation"
 
 class Jbuilder::Schema
-  VERSION = "2.0.3" # TODO Fix this. It's throwing errors when including the Ruby gem in downstream projects.
+  VERSION = JBUILDER_SCHEMA_VERSION # See `jbuilder/schema/version.rb`
 
   module IgnoreSchemaMeta
     ::Jbuilder.prepend self
