@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/delegation"
+require "jbuilder"
 require "jbuilder/schema/version"
+require "active_support/core_ext/module/delegation"
 
 class Jbuilder::Schema
   VERSION = "2.0.3" # TODO Fix this. It's throwing errors when including the Ruby gem in downstream projects.
