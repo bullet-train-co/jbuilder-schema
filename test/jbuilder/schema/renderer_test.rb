@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
+class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
   setup do
     I18n.backend.store_translations "en", articles: {fields: {
       id: {description: "en.articles.fields.id.description"},
@@ -21,7 +21,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
 
   teardown { I18n.reload! }
 
-  test "renderers with default renderer" do
+  test "renders with default renderer" do
     I18n.backend.store_translations "en", users: {
       title: "User title",
       description: "User in the blog",
