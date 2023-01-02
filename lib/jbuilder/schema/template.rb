@@ -115,7 +115,7 @@ class Jbuilder::Schema
         end
       end
 
-      result = _set_description key, result if model_scope.model
+      _set_description key, result
       _set_value key, result
     end
 
@@ -168,9 +168,7 @@ class Jbuilder::Schema
       hash_or_array = _format_keys(hash_or_array)
       if hash_or_array.is_a?(::Hash)
         hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
-          result = _schema(key, value)
-          result = _set_description(key, result) if model_scope.model
-          a[key] = result
+          a[key] = _schema(key, value)
         end
       end
       @attributes = _merge_values(@attributes, hash_or_array)
@@ -205,11 +203,9 @@ class Jbuilder::Schema
     end
 
     def _set_description(key, value)
-      unless value.key?(:description)
-        description = model_scope.translate_field(key)
-        value = {description: description}.merge! value
+      if !value.key?(:description) && model_scope.model
+        value[:description] = model_scope.translate_field(key)
       end
-      value
     end
 
     def _set_ref(component)
@@ -247,6 +243,7 @@ class Jbuilder::Schema
         options[:enum] = defined_enum.keys
       end
 
+      _set_description key, options
       options
     end
 
@@ -289,7 +286,6 @@ class Jbuilder::Schema
     def _extract_hash_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
-        result = _set_description(key, result) if model_scope.model
         _set_value key, result
       end
     end
@@ -297,7 +293,6 @@ class Jbuilder::Schema
     def _extract_method_values(object, attributes, schema:)
       attributes.each do |key|
         result = _schema(key, _format_keys(object.public_send(key)), **schema[key] || {})
-        result = _set_description(key, result) if model_scope.model
         _set_value key, result
       end
     end

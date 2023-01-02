@@ -43,11 +43,11 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
         - id
         properties:
           id:
-            description: en.users.fields.id.description
             type: integer
+            description: en.users.fields.id.description
           name:
-            description: en.users.fields.name.description
             type: string
+            description: en.users.fields.name.description
       YAML
     end
   end
@@ -103,30 +103,30 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       - id
       properties:
         id:
-          description: en.articles.fields.id.description
           type: integer
+          description: en.articles.fields.id.description
         status:
-          description: en.articles.fields.status.description
           type: string
           enum:
           - pending
           - published
           - archived
+          description: en.articles.fields.status.description
         title:
-          description: en.articles.fields.title.description
           type: string
+          description: en.articles.fields.title.description
         body:
-          description: en.articles.fields.body.description
           type: string
           pattern: \"\\\\w+\"
+          description: en.articles.fields.body.description
         created_at:
+          type: string
+          format: date-time
           description: en.articles.fields.created_at.description
-          type: string
-          format: date-time
         updated_at:
-          description: en.articles.fields.updated_at.description
           type: string
           format: date-time
+          description: en.articles.fields.updated_at.description
     YAML
   end
 
