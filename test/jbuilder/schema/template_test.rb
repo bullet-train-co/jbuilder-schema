@@ -193,8 +193,8 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       # Test our internal options don't bar someone from adding them to their JSON.
       json.type :array
       json.items [1]
-      json.properties id: {type: :string}
-      json.attributes yo: :sup
+      json.properties "hm"
+      json.attributes "ya"
       json.configuration "guess what"
     end
 
@@ -263,14 +263,19 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     assert_equal({type: :array, contains: {type: %i[string integer number boolean]}, minContains: 0}.as_json, json._get_type(["a", 1, 1.5, false]).as_json)
   end
 
+  test "schema! with array" do
+    json = json { _1.array! articles, :title }
+    assert_equal({type: :array, items: {"title" => {type: :string, description: "test"}}}, json.schema!)
+  end
+
   private
 
   def json_for(model, **options, &block)
     Jbuilder::Schema::Template.new(nil, model: model, **options, &block).attributes!
   end
 
-  def json
-    Jbuilder::Schema::Template.new(nil, model: Article)
+  def json(&block)
+    Jbuilder::Schema::Template.new(nil, model: Article, &block)
   end
 
   def articles

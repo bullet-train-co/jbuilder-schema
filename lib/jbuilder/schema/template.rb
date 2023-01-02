@@ -58,81 +58,63 @@ class Jbuilder::Schema
     end
 
     def schema!
-      {type: @type}.merge(@type == :object ? _object(**attributes!.merge) : attributes!)
+      @type == :object ? _object(attributes!) : attributes!
     end
 
     def set!(key, value = BLANK, *args, schema: {}, **options, &block)
       result = if block
         if !_blank?(value)
-          # OBJECTS ARRAY:
           # json.comments @article.comments { |comment| ... }
           # { "comments": [ { ... }, { ... } ] }
           _scope { array! value, &block }
         else
-          # BLOCK:
           # json.comments { ... }
           # { "comments": ... }
           @inline_array = true
-          _merge_schema_block(key, **schema) { yield self }
+          _merge_block_with_configuration(key, **schema) { yield self }
         end
       elsif args.empty?
-        if ::Jbuilder === value
-          # ATTRIBUTE1:
+        if value.respond_to?(:all?) && value.all? { _is_active_model? _1 }
+          # json.articles @articles # TODO: Jbuilder doesn't automatically extract keys from a collection, should we add this feature?
+          _scope { array! value, *value.first.attribute_names }
+        else
           # json.age 32
           # json.person another_jbuilder
           # { "age": 32, "person": { ...  }
-          _schema(key, _format_keys(value.attributes!), **schema)
-        elsif _is_collection_array?(value)
-          # ATTRIBUTE2:
-          _scope { array! value }
-        # json.articles @articles
-        else
-          # json.age 32
-          # { "age": 32 }
+          value = ::Jbuilder === value ? value.attributes! : value
           _schema(key, _format_keys(value), **schema)
         end
       elsif _is_collection?(value)
-        # COLLECTION:
         # json.comments @article.comments, :content, :created_at
         # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
         @inline_array = true
         _scope { array! value, *args }
       else
-        # EXTRACT!:
         # json.author @article.creator, :name, :email_address
         # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-        _merge_schema_block(key, **schema) { extract! value, *args, schema: schema }
+        _merge_block_with_configuration(key, **schema) { extract! value, *args, schema: schema }
       end
 
       _set_description key, result
       _set_value key, result
     end
 
-    def extract!(object, *attributes, schema: {})
-      if ::Hash === object
-        _extract_hash_values(object, attributes, schema: schema)
-      else
-        _extract_method_values(object, attributes, schema: schema)
-      end
-    end
-
-    def array!(collection = [], *args, schema: {}, **options, &block)
+    def array!(collection = [], *args, schema: nil, **options, &block)
       if _partial_options?(options)
         partial!(collection: collection, **options)
       else
-        array = _make_array(collection, *args, schema: schema, &block)
+        @type = :array
 
-        if @inline_array
-          @attributes = {} if _blank?
-          @attributes.merge! type: :array, items: array
-        elsif _is_collection_array?(array)
-          @inline_array = true
-          array! array, *array.first&.attribute_names(&:to_sym)
-        else
-          @type = :array
-          @attributes[:items] = array
+        _with_schema_overrides(schema) do
+          @attributes = {} if blank?
+          @attributes[:type] = :array unless ::Kernel.block_given?
+          @attributes[:items] = _scope { super(collection, *args, &block) }
         end
       end
+    end
+
+    def extract!(object, *attributes, schema: nil)
+      _with_schema_overrides(schema) { super(object, *attributes) }
     end
 
     def partial!(model = nil, *args, partial: nil, collection: nil, **options)
@@ -166,7 +148,14 @@ class Jbuilder::Schema
 
     private
 
-    def _object(**attributes)
+    def _with_schema_overrides(overrides)
+      old_schema_overrides, @schema_overrides = @schema_overrides, overrides if overrides
+      yield
+    ensure
+      @schema_overrides = old_schema_overrides if overrides
+    end
+
+    def _object(attributes)
       {
         type: :object,
         title: @configuration.title,
@@ -201,6 +190,8 @@ class Jbuilder::Schema
     FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
 
     def _schema(key, value, **options)
+      options = @schema_overrides&.dig(key).to_h if options.empty?
+
       unless options[:type]
         options[:type] = _primitive_type value
 
@@ -231,20 +222,9 @@ class Jbuilder::Schema
       end
     end
 
-    def _make_array(collection, *args, schema: {}, &block)
-      if collection.nil?
-        []
-      elsif block
-        _map_collection(collection, &block)
-      elsif args.any?
-        _map_collection(collection) { |element| extract! element, *args, schema: schema }
-      else
-        _format_keys(collection.to_a)
-      end
-    end
-
-    def _is_collection_array?(object)
-      object.is_a?(::Array) && object.all? { _is_active_model? _1 }
+    def _set_value(key, value)
+      value = _schema(key, value) unless value.is_a?(::Hash) && value.key?(:type)
+      super
     end
 
     def _required!(keys)
@@ -256,25 +236,11 @@ class Jbuilder::Schema
     # Jbuilder methods
     ###
 
-    def _extract_hash_values(object, attributes, schema:)
-      attributes.each do |key|
-        result = _schema(key, _format_keys(object.fetch(key)), **schema[key] || {})
-        _set_value key, result
-      end
-    end
-
-    def _extract_method_values(object, attributes, schema:)
-      attributes.each do |key|
-        result = _schema(key, _format_keys(object.public_send(key)), **schema[key] || {})
-        _set_value key, result
-      end
-    end
-
     def _map_collection(collection)
       super.first
     end
 
-    def _merge_schema_block(key, object: nil, object_title: nil, object_description: nil, **, &block)
+    def _merge_block_with_configuration(key, object: nil, object_title: nil, object_description: nil, **, &block)
       old_configuration, @configuration = @configuration, Configuration.new(model: object.class, title: object_title, description: object_description) if object
       _merge_block(key, &block)
     ensure
@@ -286,7 +252,7 @@ class Jbuilder::Schema
       raise NullError.build(key) if current_value.nil?
 
       value = _scope { yield self }
-      value = _object(**value) unless value.values_at("type", :type).any?(:array) || value.key?(:$ref) || value.key?("$ref")
+      value = _object(value) unless value[:type] == :array || value.key?(:$ref)
       _merge_values(current_value, value)
     end
   end
