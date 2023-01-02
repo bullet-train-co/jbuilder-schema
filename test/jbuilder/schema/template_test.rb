@@ -111,7 +111,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.articles { json.array! Article.first(3), :id, :title }
     end
 
-    assert_equal({"articles" => {description: "test", "type" => :array, "items" => {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}}, result)
+    assert_equal({"articles" => {description: "test", type: :array, items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}}, result)
   end
 
   test "array with block" do
@@ -123,7 +123,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({"items" => {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :string}}}, result)
+    assert_equal({items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :string}}}, result)
   end
 
   test "array with block with schema attributes" do
@@ -135,7 +135,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({"items" => {"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :text}}}, result)
+    assert_equal({items: {"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :text}}}, result)
   end
 
   test "block with merge" do
@@ -155,7 +155,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.user { json.partial! "api/v1/users/user", user: User.first }
     end
 
-    assert_equal({"user" => {description: "test", "type" => :object, "$ref" => "#/components/schemas/user"}}, result)
+    assert_equal({"user" => {description: "test", type: :object, "$ref": "#/components/schemas/user"}}, result)
   end
 
   test "block with array with partial" do
@@ -165,12 +165,12 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({"articles" => {description: "test", "type" => :array, "items" => {:$ref => "#/components/schemas/article"}}}, result)
+    assert_equal({"articles" => {description: "test", type: :array, items: {"$ref": "#/components/schemas/article"}}}, result)
   end
 
   test "collections" do
-    assert_equal({description: "test", "type" => :array, "items" => {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}, json.articles(articles, :id, :title))
-    assert_equal({description: "test", "type" => :array, "items" => {
+    assert_equal({description: "test", type: :array, items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}, json.articles(articles, :id, :title))
+    assert_equal({description: "test", type: :array, items: {
       "id" => {description: "test", type: :integer},
       "status" => {description: "test", type: :string, enum: ["pending", "published", "archived"]},
       "title" => {description: "test", type: :string},
@@ -193,9 +193,12 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.key_format! camelize: :upper
       json.id 123
       json.name "David"
+      # json.type :array # TODO: Make this testable by not adding a type method to Jbuilder::Schema::Template
+      json.items [1]
+      json.properties id: {type: :string}
     end
 
-    assert_equal({"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string}}, result)
+    assert_equal({"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string}, "Items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"}, "Properties" => {type: :string, description: "test"}}, result)
   end
 
   test "deep key format" do

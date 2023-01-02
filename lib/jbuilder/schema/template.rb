@@ -126,14 +126,14 @@ class Jbuilder::Schema
         array = _make_array(collection, *args, schema: schema, &block)
 
         if @inline_array
-          _set_value(:type, :array)
-          _set_value(:items, array)
+          @attributes = {} if _blank?
+          @attributes.merge! type: :array, items: array
         elsif _is_collection_array?(array)
           @inline_array = true
           array! array, *array.first&.attribute_names(&:to_sym)
         else
           @type = :array
-          _set_value(:items, array)
+          @attributes[:items] = array
         end
       end
     end
@@ -143,7 +143,7 @@ class Jbuilder::Schema
         # TODO: Find where it is being used
         _render_active_model_partial model
       else
-        _set_ref((partial || model)&.split("/")&.last, collection: collection)
+        _set_ref(partial || model, collection: collection)
       end
     end
 
@@ -185,20 +185,19 @@ class Jbuilder::Schema
       end
     end
 
-    def _set_ref(component, collection:)
-      component_path = "#/#{::Jbuilder::Schema.components_path}/#{component}"
+    def _set_ref(part, collection:)
+      component_path = "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"
+      @attributes = {} if _blank?
 
       if @inline_array
         if collection&.any?
-          _set_value(:type, :array)
-          _set_value(:items, {:$ref => component_path})
+          @attributes.merge! type: :array, items: {"$ref": component_path}
         else
-          _set_value(:type, :object)
-          _set_value(:$ref, component_path)
+          @attributes.merge! type: :object, "$ref": component_path
         end
       else
         @type = :array
-        _set_value(:items, {:$ref => component_path})
+        @attributes[:items] = {"$ref": component_path}
       end
     end
 
@@ -294,16 +293,4 @@ class Jbuilder::Schema
       _merge_values(current_value, value)
     end
   end
-end
-
-class Jbuilder
-  module SkipFormatting
-    SCHEMA_KEYS = %i[type items properties]
-
-    def format(key)
-      SCHEMA_KEYS.include?(key) ? key : super
-    end
-  end
-
-  KeyFormatter.prepend SkipFormatting
 end
