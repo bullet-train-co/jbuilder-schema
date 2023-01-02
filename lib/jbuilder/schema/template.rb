@@ -48,7 +48,6 @@ class Jbuilder::Schema
     def initialize(context, **options)
       @type = :object
       @inline_array = false
-      @collection = false
 
       @configuration = Configuration.new(**options)
 
@@ -100,8 +99,6 @@ class Jbuilder::Schema
         # json.comments @article.comments, :content, :created_at
         # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
         @inline_array = true
-        @collection = true
-
         _scope { array! value, *args }
       else
         # EXTRACT!:
@@ -124,37 +121,29 @@ class Jbuilder::Schema
 
     def array!(collection = [], *args, schema: {}, **options, &block)
       if _partial_options?(options)
-        @collection = true
-        _set_ref(options[:partial].split("/").last)
+        partial!(collection: collection, **options)
       else
         array = _make_array(collection, *args, schema: schema, &block)
 
         if @inline_array
-          @attributes = {}
           _set_value(:type, :array)
           _set_value(:items, array)
         elsif _is_collection_array?(array)
-          @attributes = {}
           @inline_array = true
-          @collection = true
           array! array, *array.first&.attribute_names(&:to_sym)
         else
           @type = :array
-          @attributes = {}
           _set_value(:items, array)
         end
       end
     end
 
-    def partial!(*args)
-      if args.one? && _is_active_model?(args.first)
+    def partial!(model = nil, *args, partial: nil, collection: nil, **options)
+      if args.none? && _is_active_model?(model)
         # TODO: Find where it is being used
-        _render_active_model_partial args.first
-      elsif args.first.is_a?(::Hash)
-        _set_ref(args.first[:partial].split("/").last)
+        _render_active_model_partial model
       else
-        @collection = true if args[1].key?(:collection)
-        _set_ref(args.first&.split("/")&.last)
+        _set_ref((partial || model)&.split("/")&.last, collection: collection)
       end
     end
 
@@ -196,11 +185,11 @@ class Jbuilder::Schema
       end
     end
 
-    def _set_ref(component)
+    def _set_ref(component, collection:)
       component_path = "#/#{::Jbuilder::Schema.components_path}/#{component}"
 
       if @inline_array
-        if @collection
+        if collection&.any?
           _set_value(:type, :array)
           _set_value(:items, {:$ref => component_path})
         else
