@@ -63,8 +63,8 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
         required: [],
         properties: {
           "articles" => {
-            "type" => :array,
-            "items" => {
+            type: :array,
+            items: {
               "id" => {type: :integer},
               "title" => {type: :string}
             }
