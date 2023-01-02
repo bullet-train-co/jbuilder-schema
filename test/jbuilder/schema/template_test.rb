@@ -188,17 +188,33 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     assert_equal({"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}}, json.array!(articles, :id, :title, schema: {id: {type: :string}}))
   end
 
+  test "pass through of internal instance variables" do
+    result = json_for(User) do |json|
+      # Test our internal options don't bar someone from adding them to their JSON.
+      json.type :array
+      json.items [1]
+      json.properties id: {type: :string}
+      json.attributes yo: :sup
+      json.configuration "guess what"
+    end
+
+    assert_equal({
+      "type" => {type: :string, description: "test"},
+      "items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"},
+      "properties" => {type: :string, description: "test"},
+      "attributes" => {type: :string, description: "test"},
+      "configuration" => {type: :string, description: "test"},
+    }, result)
+  end
+
   test "key format" do
     result = json_for(User) do |json|
       json.key_format! camelize: :upper
       json.id 123
       json.name "David"
-      # json.type :array # TODO: Make this testable by not adding a type method to Jbuilder::Schema::Template
-      json.items [1]
-      json.properties id: {type: :string}
     end
 
-    assert_equal({"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string}, "Items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"}, "Properties" => {type: :string, description: "test"}}, result)
+    assert_equal({"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string}}, result)
   end
 
   test "deep key format" do
@@ -250,7 +266,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   private
 
   def json_for(model, **options, &block)
-    Jbuilder::Schema::Template.new(nil, model: model, **options, &block).attributes
+    Jbuilder::Schema::Template.new(nil, model: model, **options, &block).attributes!
   end
 
   def json
