@@ -27,7 +27,7 @@ end
 class User < ActiveRecord::Base
 end
 
-5.times do |n|
+3.times do |n|
   User.create! name: "Generic name #{n}", email: "user-#{n}@example.com"
 end
 
@@ -37,6 +37,6 @@ class Article < ActiveRecord::Base
   enum :status, %i[ pending published archived ]
 end
 
-5.times do |n|
+3.times do |n|
   Article.create! user: User.first, title: "Generic title #{n}", body: "Lorem ipsum… #{n}"
 end
