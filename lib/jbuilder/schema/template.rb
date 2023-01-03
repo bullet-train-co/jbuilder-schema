@@ -80,9 +80,7 @@ class Jbuilder::Schema
         partial!(collection: collection, **options)
       else
         _with_schema_overrides(schema) do
-          @attributes = {} if _blank?
-          @attributes[:type] = :array
-          @attributes[:items] = _scope { super(collection, *args, &block) }
+          _attributes.merge! type: :array, items: _scope { super(collection, *args, &block) }
         end
       end
     end
@@ -146,13 +144,17 @@ class Jbuilder::Schema
 
     def _set_ref(part, collection:)
       ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"}
-      @attributes = {} if _blank?
 
       if collection&.any?
-        @attributes.merge! type: :array, items: ref
+        _attributes.merge! type: :array, items: ref
       else
-        @attributes.merge! type: :object, **ref
+        _attributes.merge! type: :object, **ref
       end
+    end
+
+    def _attributes
+      @attributes = {} if _blank?
+      @attributes
     end
 
     FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
