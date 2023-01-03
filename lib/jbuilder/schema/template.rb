@@ -47,11 +47,8 @@ class Jbuilder::Schema
     end
 
     def initialize(context, **options)
-      @type = :object
       @configuration = Configuration.new(**options)
-
       super(context)
-
       @ignore_nil = false
     end
 
@@ -60,7 +57,11 @@ class Jbuilder::Schema
     end
 
     def schema!
-      @type == :object ? _object(attributes!) : attributes!
+      if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) }
+        @attributes
+      else
+        _object(@attributes)
+      end
     end
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
@@ -80,8 +81,6 @@ class Jbuilder::Schema
       if _partial_options?(options)
         partial!(collection: collection, **options)
       else
-        @type = :array
-
         _with_schema_overrides(schema) do
           @attributes = {} if blank?
           @attributes[:type] = :array unless ::Kernel.block_given?
@@ -153,7 +152,6 @@ class Jbuilder::Schema
 
       case
       when !@inline_array
-        @type = :array
         @attributes[:items] = ref
       when collection&.any?
         @attributes.merge! type: :array, items: ref
