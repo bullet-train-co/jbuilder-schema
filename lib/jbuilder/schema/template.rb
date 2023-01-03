@@ -24,6 +24,10 @@ class Jbuilder::Schema
     end
 
     class Configuration < ::Struct.new(:model, :title, :description, keyword_init: true)
+      def self.build(object: nil, object_title: nil, object_description: nil, **)
+        new(model: object.class, title: object_title, description: object_description)
+      end
+
       def title
         super || translate(Jbuilder::Schema.title_name)
       end
@@ -61,14 +65,16 @@ class Jbuilder::Schema
       @type == :object ? _object(attributes!) : attributes!
     end
 
-    def set!(key, value = BLANK, *args, schema: {}, **options, &block)
-      @inline_array = true if block && _blank?(value) || _is_collection?(value)
+    def set!(key, value = BLANK, *args, schema: nil, **options, &block)
+      old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
 
-      _with_configuration(**schema) do
-        _with_schema_overrides(key => schema) do
-          super(key, value, *args.presence || _extract_possible_keys(value), **options, &block)
-        end
+      _with_schema_overrides(key => schema) do
+        @inline_array = true if block && _blank?(value) || _is_collection?(value)
+
+        super(key, value, *args.presence || _extract_possible_keys(value), **options, &block)
       end
+    ensure
+      @configuration = old_configuration if old_configuration
     end
 
     def array!(collection = [], *args, schema: nil, **options, &block)
@@ -207,13 +213,6 @@ class Jbuilder::Schema
     def _required!(keys)
       presence_validated_attributes = @configuration.model.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
       keys & [_key(:id), *presence_validated_attributes.map { _key _1 }]
-    end
-
-    def _with_configuration(object: nil, object_title: nil, object_description: nil, **)
-      old_configuration, @configuration = @configuration, Configuration.new(model: object.class, title: object_title, description: object_description) if object
-      yield
-    ensure
-      @configuration = old_configuration if object
     end
 
     ###
