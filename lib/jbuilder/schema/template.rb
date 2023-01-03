@@ -68,8 +68,6 @@ class Jbuilder::Schema
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
 
       _with_schema_overrides(key => schema) do
-        @inline_array = true if block && _blank?(value) || _is_collection?(value)
-
         super(key, value, *args.presence || _extract_possible_keys(value), **options, &block)
       end
     ensure
@@ -150,7 +148,7 @@ class Jbuilder::Schema
       ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"}
       @attributes = {} if _blank?
 
-      if !@inline_array || collection&.any?
+      if collection&.any?
         @attributes.merge! type: :array, items: ref
       else
         @attributes.merge! type: :object, **ref
