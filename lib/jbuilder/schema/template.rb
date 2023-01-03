@@ -99,14 +99,8 @@ class Jbuilder::Schema
     end
 
     def merge!(object)
-      hash_or_array = ::Jbuilder === object ? object.attributes! : object
-      hash_or_array = _format_keys(hash_or_array)
-      if hash_or_array.is_a?(::Hash)
-        hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
-          a[key] = _schema(key, value)
-        end
-      end
-      @attributes = _merge_values(@attributes, hash_or_array)
+      object = object.to_h { [_1, _schema(_1, _2)] } if object.is_a?(::Hash)
+      super
     end
 
     def cache!(key = nil, **options)
