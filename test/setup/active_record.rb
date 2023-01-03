@@ -25,9 +25,10 @@ ActiveRecord::Schema.define do
 end
 
 class User < ActiveRecord::Base
+  has_many :articles
 end
 
-5.times do |n|
+3.times do |n|
   User.create! name: "Generic name #{n}", email: "user-#{n}@example.com"
 end
 
@@ -35,12 +36,8 @@ class Article < ActiveRecord::Base
   belongs_to :user
 
   enum :status, %i[ pending published archived ]
-
-  def as_json(options = {})
-    super(only: %i[id title body])
-  end
 end
 
-5.times do |n|
-  Article.create! user: User.first, title: "Generic title #{n}", body: "Lorem ipsum… #{n}"
+3.times do |n|
+  User.first.articles.create! title: "Generic title #{n}", body: "Lorem ipsum… #{n}"
 end
