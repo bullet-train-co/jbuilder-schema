@@ -150,6 +150,14 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result)
   end
 
+  test "partial" do
+    result = json_for(Article) do |json|
+      json.partial! "articles/article", collection: Article.all, as: :article
+    end
+
+    assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
+  end
+
   test "block with partial" do
     result = json_for(User) do |json|
       json.user { json.partial! "api/v1/users/user", user: User.first }
@@ -183,7 +191,6 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
 
   test "jbuilder methods" do
     assert_equal({description: "test", type: :string}, json.set!(:name, "David"))
-    assert_equal({:$ref => "#/components/schemas/article"}, json.partial!("articles/article", collection: Article.all, as: :article))
     assert_equal({"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}, json.array!(Article.all, :id, :title))
     assert_equal({"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}}, json.array!(Article.all, :id, :title, schema: {id: {type: :string}}))
   end

@@ -150,10 +150,7 @@ class Jbuilder::Schema
       ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"}
       @attributes = {} if _blank?
 
-      case
-      when !@inline_array
-        @attributes[:items] = ref
-      when collection&.any?
+      if !@inline_array || collection&.any?
         @attributes.merge! type: :array, items: ref
       else
         @attributes.merge! type: :object, **ref
