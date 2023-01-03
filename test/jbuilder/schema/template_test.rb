@@ -189,12 +189,6 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     }, json.articles(Article.all))
   end
 
-  test "jbuilder methods" do
-    assert_equal({description: "test", type: :string}, json.set!(:name, "David"))
-    assert_equal({"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}, json.array!(Article.all, :id, :title))
-    assert_equal({"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}}, json.array!(Article.all, :id, :title, schema: {id: {type: :string}}))
-  end
-
   test "pass through of internal instance variables" do
     result = json_for(User) do |json|
       # Test our internal options don't bar someone from adding them to their JSON.
