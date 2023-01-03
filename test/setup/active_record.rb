@@ -35,10 +35,6 @@ class Article < ActiveRecord::Base
   belongs_to :user
 
   enum :status, %i[ pending published archived ]
-
-  def as_json(options = {})
-    super(only: %i[id title body])
-  end
 end
 
 5.times do |n|

@@ -66,7 +66,7 @@ class Jbuilder::Schema
 
       _with_configuration(**schema) do
         _with_schema_overrides(key => schema) do
-          super(key, value, *args, **options, &block)
+          super(key, value, *args.presence || _extract_possible_keys(value), **options, &block)
         end
       end
     end
@@ -119,6 +119,10 @@ class Jbuilder::Schema
     end
 
     private
+
+    def _extract_possible_keys(value)
+      value.first.as_json.keys if _is_collection?(value) && _is_active_model?(value.first)
+    end
 
     def _with_schema_overrides(overrides)
       old_schema_overrides, @schema_overrides = @schema_overrides, overrides if overrides
