@@ -62,41 +62,13 @@ class Jbuilder::Schema
     end
 
     def set!(key, value = BLANK, *args, schema: {}, **options, &block)
-      result = if block
-        if !_blank?(value)
-          # json.comments @article.comments { |comment| ... }
-          # { "comments": [ { ... }, { ... } ] }
-          _scope { array! value, &block }
-        else
-          # json.comments { ... }
-          # { "comments": ... }
-          @inline_array = true
-          _merge_block_with_configuration(key, **schema) { yield self }
-        end
-      elsif args.empty?
-        if value.respond_to?(:all?) && value.all? { _is_active_model? _1 }
-          # json.articles @articles # TODO: Jbuilder doesn't automatically extract keys from a collection, should we add this feature?
-          _scope { array! value, *value.first.attribute_names }
-        else
-          # json.age 32
-          # json.person another_jbuilder
-          # { "age": 32, "person": { ...  }
-          value = ::Jbuilder === value ? value.attributes! : value
-          _schema(key, _format_keys(value), **schema)
-        end
-      elsif _is_collection?(value)
-        # json.comments @article.comments, :content, :created_at
-        # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
-        @inline_array = true
-        _scope { array! value, *args }
-      else
-        # json.author @article.creator, :name, :email_address
-        # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-        _merge_block_with_configuration(key, **schema) { extract! value, *args, schema: schema }
-      end
+      @inline_array = true if block && _blank?(value) || _is_collection?(value)
 
-      _set_description key, result
-      _set_value key, result
+      _with_configuration(**schema) do
+        _with_schema_overrides(key => schema) do
+          super(key, value, *args, **options, &block)
+        end
+      end
     end
 
     def array!(collection = [], *args, schema: nil, **options, &block)
@@ -224,6 +196,7 @@ class Jbuilder::Schema
 
     def _set_value(key, value)
       value = _schema(key, value) unless value.is_a?(::Hash) && value.key?(:type)
+      _set_description(key, value)
       super
     end
 
@@ -232,19 +205,19 @@ class Jbuilder::Schema
       keys & [_key(:id), *presence_validated_attributes.map { _key _1 }]
     end
 
+    def _with_configuration(object: nil, object_title: nil, object_description: nil, **)
+      old_configuration, @configuration = @configuration, Configuration.new(model: object.class, title: object_title, description: object_description) if object
+      yield
+    ensure
+      @configuration = old_configuration if object
+    end
+
     ###
     # Jbuilder methods
     ###
 
     def _map_collection(collection)
       super.first
-    end
-
-    def _merge_block_with_configuration(key, object: nil, object_title: nil, object_description: nil, **, &block)
-      old_configuration, @configuration = @configuration, Configuration.new(model: object.class, title: object_title, description: object_description) if object
-      _merge_block(key, &block)
-    ensure
-      @configuration = old_configuration if object
     end
 
     def _merge_block(key)

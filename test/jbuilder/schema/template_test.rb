@@ -135,7 +135,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({items: {"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :text}}}, result)
+    assert_equal({items: {"id" => {type: :string, description: "test"}, "title" => {type: :string, description: "test"}, "body" => {type: :text, description: "test"}}}, result)
   end
 
   test "block with merge" do
