@@ -74,6 +74,7 @@ class Jbuilder::Schema
     ensure
       @configuration = old_configuration if old_configuration
     end
+    alias_method :method_missing, :set! # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
 
     def array!(collection = [], *args, schema: nil, **options, &block)
       if _partial_options?(options)
@@ -115,11 +116,6 @@ class Jbuilder::Schema
 
     def cache!(key = nil, **options)
       yield # TODO: Our schema generation breaks Jbuilder's fragment caching.
-    end
-
-    def method_missing(*args, **options, &block) # standard:disable Style/MissingRespondToMissing
-      # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
-      set!(*args, **options, &block)
     end
 
     private
