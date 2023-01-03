@@ -152,18 +152,17 @@ class Jbuilder::Schema
     end
 
     def _set_ref(part, collection:)
-      component_path = "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"
+      ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"}
       @attributes = {} if _blank?
 
-      if @inline_array
-        if collection&.any?
-          @attributes.merge! type: :array, items: {"$ref": component_path}
-        else
-          @attributes.merge! type: :object, "$ref": component_path
-        end
-      else
+      case
+      when !@inline_array
         @type = :array
-        @attributes[:items] = {"$ref": component_path}
+        @attributes[:items] = ref
+      when collection&.any?
+        @attributes.merge! type: :array, items: ref
+      else
+        @attributes.merge! type: :object, **ref
       end
     end
 
