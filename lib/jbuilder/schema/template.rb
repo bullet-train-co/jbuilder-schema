@@ -83,7 +83,7 @@ class Jbuilder::Schema
       else
         _with_schema_overrides(schema) do
           @attributes = {} if blank?
-          @attributes[:type] = :array unless ::Kernel.block_given?
+          @attributes[:type] = :array
           @attributes[:items] = _scope { super(collection, *args, &block) }
         end
       end

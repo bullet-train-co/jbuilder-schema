@@ -123,7 +123,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :string}}}, result)
+    assert_equal({type: :array, items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :string}}}, result)
   end
 
   test "array with block with schema attributes" do
@@ -135,7 +135,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({items: {"id" => {type: :string, description: "test"}, "title" => {type: :string, description: "test"}, "body" => {type: :text, description: "test"}}}, result)
+    assert_equal({type: :array, items: {"id" => {type: :string, description: "test"}, "title" => {type: :string, description: "test"}, "body" => {type: :text, description: "test"}}}, result)
   end
 
   test "block with merge" do
