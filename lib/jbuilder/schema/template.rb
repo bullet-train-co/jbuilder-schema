@@ -48,8 +48,6 @@ class Jbuilder::Schema
 
     def initialize(context, **options)
       @type = :object
-      @inline_array = false
-
       @configuration = Configuration.new(**options)
 
       super(context)
