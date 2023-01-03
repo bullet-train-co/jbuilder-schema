@@ -82,7 +82,7 @@ class Jbuilder::Schema
         partial!(collection: collection, **options)
       else
         _with_schema_overrides(schema) do
-          @attributes = {} if blank?
+          @attributes = {} if _blank?
           @attributes[:type] = :array
           @attributes[:items] = _scope { super(collection, *args, &block) }
         end
