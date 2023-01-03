@@ -25,6 +25,7 @@ ActiveRecord::Schema.define do
 end
 
 class User < ActiveRecord::Base
+  has_many :articles
 end
 
 3.times do |n|
@@ -38,5 +39,5 @@ class Article < ActiveRecord::Base
 end
 
 3.times do |n|
-  Article.create! user: User.first, title: "Generic title #{n}", body: "Lorem ipsum… #{n}"
+  User.first.articles.create! title: "Generic title #{n}", body: "Lorem ipsum… #{n}"
 end
