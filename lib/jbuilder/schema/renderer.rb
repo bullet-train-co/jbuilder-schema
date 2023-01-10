@@ -25,9 +25,12 @@ class Jbuilder::Schema::Renderer
 
     options[:locals] ||= {}
     options[:locals].merge! @default_locals if @default_locals
-    options[:locals][:__jbuilder_schema_options] = { object: object, title: title, description: description }
 
     @view_renderer.assign assigns if assigns
+    example = @view_renderer.render(options) # Render without schema options to extract regular Jbuilder json.
+    puts example
+
+    options[:locals][:__jbuilder_schema_options] = { example: example.presence, object: object, title: title, description: description }
     @view_renderer.render(options)
   end
 
