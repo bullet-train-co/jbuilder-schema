@@ -28,8 +28,10 @@ class User < ActiveRecord::Base
   has_many :articles
 end
 
+time = DateTime.parse("2023-1-1 12:00")
+
 3.times do |n|
-  User.create! name: "Generic name #{n}", email: "user-#{n}@example.com"
+  User.create! name: "Generic name #{n}", email: "user-#{n}@example.com", created_at: time, updated_at: time
 end
 
 class Article < ActiveRecord::Base
@@ -39,5 +41,5 @@ class Article < ActiveRecord::Base
 end
 
 3.times do |n|
-  User.first.articles.create! title: "Generic title #{n}", body: "Lorem ipsum… #{n}"
+  User.first.articles.create! title: "Generic title #{n}", body: "Lorem ipsum… #{n}", created_at: time, updated_at: time
 end

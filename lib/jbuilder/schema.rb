@@ -13,6 +13,18 @@ class Jbuilder::Schema
     def method_missing(*args, schema: nil, **options, &block) # standard:disable Style/MissingRespondToMissing
       super(*args, **options, &block)
     end
+
+    def set!(*args, schema: nil, **options, &block)
+      super(*args, **options, &block)
+    end
+
+    def array!(*args, schema: nil, **options, &block)
+      super(*args, **options, &block)
+    end
+
+    def extract!(*args, schema: nil, **options, &block)
+      super(*args, **options, &block)
+    end
   end
 
   singleton_class.alias_method :configure, :tap
