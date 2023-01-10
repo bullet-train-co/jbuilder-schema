@@ -46,8 +46,8 @@ class Jbuilder::Schema
       end
     end
 
-    def initialize(context, example: nil, **options)
-      @example = ::JSON.parse(example) if example
+    def initialize(context, json: nil, **options)
+      @json = json
       @configuration = Configuration.new(**options)
       super(context)
       @ignore_nil = false
@@ -62,7 +62,7 @@ class Jbuilder::Schema
         @attributes
       else
         _object(@attributes)
-      end.merge(example: @example).compact
+      end.merge(example: @json).compact
     end
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
