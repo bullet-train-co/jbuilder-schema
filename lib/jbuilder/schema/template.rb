@@ -23,9 +23,9 @@ class Jbuilder::Schema
       end
     end
 
-    class Configuration < ::Struct.new(:model, :title, :description, keyword_init: true)
+    class Configuration < ::Struct.new(:object, :title, :description, keyword_init: true)
       def self.build(object: nil, object_title: nil, object_description: nil, **)
-        new(model: object.class, title: object_title, description: object_description)
+        new(object: object, title: object_title, description: object_description)
       end
 
       def title
@@ -42,7 +42,7 @@ class Jbuilder::Schema
 
       private
       def translate(key)
-        I18n.t(key, scope: @scope ||= model&.name&.underscore&.pluralize)
+        I18n.t(key, scope: @scope ||= object&.class&.name&.underscore&.pluralize)
       end
     end
 
@@ -138,7 +138,7 @@ class Jbuilder::Schema
     end
 
     def _set_description(key, value)
-      if !value.key?(:description) && @configuration.model
+      if !value.key?(:description) && @configuration.object
         value[:description] = @configuration.translate_field(key)
       end
     end
@@ -174,7 +174,7 @@ class Jbuilder::Schema
         format = FORMATS[value.class] and options[:format] ||= format
       end
 
-      if (model = @configuration.model) && (defined_enum = model.try(:defined_enums)&.dig(key.to_s))
+      if (klass = @configuration.object&.class) && (defined_enum = klass.try(:defined_enums)&.dig(key.to_s))
         options[:enum] = defined_enum.keys
       end
 
@@ -200,7 +200,7 @@ class Jbuilder::Schema
     end
 
     def _required!(keys)
-      presence_validated_attributes = @configuration.model.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
+      presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
       keys & [_key(:id), *presence_validated_attributes.map { _key _1 }]
     end
 
