@@ -25,7 +25,7 @@ class Jbuilder::Schema::Renderer
 
     options[:locals] ||= {}
     options[:locals].merge! @default_locals if @default_locals
-    options[:locals][:__jbuilder_schema_options] = { model: object&.class, title: title, description: description }
+    options[:locals][:__jbuilder_schema_options] = { object: object, title: title, description: description }
 
     @view_renderer.assign assigns if assigns
     @view_renderer.render(options)
