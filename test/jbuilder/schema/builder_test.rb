@@ -60,20 +60,16 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       schema = Jbuilder::Schema.render template: "articles/index", assigns: { articles: Article.all }
 
       assert_equal({
-        "articles" => {
-          type: :array,
-          items: {
-            "id" => {type: :integer},
-            "title" => {type: :string}
-          }
+        type: :array,
+        items: {
+          "id" => {type: :integer},
+          "title" => {type: :string}
         },
-        example: {
-          "articles" => [
-            {"id"=>1, "title"=>"Generic title 0"},
-            {"id"=>2, "title"=>"Generic title 1"},
-            {"id"=>3, "title"=>"Generic title 2"}
-          ]
-        }
+        example: [
+          {"id"=>1, "title"=>"Generic title 0"},
+          {"id"=>2, "title"=>"Generic title 1"},
+          {"id"=>3, "title"=>"Generic title 2"}
+        ]
       }, schema)
     end
   end
