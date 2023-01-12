@@ -123,7 +123,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :string}}}, result)
+    assert_equal({type: :array, items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}, "body" => {description: "test", type: :string}}}, result)
   end
 
   test "array with block with schema attributes" do
@@ -135,7 +135,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       end
     end
 
-    assert_equal({items: {"id" => {type: :string, description: "test"}, "title" => {type: :string, description: "test"}, "body" => {type: :text, description: "test"}}}, result)
+    assert_equal({type: :array, items: {"id" => {type: :string, description: "test"}, "title" => {type: :string, description: "test"}, "body" => {type: :text, description: "test"}}}, result)
   end
 
   test "block with merge" do
@@ -148,6 +148,14 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
 
     # TODO: should the merged name be a symbol or string here? E.g. should it pass through `_key`?
     assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result)
+  end
+
+  test "partial" do
+    result = json_for(Article) do |json|
+      json.partial! "articles/article", collection: Article.all, as: :article
+    end
+
+    assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
   end
 
   test "block with partial" do
@@ -181,11 +189,12 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     }, json.articles(Article.all))
   end
 
-  test "jbuilder methods" do
-    assert_equal({description: "test", type: :string}, json.set!(:name, "David"))
-    assert_equal({:$ref => "#/components/schemas/article"}, json.partial!("articles/article", collection: Article.all, as: :article))
-    assert_equal({"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}, json.array!(Article.all, :id, :title))
-    assert_equal({"id" => {description: "test", type: :string}, "title" => {description: "test", type: :string}}, json.array!(Article.all, :id, :title, schema: {id: {type: :string}}))
+  test "empty collections" do
+    result = json_for(User) do |json|
+      json.articles []
+    end
+
+    assert_equal({"articles" => {type: :array, items: {"$ref": "#/components/schemas/article"}, description: "test"}}, result)
   end
 
   test "pass through of internal instance variables" do

@@ -47,11 +47,8 @@ class Jbuilder::Schema
     end
 
     def initialize(context, **options)
-      @type = :object
       @configuration = Configuration.new(**options)
-
       super(context)
-
       @ignore_nil = false
     end
 
@@ -60,16 +57,25 @@ class Jbuilder::Schema
     end
 
     def schema!
-      @type == :object ? _object(attributes!) : attributes!
+      if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) }
+        @attributes
+      else
+        _object(@attributes)
+      end
     end
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
 
       _with_schema_overrides(key => schema) do
-        @inline_array = true if block && _blank?(value) || _is_collection?(value)
+        keys = args.presence || _extract_possible_keys(value)
 
-        super(key, value, *args.presence || _extract_possible_keys(value), **options, &block)
+        # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
+        if block.nil? && keys.blank? && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
+          _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true) })
+        else
+          super(key, value, *keys, **options, &block)
+        end
       end
     ensure
       @configuration = old_configuration if old_configuration
@@ -80,12 +86,8 @@ class Jbuilder::Schema
       if _partial_options?(options)
         partial!(collection: collection, **options)
       else
-        @type = :array
-
         _with_schema_overrides(schema) do
-          @attributes = {} if blank?
-          @attributes[:type] = :array unless ::Kernel.block_given?
-          @attributes[:items] = _scope { super(collection, *args, &block) }
+          _attributes.merge! type: :array, items: _scope { super(collection, *args, &block) }
         end
       end
     end
@@ -99,19 +101,13 @@ class Jbuilder::Schema
         # TODO: Find where it is being used
         _render_active_model_partial model
       else
-        _set_ref(partial || model, collection: collection)
+        _set_ref(partial || model, array: collection&.any?)
       end
     end
 
     def merge!(object)
-      hash_or_array = ::Jbuilder === object ? object.attributes! : object
-      hash_or_array = _format_keys(hash_or_array)
-      if hash_or_array.is_a?(::Hash)
-        hash_or_array = hash_or_array.each_with_object({}) do |(key, value), a|
-          a[key] = _schema(key, value)
-        end
-      end
-      @attributes = _merge_values(@attributes, hash_or_array)
+      object = object.to_h { [_1, _schema(_1, _2)] } if object.is_a?(::Hash)
+      super
     end
 
     def cache!(key = nil, **options)
@@ -147,19 +143,19 @@ class Jbuilder::Schema
       end
     end
 
-    def _set_ref(part, collection:)
+    def _set_ref(part, array: false)
       ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"}
-      @attributes = {} if _blank?
 
-      case
-      when !@inline_array
-        @type = :array
-        @attributes[:items] = ref
-      when collection&.any?
-        @attributes.merge! type: :array, items: ref
+      if array
+        _attributes.merge! type: :array, items: ref
       else
-        @attributes.merge! type: :object, **ref
+        _attributes.merge! type: :object, **ref
       end
+    end
+
+    def _attributes
+      @attributes = {} if _blank?
+      @attributes
     end
 
     FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
