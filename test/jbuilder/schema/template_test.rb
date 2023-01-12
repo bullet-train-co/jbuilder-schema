@@ -189,6 +189,14 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     }, json.articles(Article.all))
   end
 
+  test "empty collections" do
+    result = json_for(User) do |json|
+      json.articles []
+    end
+
+    assert_equal({"articles" => {type: :array, items: {"$ref": "#/components/schemas/article"}, description: "test"}}, result)
+  end
+
   test "pass through of internal instance variables" do
     result = json_for(User) do |json|
       # Test our internal options don't bar someone from adding them to their JSON.

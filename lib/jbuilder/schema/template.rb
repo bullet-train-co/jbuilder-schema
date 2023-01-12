@@ -68,7 +68,14 @@ class Jbuilder::Schema
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
 
       _with_schema_overrides(key => schema) do
-        super(key, value, *args.presence || _extract_possible_keys(value), **options, &block)
+        keys = args.presence || _extract_possible_keys(value)
+
+        # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
+        if block.nil? && keys.blank? && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
+          _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true) })
+        else
+          super(key, value, *keys, **options, &block)
+        end
       end
     ensure
       @configuration = old_configuration if old_configuration
@@ -94,7 +101,7 @@ class Jbuilder::Schema
         # TODO: Find where it is being used
         _render_active_model_partial model
       else
-        _set_ref(partial || model, collection: collection)
+        _set_ref(partial || model, array: collection&.any?)
       end
     end
 
@@ -136,10 +143,10 @@ class Jbuilder::Schema
       end
     end
 
-    def _set_ref(part, collection:)
+    def _set_ref(part, array: false)
       ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"}
 
-      if collection&.any?
+      if array
         _attributes.merge! type: :array, items: ref
       else
         _attributes.merge! type: :object, **ref
