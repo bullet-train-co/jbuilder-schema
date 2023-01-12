@@ -3,6 +3,7 @@ require_relative "template"
 
 class Jbuilder::Schema::Renderer
   @@view_renderer = ActionView::Base.with_empty_template_cache
+  @@view_renderer.prefix_partial_path_with_controller_namespace = false
 
   def initialize(paths, default_locals = nil)
     @view_renderer = @@view_renderer.with_view_paths(paths)
@@ -18,17 +19,23 @@ class Jbuilder::Schema::Renderer
   end
 
   def render(object = nil, title: nil, description: nil, assigns: nil, **options)
-    if object
-      partial_path = object.respond_to?(:to_partial_path_for_jbuilder_schema) ? object.to_partial_path_for_jbuilder_schema : object.to_partial_path
-      options.merge! partial: partial_path, object: object
-    end
+    @view_renderer.assign assigns if assigns
+
+    json = original_render(object || options.dup, options.dup)
+
+    partial_path = %i[to_partial_path_for_jbuilder_schema to_partial_path].map { object.public_send(_1) if object.respond_to?(_1) }.compact.first
+    options.merge! partial: partial_path, object: object if partial_path
 
     options[:locals] ||= {}
     options[:locals].merge! @default_locals if @default_locals
-    options[:locals][:__jbuilder_schema_options] = { model: object&.class, title: title, description: description }
+    options[:locals][:__jbuilder_schema_options] = { json: json, object: object, title: title, description: description }
 
-    @view_renderer.assign assigns if assigns
     @view_renderer.render(options)
+  end
+
+  # Thin wrapper around the regular Jbuilder JSON output render, which also parses it into a hash.
+  def original_render(options = {}, locals = {})
+    JSON.parse @view_renderer.render(options, locals)
   end
 
   private
