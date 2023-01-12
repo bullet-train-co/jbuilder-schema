@@ -37,7 +37,7 @@ end
 class Article < ActiveRecord::Base
   belongs_to :user
 
-  enum :status, %i[ pending published archived ]
+  enum :status, %w[ pending published archived ].index_by(&:itself)
 end
 
 3.times do |n|

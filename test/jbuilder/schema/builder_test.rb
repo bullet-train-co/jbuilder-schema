@@ -92,7 +92,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       },
       example: {
         "id" => 1,
-        "status" => nil,
+        "status" => "pending",
         "title" => "Generic title 0",
         "body" => "Lorem ipsum… 0",
         "created_at" => "2023-01-01T12:00:00.000Z",
@@ -137,7 +137,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
           description: en.articles.fields.updated_at.description
       example:
         id: 1
-        status:
+        status: pending
         title: Generic title 0
         body: Lorem ipsum… 0
         created_at: '2023-01-01T12:00:00.000Z'
@@ -163,7 +163,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       },
       example: {
         id: 1,
-        status: nil,
+        status: "pending",
         title: "Generic title 0",
         body: "Lorem ipsum… 0",
         created_at: "2023-01-01T12:00:00.000Z",
