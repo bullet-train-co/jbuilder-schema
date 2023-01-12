@@ -13,8 +13,8 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       updated_at: {description: "en.articles.fields.updated_at.description"}
     }}
 
-    @user = User.new(id: 1, email: "someone@example.org", name: "Someone")
-    @article = Article.new(id: 1, user: @user, title: "New Things", body: "…are happening", created_at: DateTime.now, updated_at: DateTime.now)
+    @user = User.first
+    @article = @user.articles.first
 
     @renderer = Jbuilder::Schema.renderer("test/fixtures/api/v1", locals: { current_user: @user })
   end
@@ -48,6 +48,9 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
           name:
             type: string
             description: en.users.fields.name.description
+        example:
+          id: 1
+          name: Generic name 0
       YAML
     end
   end
@@ -63,6 +66,13 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
             "id" => {type: :integer},
             "title" => {type: :string}
           }
+        },
+        example: {
+          "articles" => [
+            {"id"=>1, "title"=>"Generic title 0"},
+            {"id"=>2, "title"=>"Generic title 1"},
+            {"id"=>3, "title"=>"Generic title 2"}
+          ]
         }
       }, schema)
     end
@@ -83,6 +93,14 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
         "body" => {type: :string, description: "en.articles.fields.body.description", pattern: /\w+/},
         "created_at" => {type: :string, description: "en.articles.fields.created_at.description", format: "date-time"},
         "updated_at" => {type: :string, description: "en.articles.fields.updated_at.description", format: "date-time"}
+      },
+      example: {
+        "id" => 1,
+        "status" => nil,
+        "title" => "Generic title 0",
+        "body" => "Lorem ipsum… 0",
+        "created_at" => "2023-01-01T12:00:00.000Z",
+        "updated_at" => "2023-01-01T12:00:00.000Z"
       }
     }, schema)
   end
@@ -121,6 +139,13 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
           type: string
           format: date-time
           description: en.articles.fields.updated_at.description
+      example:
+        id: 1
+        status:
+        title: Generic title 0
+        body: Lorem ipsum… 0
+        created_at: '2023-01-01T12:00:00.000Z'
+        updated_at: '2023-01-01T12:00:00.000Z'
     YAML
   end
 
@@ -139,6 +164,14 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
         body: {type: "string", description: "en.articles.fields.body.description", pattern: "\\w+"},
         created_at: {type: "string", description: "en.articles.fields.created_at.description", format: "date-time"},
         updated_at: {type: "string", description: "en.articles.fields.updated_at.description", format: "date-time"}
+      },
+      example: {
+        id: 1,
+        status: nil,
+        title: "Generic title 0",
+        body: "Lorem ipsum… 0",
+        created_at: "2023-01-01T12:00:00.000Z",
+        updated_at: "2023-01-01T12:00:00.000Z"
       }
     }, JSON.parse(schema, symbolize_names: true))
   end
