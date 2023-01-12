@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    jbuilder-schema (2.0.3)
+    jbuilder-schema (2.1.0)
       jbuilder
       rails (>= 5.0.0)
 
@@ -77,7 +77,7 @@ GEM
     builder (3.2.4)
     concurrent-ruby (1.1.10)
     crass (1.0.6)
-    erubi (1.11.0)
+    erubi (1.12.0)
     globalid (1.0.0)
       activesupport (>= 5.0)
     i18n (1.12.0)
@@ -86,22 +86,25 @@ GEM
       actionview (>= 5.0.0)
       activesupport (>= 5.0.0)
     json (2.6.2)
-    loofah (2.19.0)
+    loofah (2.19.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
-    mail (2.7.1)
+    mail (2.8.0)
       mini_mime (>= 0.1.1)
+      net-imap
+      net-pop
+      net-smtp
     marcel (1.0.2)
     method_source (1.0.0)
     mini_mime (1.1.2)
     mini_portile2 (2.8.0)
-    minitest (5.16.3)
+    minitest (5.17.0)
     mocha (1.14.0)
     net-imap (0.3.1)
       net-protocol
     net-pop (0.1.2)
       net-protocol
-    net-protocol (0.1.3)
+    net-protocol (0.2.1)
       timeout
     net-smtp (0.3.3)
       net-protocol
@@ -112,8 +115,8 @@ GEM
     parallel (1.22.1)
     parser (3.1.2.0)
       ast (~> 2.4.1)
-    racc (1.6.0)
-    rack (2.2.4)
+    racc (1.6.2)
+    rack (2.2.5)
     rack-test (2.0.2)
       rack (>= 1.3)
     rails (7.0.4)
@@ -133,8 +136,8 @@ GEM
     rails-dom-testing (2.0.3)
       activesupport (>= 4.2.0)
       nokogiri (>= 1.6)
-    rails-html-sanitizer (1.4.3)
-      loofah (~> 2.3)
+    rails-html-sanitizer (1.4.4)
+      loofah (~> 2.19, >= 2.19.1)
     railties (7.0.4)
       actionpack (= 7.0.4)
       activesupport (= 7.0.4)
@@ -168,7 +171,7 @@ GEM
       rubocop (= 1.32.0)
       rubocop-performance (= 1.14.3)
     thor (1.2.1)
-    timeout (0.3.0)
+    timeout (0.3.1)
     tzinfo (2.0.5)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.2.0)
