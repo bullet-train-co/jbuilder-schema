@@ -21,10 +21,14 @@ class Jbuilder::Schema::Renderer
   def render(object = nil, title: nil, description: nil, assigns: nil, **options)
     @view_renderer.assign assigns if assigns
 
-    json = original_render(object || options.dup, options.dup)
-
     partial_path = %i[to_partial_path_for_jbuilder_schema to_partial_path].map { object.public_send(_1) if object.respond_to?(_1) }.compact.first
     options.merge! partial: partial_path, object: object if partial_path
+
+    json = if partial_path
+      original_render(options.dup, options.dup)
+    else
+      original_render(object, options.dup)
+    end
 
     options[:locals] ||= {}
     options[:locals].merge! @default_locals if @default_locals
