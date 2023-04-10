@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         ruby-version:
-          - "2.7"
+          - "3.0"
           - "3.2"
 
     steps:
@@ -35,7 +35,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.2"
+          ruby-version: "3.0"
           bundler-cache: true
       - name: Run Standard
         run: bundle exec rake standard
