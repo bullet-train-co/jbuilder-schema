@@ -22,7 +22,10 @@ class Jbuilder::Schema::Renderer
     @view_renderer.assign assigns if assigns
 
     partial_path = %i[to_partial_path_for_jbuilder_schema to_partial_path].map { object.public_send(_1) if object.respond_to?(_1) }.compact.first
-    options.merge! partial: partial_path, object: object if partial_path
+    if partial_path
+      options[:partial] = partial_path
+      options[:object] = object
+    end
 
     json = if partial_path
       original_render(options.dup, options.dup)
@@ -32,7 +35,7 @@ class Jbuilder::Schema::Renderer
 
     options[:locals] ||= {}
     options[:locals].merge! @default_locals if @default_locals
-    options[:locals][:__jbuilder_schema_options] = { json: json, object: object, title: title, description: description }
+    options[:locals][:__jbuilder_schema_options] = {json: json, object: object, title: title, description: description}
 
     @view_renderer.render(options)
   end

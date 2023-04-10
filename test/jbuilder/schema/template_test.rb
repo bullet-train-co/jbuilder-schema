@@ -147,7 +147,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     end
 
     # TODO: should the merged name be a symbol or string here? E.g. should it pass through `_key`?
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, name: {description: "test", type: :string}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, :name => {description: "test", type: :string}}}}, result)
   end
 
   test "partial" do
@@ -185,8 +185,8 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       "body" => {description: "test", type: :string},
       "created_at" => {description: "test", type: :string, format: "date-time"},
       "updated_at" => {description: "test", type: :string, format: "date-time"},
-      "user_id" => {description: "test", type: :integer}}
-    }, json.articles(Article.all))
+      "user_id" => {description: "test", type: :integer}
+    }}, json.articles(Article.all))
   end
 
   test "empty collections" do
@@ -212,7 +212,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       "items" => {type: :array, minContains: 0, contains: {type: :integer}, description: "test"},
       "properties" => {type: :string, description: "test"},
       "attributes" => {type: :string, description: "test"},
-      "configuration" => {type: :string, description: "test"},
+      "configuration" => {type: :string, description: "test"}
     }, result)
   end
 
