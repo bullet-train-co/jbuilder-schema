@@ -16,7 +16,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
     @user = User.first
     @article = @user.articles.first
 
-    @renderer = Jbuilder::Schema.renderer("test/fixtures/api/v1", locals: { current_user: @user })
+    @renderer = Jbuilder::Schema.renderer("test/fixtures/api/v1", locals: {current_user: @user})
   end
 
   teardown { I18n.reload! }
@@ -27,7 +27,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       description: "User in the blog",
       fields: {
         id: {description: "en.users.fields.id.description"},
-        name: {description: "en.users.fields.name.description"},
+        name: {description: "en.users.fields.name.description"}
       }
     }
 
@@ -57,7 +57,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
 
   test "renders a template with view assigns" do
     Dir.chdir("./test/fixtures") do
-      schema = Jbuilder::Schema.render template: "articles/index", assigns: { articles: Article.all }
+      schema = Jbuilder::Schema.render template: "articles/index", assigns: {articles: Article.all}
 
       assert_equal({
         type: :array,
@@ -66,9 +66,9 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
           "title" => {type: :string}
         },
         example: [
-          {"id"=>1, "title"=>"Generic title 0"},
-          {"id"=>2, "title"=>"Generic title 1"},
-          {"id"=>3, "title"=>"Generic title 2"}
+          {"id" => 1, "title" => "Generic title 0"},
+          {"id" => 2, "title" => "Generic title 1"},
+          {"id" => 3, "title" => "Generic title 2"}
         ]
       }, schema)
     end
@@ -125,7 +125,7 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
           description: en.articles.fields.title.description
         body:
           type: string
-          pattern: \"\\\\w+\"
+          pattern: "\\\\w+"
           description: en.articles.fields.body.description
         created_at:
           type: string

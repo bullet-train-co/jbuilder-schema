@@ -41,6 +41,7 @@ class Jbuilder::Schema
       end
 
       private
+
       def translate(key)
         I18n.t(key, scope: @scope ||= object&.class&.name&.underscore&.pluralize)
       end
