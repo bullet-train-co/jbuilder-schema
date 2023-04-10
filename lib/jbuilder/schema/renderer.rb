@@ -27,7 +27,7 @@ class Jbuilder::Schema::Renderer
     json = if partial_path
       original_render(options.dup, options.dup)
     else
-      original_render(object, options.dup)
+      original_render(object || options.dup, options.dup)
     end
 
     options[:locals] ||= {}
