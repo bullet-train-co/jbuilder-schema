@@ -135,8 +135,12 @@ class Jbuilder::Schema
         title: @configuration.title,
         description: @configuration.description,
         required: required,
-        properties: attributes
+        properties: _nullify_non_required_types(attributes, required)
       }
+    end
+
+    def _nullify_non_required_types(attributes, required)
+      attributes.transform_values! { _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1)); _1 }
     end
 
     def _set_description(key, value)
@@ -166,9 +170,9 @@ class Jbuilder::Schema
       options = @schema_overrides&.dig(key).to_h if options.empty?
 
       unless options[:type]
-        options[:type] = _primitive_type key, value
+        options[:type] = _primitive_type value
 
-        if options[:type] == :array && (types = value.map { _primitive_type key, _1 }.uniq).any?
+        if options[:type] == :array && (types = value.map { _primitive_type _1 }.uniq).any?
           options[:minContains] = 0
           options[:contains] = {type: types.many? ? types : types.first}
         end
@@ -184,21 +188,12 @@ class Jbuilder::Schema
       options
     end
 
-    def _primitive_type(key, value)
-      # if value.nil?
-      #   ::Rails.logger = ::Logger.new(::STDOUT)
-      #   ::Rails.logger.level = ::Logger::INFO
-      #   ::Rails.logger.info ">>>TTT #{key} - #{value}"
-      # ::Rails.logger.info ">>>REQ #{_required!(_attributes.keys)} - #{_required!(_attributes.keys).include?(key)}"
-      # end
-
+    def _primitive_type(value)
       case value
       when ::Array then :array
       when ::Float, ::BigDecimal then :number
       when true, false then :boolean
       when ::Integer then :integer
-      # when ::NilClass
-      #   _required!(_attributes.keys)
       else
         :string
       end
