@@ -207,8 +207,7 @@ class Jbuilder::Schema
 
     def _required!(keys)
       presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
-      # TODO: Fixes #39, but there should probably a better way to do this:
-      (keys) & [_key(:id), *presence_validated_attributes.map { _key _1 }, *presence_validated_attributes.map { _key "#{_1}_id" }]
+      keys & [_key(:id), *presence_validated_attributes.flat_map { [_key(_1), _key("#{_1}_id")] }]
     end
 
     ###
