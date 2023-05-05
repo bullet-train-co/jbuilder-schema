@@ -62,7 +62,7 @@ class Jbuilder::Schema
       if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) }
         @attributes
       else
-        _object(@attributes)
+        _object(@attributes, _required!(@attributes.keys))
       end.merge(example: @json).compact
     end
 
@@ -129,12 +129,12 @@ class Jbuilder::Schema
       @schema_overrides = old_schema_overrides if overrides
     end
 
-    def _object(attributes)
+    def _object(attributes, required)
       {
         type: :object,
         title: @configuration.title,
         description: @configuration.description,
-        required: _required!(attributes.keys),
+        required: required,
         properties: attributes
       }
     end
@@ -166,9 +166,9 @@ class Jbuilder::Schema
       options = @schema_overrides&.dig(key).to_h if options.empty?
 
       unless options[:type]
-        options[:type] = _primitive_type value
+        options[:type] = _primitive_type key, value
 
-        if options[:type] == :array && (types = value.map { _primitive_type _1 }.uniq).any?
+        if options[:type] == :array && (types = value.map { _primitive_type key, _1 }.uniq).any?
           options[:minContains] = 0
           options[:contains] = {type: types.many? ? types : types.first}
         end
@@ -184,12 +184,21 @@ class Jbuilder::Schema
       options
     end
 
-    def _primitive_type(type)
-      case type
+    def _primitive_type(key, value)
+      # if value.nil?
+      #   ::Rails.logger = ::Logger.new(::STDOUT)
+      #   ::Rails.logger.level = ::Logger::INFO
+      #   ::Rails.logger.info ">>>TTT #{key} - #{value}"
+      # ::Rails.logger.info ">>>REQ #{_required!(_attributes.keys)} - #{_required!(_attributes.keys).include?(key)}"
+      # end
+
+      case value
       when ::Array then :array
       when ::Float, ::BigDecimal then :number
       when true, false then :boolean
       when ::Integer then :integer
+      # when ::NilClass
+      #   _required!(_attributes.keys)
       else
         :string
       end
@@ -203,7 +212,8 @@ class Jbuilder::Schema
 
     def _required!(keys)
       presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
-      keys & [_key(:id), *presence_validated_attributes.map { _key _1 }]
+      # TODO: Fixes #39, but there should probably a better way to do this:
+      (keys) & [_key(:id), *presence_validated_attributes.map { _key _1 }, *presence_validated_attributes.map { _key "#{_1}_id" }]
     end
 
     ###
@@ -219,7 +229,7 @@ class Jbuilder::Schema
       raise NullError.build(key) if current_value.nil?
 
       value = _scope { yield self }
-      value = _object(value) unless value[:type] == :array || value.key?(:$ref)
+      value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:$ref)
       _merge_values(current_value, value)
     end
   end
