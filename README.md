@@ -2,9 +2,6 @@
 
 Generate JSON Schema compatible with OpenAPI 3 specs from Jbuilder files
 
-[![Tests](https://github.com/bullet-train-co/jbuilder-schema/actions/workflows/tests.yml/badge.svg)](https://github.com/bullet-train-co/jbuilder-schema/actions)
-[![Standard](https://github.com/bullet-train-co/jbuilder-schema/actions/workflows/standard.yml/badge.svg)](https://github.com/bullet-train-co/jbuilder-schema/actions)
-
 ## Installation
 
 In your Gemfile, put `gem "jbuilder-schema"` after Jbuilder:

@@ -46,7 +46,9 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
             type: integer
             description: en.users.fields.id.description
           name:
-            type: string
+            type:
+            - string
+            - 'null'
             description: en.users.fields.name.description
         example:
           id: 1
@@ -84,11 +86,11 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       required: ["id"],
       properties: {
         "id" => {type: :integer, description: "en.articles.fields.id.description"},
-        "status" => {type: :string, description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
-        "title" => {type: :string, description: "en.articles.fields.title.description"},
-        "body" => {type: :string, description: "en.articles.fields.body.description", pattern: /\w+/},
-        "created_at" => {type: :string, description: "en.articles.fields.created_at.description", format: "date-time"},
-        "updated_at" => {type: :string, description: "en.articles.fields.updated_at.description", format: "date-time"}
+        "status" => {type: [:string, "null"], description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
+        "title" => {type: [:string, "null"], description: "en.articles.fields.title.description"},
+        "body" => {type: [:string, "null"], description: "en.articles.fields.body.description", pattern: /\w+/},
+        "created_at" => {type: [:string, "null"], description: "en.articles.fields.created_at.description", format: "date-time"},
+        "updated_at" => {type: [:string, "null"], description: "en.articles.fields.updated_at.description", format: "date-time"}
       },
       example: {
         "id" => 1,
@@ -114,25 +116,35 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
           type: integer
           description: en.articles.fields.id.description
         status:
-          type: string
+          type:
+          - string
+          - 'null'
           enum:
           - pending
           - published
           - archived
           description: en.articles.fields.status.description
         title:
-          type: string
+          type:
+          - string
+          - 'null'
           description: en.articles.fields.title.description
         body:
-          type: string
+          type:
+          - string
+          - 'null'
           pattern: "\\\\w+"
           description: en.articles.fields.body.description
         created_at:
-          type: string
+          type:
+          - string
+          - 'null'
           format: date-time
           description: en.articles.fields.created_at.description
         updated_at:
-          type: string
+          type:
+          - string
+          - 'null'
           format: date-time
           description: en.articles.fields.updated_at.description
       example:
@@ -155,11 +167,11 @@ class Jbuilder::Schema::BuilderTest < ActiveSupport::TestCase
       required: ["id"],
       properties: {
         id: {type: "integer", description: "en.articles.fields.id.description"},
-        status: {type: "string", description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
-        title: {type: "string", description: "en.articles.fields.title.description"},
-        body: {type: "string", description: "en.articles.fields.body.description", pattern: "\\w+"},
-        created_at: {type: "string", description: "en.articles.fields.created_at.description", format: "date-time"},
-        updated_at: {type: "string", description: "en.articles.fields.updated_at.description", format: "date-time"}
+        status: { type: %w[string null], description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
+        title: { type: %w[string null], description: "en.articles.fields.title.description"},
+        body: { type: %w[string null], description: "en.articles.fields.body.description", pattern: "\\w+"},
+        created_at: { type: %w[string null], description: "en.articles.fields.created_at.description", format: "date-time"},
+        updated_at: { type: %w[string null], description: "en.articles.fields.updated_at.description", format: "date-time"}
       },
       example: {
         id: 1,

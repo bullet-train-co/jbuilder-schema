@@ -77,7 +77,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.user User.first, :id, :name
     end
 
-    assert_equal({"user" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: :string}}}}, result)
+    assert_equal({"user" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: [:string, "null"]}}}}, result)
   end
 
   test "object with schema attributes" do
@@ -85,7 +85,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       json.user User.first, :id, :name, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
     end
 
-    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: :string}}}}, result)
+    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: [:string, "null"]}}}}, result)
   end
 
   test "simple block" do
@@ -147,7 +147,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     end
 
     # TODO: should the merged name be a symbol or string here? E.g. should it pass through `_key`?
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, :name => {description: "test", type: :string}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, name: {description: "test", type: [:string, "null"]}}}}, result)
   end
 
   test "partial" do
@@ -238,7 +238,7 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
       }
     end
 
-    assert_equal({"Id" => {description: "test", type: :integer}, "Title" => {description: "test", type: :string}, "Author" => {type: :object, title: "test", description: "test", required: ["Id"], properties: {"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: :string}}}}, result)
+    assert_equal({"Id" => {description: "test", type: :integer}, "Title" => {description: "test", type: :string}, "Author" => {type: :object, title: "test", description: "test", required: ["Id"], properties: {"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: [:string, "null"]}}}}, result)
   end
 
   test "deep key format with array" do
