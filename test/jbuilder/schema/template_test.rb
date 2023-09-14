@@ -158,6 +158,14 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
   end
 
+  test "inline partial" do
+    result = json_for(Article) do |json|
+      json.articles Article.all, partial: "articles/article", as: :article
+    end
+
+    assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
+  end
+
   test "block with partial" do
     result = json_for(User) do |json|
       json.user { json.partial! "api/v1/users/user", user: User.first }
