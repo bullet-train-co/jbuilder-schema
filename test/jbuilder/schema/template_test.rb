@@ -298,14 +298,14 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
 
   ### Real world examples
   test "It renders user" do
-    yaml = Jbuilder::Schema.renderer("test/fixtures/api/v1").yaml(User.first, title: "User", description: "User description")
+    yaml = Jbuilder::Schema.renderer(["test/fixtures/api/v1", "test/fixtures"]).yaml(User.first, title: "User", description: "User description")
     schema = YAML.load_file file_fixture("schema_outputs/user.yaml")
 
     assert_equal(schema.to_yaml, yaml)
   end
 
   test "It renders article" do
-    yaml = Jbuilder::Schema.renderer("test/fixtures/api/v1").yaml(Article.first, title: "Article", description: "Article description")
+    yaml = Jbuilder::Schema.renderer(["test/fixtures/api/v1", "test/fixtures"]).yaml(Article.first, title: "Article", description: "Article description")
     schema = YAML.load_file file_fixture("schema_outputs/article.yaml")
 
     puts yaml
