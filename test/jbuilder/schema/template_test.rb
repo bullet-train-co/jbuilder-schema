@@ -3,7 +3,7 @@
 require "test_helper"
 require "jbuilder/schema/template"
 
-class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
+class Jbuilder::Schema::TemplateTest < ActionView::TestCase
   setup do
     I18n.stubs(:t).returns("test")
   end
@@ -313,10 +313,10 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   private
 
   def json_for(model, **options, &block)
-    Jbuilder::Schema::Template.new(nil, object: model.new, **options, &block).attributes!
+    Jbuilder::Schema::Template.new(view, object: model.new, **options, &block).attributes!
   end
 
   def json(&block)
-    Jbuilder::Schema::Template.new(nil, object: Article.new, &block)
+    Jbuilder::Schema::Template.new(view, object: Article.new, &block)
   end
 end
