@@ -1,0 +1,38 @@
+---
+type: object
+title: User
+description: User description
+required:
+  - id
+properties:
+  id:
+    type: integer
+    description: test
+  name:
+    type:
+      - string
+      - 'null'
+    description: test
+  email:
+    type:
+      - string
+      - 'null'
+    description: test
+  created_at:
+    type:
+      - string
+      - 'null'
+    format: date-time
+    description: test
+  updated_at:
+    type:
+      - string
+      - 'null'
+    format: date-time
+    description: test
+example:
+  id: 1
+  name: Generic name 0
+  email: user-0@example.com
+  created_at: '2023-01-01T12:00:00.000Z'
+  updated_at: '2023-01-01T12:00:00.000Z'

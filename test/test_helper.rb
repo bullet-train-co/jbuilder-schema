@@ -15,3 +15,4 @@ require "mocha/minitest"
 require "setup/active_record"
 
 ActiveSupport.test_order = :random
+ActiveSupport::TestCase.file_fixture_path = "test/fixtures"

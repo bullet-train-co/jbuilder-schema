@@ -22,10 +22,26 @@ ActiveRecord::Schema.define do
     t.text :body, null: false
     t.timestamps null: false
   end
+
+  create_table :ratings, force: true do |t|
+    t.references :user
+    t.references :article
+    t.integer :value, null: false
+    t.timestamps null: false
+  end
+
+  create_table :comments, force: true do |t|
+    t.references :user
+    t.references :article
+    t.text :text, null: false
+    t.timestamps null: false
+  end
 end
 
 class User < ActiveRecord::Base
   has_many :articles
+  has_many :ratings
+  has_many :comments
 end
 
 time = DateTime.parse("2023-1-1 12:00")
@@ -36,10 +52,29 @@ end
 
 class Article < ActiveRecord::Base
   belongs_to :user
+  has_many :ratings
+  has_many :comments
 
   enum :status, %w[pending published archived].index_by(&:itself)
 end
 
+class Rating < ActiveRecord::Base
+  belongs_to :user
+  belongs_to :article
+end
+
+class Comment < ActiveRecord::Base
+  belongs_to :user
+  belongs_to :article
+end
+
 3.times do |n|
   User.first.articles.create! title: "Generic title #{n}", body: "Lorem ipsum… #{n}", created_at: time, updated_at: time
+end
+
+Article.all.each do |article|
+  3.times do |n|
+    article.ratings.create! value: 5 - n, user: User.find(n + 1), created_at: time, updated_at: time
+    article.comments.create! text: "Lorem ipsum… #{n}", user: User.find(3 - n), created_at: time, updated_at: time
+  end
 end

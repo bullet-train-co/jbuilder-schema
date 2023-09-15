@@ -166,6 +166,14 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
     assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
   end
 
+  test "inline object partial" do
+    result = json_for(Article) do |json|
+      json.author Article.first.user, partial: "api/v1/users/user", as: :user
+    end
+
+    assert_equal({type: :object, "$ref": "#/components/schemas/user"}, result)
+  end
+
   test "block with partial" do
     result = json_for(User) do |json|
       json.user { json.partial! "api/v1/users/user", user: User.first }
@@ -283,6 +291,23 @@ class Jbuilder::Schema::TemplateTest < ActiveSupport::TestCase
   test "schema! with array" do
     json = json { _1.array! Article.all, :title }
     assert_equal({type: :array, items: {"title" => {type: :string, description: "test"}}}, json.schema!)
+  end
+
+  ### Real world examples
+  test "It renders user" do
+    yaml = Jbuilder::Schema.renderer("test/fixtures/api/v1").yaml(User.first, title: "User", description: "User description")
+    schema = YAML.load_file file_fixture("schema_outputs/user.yaml")
+
+    assert_equal(schema.to_yaml, yaml)
+  end
+
+  test "It renders article" do
+    yaml = Jbuilder::Schema.renderer("test/fixtures/api/v1").yaml(Article.first, title: "Article", description: "Article description")
+    schema = YAML.load_file file_fixture("schema_outputs/article.yaml")
+
+    puts yaml
+
+    assert_equal(schema.to_yaml, yaml)
   end
 
   private
