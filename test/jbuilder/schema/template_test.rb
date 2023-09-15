@@ -4,6 +4,9 @@ require "test_helper"
 require "jbuilder/schema/template"
 
 class Jbuilder::Schema::TemplateTest < ActionView::TestCase
+  # Assign the correct view path for the controller that ActionView::TestCase uses.
+  TestController.prepend_view_path "test/fixtures"
+
   setup do
     I18n.stubs(:t).returns("test")
   end
