@@ -16,7 +16,7 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
     @user = User.first
     @article = @user.articles.first
 
-    @renderer = Jbuilder::Schema.renderer("test/fixtures/api/v1", locals: {current_user: @user})
+    @renderer = Jbuilder::Schema.renderer(["test/fixtures/app/views/api/v1", "test/fixtures/app/views"], locals: {current_user: @user})
   end
 
   teardown { I18n.reload! }
@@ -167,11 +167,11 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
       required: ["id"],
       properties: {
         id: {type: "integer", description: "en.articles.fields.id.description"},
-        status: { type: %w[string null], description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
-        title: { type: %w[string null], description: "en.articles.fields.title.description"},
-        body: { type: %w[string null], description: "en.articles.fields.body.description", pattern: "\\w+"},
-        created_at: { type: %w[string null], description: "en.articles.fields.created_at.description", format: "date-time"},
-        updated_at: { type: %w[string null], description: "en.articles.fields.updated_at.description", format: "date-time"}
+        status: {type: %w[string null], description: "en.articles.fields.status.description", enum: ["pending", "published", "archived"]},
+        title: {type: %w[string null], description: "en.articles.fields.title.description"},
+        body: {type: %w[string null], description: "en.articles.fields.body.description", pattern: "\\w+"},
+        created_at: {type: %w[string null], description: "en.articles.fields.created_at.description", format: "date-time"},
+        updated_at: {type: %w[string null], description: "en.articles.fields.updated_at.description", format: "date-time"}
       },
       example: {
         id: 1,

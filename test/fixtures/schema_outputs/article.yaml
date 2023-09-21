@@ -35,7 +35,9 @@ properties:
     "$ref": "#/components/schemas/user"
     description: test
   ratings:
-    type: array
+    type:
+      - array
+      - 'null'
     items:
       "$ref": "#/components/schemas/rating"
     description: test

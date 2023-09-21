@@ -82,7 +82,16 @@ class Jbuilder::Schema
     ensure
       @configuration = old_configuration if old_configuration
     end
+
+    # TODO: Returning method_missing from JBuilder fixes https://github.com/bullet-train-co/jbuilder-schema/issues/47
     alias_method :method_missing, :set! # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
+    # def method_missing(*args, &block) # rubocop:disable Style/MissingRespondToMissing
+    #   if ::Kernel.block_given?
+    #     set!(*args, &block)
+    #   else
+    #     set!(*args)
+    #   end
+    # end
 
     def array!(collection = [], *args, schema: nil, **options, &block)
       if _partial_options?(options)
@@ -140,7 +149,10 @@ class Jbuilder::Schema
     end
 
     def _nullify_non_required_types(attributes, required)
-      attributes.transform_values! { _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1)); _1 }
+      attributes.transform_values! {
+        _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1))
+        _1
+      }
     end
 
     def _set_description(key, value)

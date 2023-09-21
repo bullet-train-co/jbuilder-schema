@@ -150,7 +150,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     end
 
     # TODO: should the merged name be a symbol or string here? E.g. should it pass through `_key`?
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, name: {description: "test", type: [:string, "null"]}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, :name => {description: "test", type: [:string, "null"]}}}}, result)
   end
 
   test "partial" do
@@ -162,16 +162,16 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
   end
 
   test "inline partial" do
-    result = json_for(Article) do |json|
-      json.articles Article.all, partial: "articles/article", as: :article
+    result = json_for(User) do |json|
+      json.users User.all, partial: "api/v1/users/user", as: :user
     end
 
-    assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
+    assert_equal({type: :array, items: {"$ref": "#/components/schemas/user"}}, result)
   end
 
   test "inline object partial" do
     result = json_for(Article) do |json|
-      json.author Article.first.user, partial: "api/v1/users/user", as: :user
+      json.author Article.first.user, partial: "app/views/api/v1/users/user", as: :user
     end
 
     assert_equal({type: :object, "$ref": "#/components/schemas/user"}, result)
@@ -298,14 +298,14 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
 
   ### Real world examples
   test "It renders user" do
-    yaml = Jbuilder::Schema.renderer(["test/fixtures/api/v1", "test/fixtures"]).yaml(User.first, title: "User", description: "User description")
+    yaml = Jbuilder::Schema.renderer(["test/fixtures/app/views/api/v1", "test/fixtures/app/views"]).yaml(User.first, title: "User", description: "User description")
     schema = YAML.load_file file_fixture("schema_outputs/user.yaml")
 
     assert_equal(schema.to_yaml, yaml)
   end
 
   test "It renders article" do
-    yaml = Jbuilder::Schema.renderer(["test/fixtures/api/v1", "test/fixtures"]).yaml(Article.first, title: "Article", description: "Article description")
+    yaml = Jbuilder::Schema.renderer(["test/fixtures/app/views/api/v1", "test/fixtures/app/views"]).yaml(Article.first, title: "Article", description: "Article description")
     schema = YAML.load_file file_fixture("schema_outputs/article.yaml")
 
     puts yaml
