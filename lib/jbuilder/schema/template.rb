@@ -72,20 +72,13 @@ class Jbuilder::Schema
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
 
-        # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
+        ::Rails.logger.debug("Jbuilder::Schema::Template -- #{key} - #{key.class.name}, #{value}, #{keys}, #{options}")
 
-        # ::Rails.logger.debug("Jbuilder::Schema::Template -- #{block.nil?} && #{keys.blank?} && #{_is_collection?(value)} && (#{value.empty?} || #{value.all? { _is_active_model?(_1) }})")
+        # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
         if block.nil? && (keys.blank? || _partial_options?(options)) && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
           _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true) })
         else
-
-
-          ::Rails.logger.debug("Jbuilder::Schema::Template -- #{key}, #{value}, #{keys}, #{options}")
-          # if _partial_options?(options)
-          #   _set_inline_partial name, object, options
-          # else
           super(key, value, *keys, **options, &block)
-          # end
         end
       end
     ensure
@@ -94,13 +87,6 @@ class Jbuilder::Schema
 
     # TODO: Returning method_missing from JBuilder fixes https://github.com/bullet-train-co/jbuilder-schema/issues/47
     alias_method :method_missing, :set! # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
-    # def method_missing(*args, &block) # rubocop:disable Style/MissingRespondToMissing
-    #   if ::Kernel.block_given?
-    #     set!(*args, &block)
-    #   else
-    #     set!(*args)
-    #   end
-    # end
 
     def array!(collection = [], *args, schema: nil, **options, &block)
       if _partial_options?(options)
@@ -188,6 +174,7 @@ class Jbuilder::Schema
     FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
 
     def _schema(key, value, **options)
+      ::Rails.logger.debug("Jbuilder::Schema::Template -- #{key} - #{key.class.name}, #{value}, #{options}")
       options = @schema_overrides&.dig(key).to_h if options.empty?
 
       unless options[:type]
@@ -206,6 +193,7 @@ class Jbuilder::Schema
       end
 
       _set_description key, options
+      ::Rails.logger.debug("Jbuilder::Schema::Template._schema options -- #{key} - #{key.class.name}, #{options}")
       options
     end
 
@@ -221,6 +209,7 @@ class Jbuilder::Schema
     end
 
     def _set_value(key, value)
+      ::Rails.logger.debug("Jbuilder::Schema::Template._set_value -- #{key}, #{value} - #{value.is_a?(::Hash)} && #{value.is_a?(::Hash) && value.key?(:type)}")
       value = _schema(key, value) unless value.is_a?(::Hash) && value.key?(:type)
       _set_description(key, value)
       super

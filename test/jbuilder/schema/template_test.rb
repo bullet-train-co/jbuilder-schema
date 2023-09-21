@@ -166,7 +166,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.users User.all, partial: "api/v1/users/user", as: :user
     end
 
-    assert_equal({users: {type: :array, items: {"$ref": "#/components/schemas/user"}, description: "test"}}, result)
+    assert_equal({"users" => {type: :array, items: {"$ref": "#/components/schemas/user"}, description: "test"}}, result)
   end
 
   test "inline object partial" do
@@ -174,7 +174,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.author Article.first.user, partial: "api/v1/users/user", as: :user
     end
 
-    assert_equal({author: {type: :object, "$ref": "#/components/schemas/user", description: "test"}}, result)
+    assert_equal({"author" => {type: :object, "$ref": "#/components/schemas/user", description: "test"}}, result)
   end
 
   test "block with partial" do
