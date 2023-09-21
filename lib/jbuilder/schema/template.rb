@@ -73,10 +73,19 @@ class Jbuilder::Schema
         keys = args.presence || _extract_possible_keys(value)
 
         # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
-        if block.nil? && keys.blank? && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
+
+        # ::Rails.logger.debug("Jbuilder::Schema::Template -- #{block.nil?} && #{keys.blank?} && #{_is_collection?(value)} && (#{value.empty?} || #{value.all? { _is_active_model?(_1) }})")
+        if block.nil? && (keys.blank? || _partial_options?(options)) && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
           _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true) })
         else
+
+
+          ::Rails.logger.debug("Jbuilder::Schema::Template -- #{key}, #{value}, #{keys}, #{options}")
+          # if _partial_options?(options)
+          #   _set_inline_partial name, object, options
+          # else
           super(key, value, *keys, **options, &block)
+          # end
         end
       end
     ensure

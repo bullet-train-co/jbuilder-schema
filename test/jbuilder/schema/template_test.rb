@@ -5,7 +5,7 @@ require "jbuilder/schema/template"
 
 class Jbuilder::Schema::TemplateTest < ActionView::TestCase
   # Assign the correct view path for the controller that ActionView::TestCase uses.
-  TestController.prepend_view_path "test/fixtures"
+  TestController.prepend_view_path "test/fixtures/app/views/"
 
   setup do
     I18n.stubs(:t).returns("test")
@@ -166,15 +166,15 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.users User.all, partial: "api/v1/users/user", as: :user
     end
 
-    assert_equal({type: :array, items: {"$ref": "#/components/schemas/user"}}, result)
+    assert_equal({users: {type: :array, items: {"$ref": "#/components/schemas/user"}, description: "test"}}, result)
   end
 
   test "inline object partial" do
     result = json_for(Article) do |json|
-      json.author Article.first.user, partial: "app/views/api/v1/users/user", as: :user
+      json.author Article.first.user, partial: "api/v1/users/user", as: :user
     end
 
-    assert_equal({type: :object, "$ref": "#/components/schemas/user"}, result)
+    assert_equal({author: {type: :object, "$ref": "#/components/schemas/user", description: "test"}}, result)
   end
 
   test "block with partial" do
@@ -307,8 +307,6 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
   test "It renders article" do
     yaml = Jbuilder::Schema.renderer(["test/fixtures/app/views/api/v1", "test/fixtures/app/views"]).yaml(Article.first, title: "Article", description: "Article description")
     schema = YAML.load_file file_fixture("schema_outputs/article.yaml")
-
-    puts yaml
 
     assert_equal(schema.to_yaml, yaml)
   end

@@ -15,8 +15,17 @@ class Jbuilder::Schema
     end
 
     def set!(*args, schema: nil, **options, &block)
+      ::Rails.logger.debug("Jbuilder::Schema::IgnoreSchemaMeta #{args}, #{schema}, #{options}")
       super(*args, **options, &block)
     end
+
+    # def set! (key, value = BLANK, *args, schema: nil, **options, &block)
+    #   ::Rails.logger.debug("Jbuilder::Schema::IgnoreSchemaMeta #{args}, #{schema}, #{options}")
+    #   # super(key, value, *args, &block)
+    #   super(*args, **options, &block)
+    # end
+
+    # (key, value = BLANK, *args, &block)
 
     def array!(*args, schema: nil, **options, &block)
       super(*args, **options, &block)
