@@ -161,7 +161,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
   end
 
-  test "inline partial" do
+  test "inline collection partial" do
     result = json_for(User) do |json|
       json.users User.all, partial: "api/v1/users/user", as: :user
     end
