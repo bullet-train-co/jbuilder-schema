@@ -1,35 +1,35 @@
 ---
 type: object
 title: User
-description: User description
+description: User in the blog
 required:
   - id
 properties:
   id:
     type: integer
-    description: test
+    description: User ID
   name:
     type:
       - string
       - 'null'
-    description: test
+    description: User Name
   email:
     type:
       - string
       - 'null'
-    description: test
+    description: User Email
   created_at:
     type:
       - string
       - 'null'
     format: date-time
-    description: test
+    description: User Creation Date
   updated_at:
     type:
       - string
       - 'null'
     format: date-time
-    description: test
+    description: User Update Date
 example:
   id: 1
   name: Generic name 0

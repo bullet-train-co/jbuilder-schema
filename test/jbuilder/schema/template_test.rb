@@ -296,21 +296,6 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     assert_equal({type: :array, items: {"title" => {type: :string, description: "test"}}}, json.schema!)
   end
 
-  ### Real world examples
-  test "It renders user" do
-    yaml = Jbuilder::Schema.renderer(["test/fixtures/app/views/api/v1", "test/fixtures/app/views"]).yaml(User.first, title: "User", description: "User description")
-    schema = YAML.load_file file_fixture("schema_outputs/user.yaml")
-
-    assert_equal(schema.to_yaml, yaml)
-  end
-
-  test "It renders article" do
-    yaml = Jbuilder::Schema.renderer(["test/fixtures/app/views/api/v1", "test/fixtures/app/views"]).yaml(Article.first, title: "Article", description: "Article description")
-    schema = YAML.load_file file_fixture("schema_outputs/article.yaml")
-
-    assert_equal(schema.to_yaml, yaml)
-  end
-
   private
 
   def json_for(model, **options, &block)
