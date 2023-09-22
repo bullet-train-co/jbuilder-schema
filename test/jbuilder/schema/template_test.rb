@@ -153,7 +153,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, name: {description: "test", type: [:string, "null"]}}}}, result)
   end
 
-  test "partial" do
+  test "collection partial in block" do
     result = json_for(Article) do |json|
       json.partial! "articles/article", collection: Article.all, as: :article
     end
@@ -161,7 +161,15 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
   end
 
-  test "inline collection partial" do
+  test "object partial in block" do
+    result = json_for(User) do |json|
+      json.user { json.partial! "api/v1/users/user", user: User.first }
+    end
+
+    assert_equal({"user" => {description: "test", type: :object, "$ref": "#/components/schemas/user"}}, result)
+  end
+
+  test "collection partial inline" do
     result = json_for(User) do |json|
       json.users User.all, partial: "api/v1/users/user", as: :user
     end
@@ -169,20 +177,12 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     assert_equal({"users" => {type: :array, items: {"$ref": "#/components/schemas/user"}, description: "test"}}, result)
   end
 
-  test "inline object partial" do
+  test "object partial inline" do
     result = json_for(Article) do |json|
       json.author Article.first.user, partial: "api/v1/users/user", as: :user
     end
 
     assert_equal({"author" => {type: :object, "$ref": "#/components/schemas/user", description: "test"}}, result)
-  end
-
-  test "block with partial" do
-    result = json_for(User) do |json|
-      json.user { json.partial! "api/v1/users/user", user: User.first }
-    end
-
-    assert_equal({"user" => {description: "test", type: :object, "$ref": "#/components/schemas/user"}}, result)
   end
 
   test "block with array with partial" do
