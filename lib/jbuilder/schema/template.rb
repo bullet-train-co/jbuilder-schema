@@ -59,7 +59,12 @@ class Jbuilder::Schema
     end
 
     def schema!
-      if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) }
+      # TODO: Not sure why it was like that, when it was meant to be used,
+      # but that seems to fix the problem with disappearance of root properties
+      # https://github.com/bullet-train-co/jbuilder-schema/issues/46
+      # if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) }
+
+      if [@attributes, *@attributes.first].select { |a| a.is_a?(::Hash) && a[:type] == :array && a.key?(:items) }.any?
         @attributes
       else
         _object(@attributes, _required!(@attributes.keys))
@@ -75,6 +80,8 @@ class Jbuilder::Schema
         # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
         if block.nil? && keys.blank? && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
           _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true) })
+        elsif _partial_options?(options)
+          _set_value(key, _scope { _set_ref(options[:as].to_s, array: _is_collection?(value)) })
         else
           super(key, value, *keys, **options, &block)
         end
@@ -82,6 +89,7 @@ class Jbuilder::Schema
     ensure
       @configuration = old_configuration if old_configuration
     end
+
     alias_method :method_missing, :set! # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
 
     def array!(collection = [], *args, schema: nil, **options, &block)
@@ -140,7 +148,10 @@ class Jbuilder::Schema
     end
 
     def _nullify_non_required_types(attributes, required)
-      attributes.transform_values! { _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1)); _1 }
+      attributes.transform_values! {
+        _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1))
+        _1
+      }
     end
 
     def _set_description(key, value)

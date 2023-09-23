@@ -1,0 +1,38 @@
+---
+type: object
+title: User
+description: User in the blog
+required:
+  - id
+properties:
+  id:
+    type: integer
+    description: User ID
+  name:
+    type:
+      - string
+      - 'null'
+    description: User Name
+  email:
+    type:
+      - string
+      - 'null'
+    description: User Email
+  created_at:
+    type:
+      - string
+      - 'null'
+    format: date-time
+    description: User Creation Date
+  updated_at:
+    type:
+      - string
+      - 'null'
+    format: date-time
+    description: User Update Date
+example:
+  id: 1
+  name: Generic name 0
+  email: user-0@example.com
+  created_at: '2023-01-01T12:00:00.000Z'
+  updated_at: '2023-01-01T12:00:00.000Z'
