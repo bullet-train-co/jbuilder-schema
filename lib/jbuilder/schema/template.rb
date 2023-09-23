@@ -62,8 +62,9 @@ class Jbuilder::Schema
       # TODO: Not sure why it was like that, when it was meant to be used,
       # but that seems to fix the problem with disappearance of root properties
       # https://github.com/bullet-train-co/jbuilder-schema/issues/46
-      # if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) } # && 1 == 0
-      if ([@attributes] + @attributes.first.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) } # && 1 == 0
+      # if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) }
+
+      if [@attributes, *@attributes.first].select { |a| a.is_a?(::Hash) && a[:type] == :array && a.key?(:items) }.any?
         @attributes
       else
         _object(@attributes, _required!(@attributes.keys))
@@ -147,7 +148,10 @@ class Jbuilder::Schema
     end
 
     def _nullify_non_required_types(attributes, required)
-      attributes.transform_values! { _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1)); _1 }
+      attributes.transform_values! {
+        _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1))
+        _1
+      }
     end
 
     def _set_description(key, value)

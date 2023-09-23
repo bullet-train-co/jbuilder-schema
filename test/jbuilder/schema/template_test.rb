@@ -150,7 +150,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     end
 
     # TODO: should the merged name be a symbol or string here? E.g. should it pass through `_key`?
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, name: {description: "test", type: [:string, "null"]}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, :name => {description: "test", type: [:string, "null"]}}}}, result)
   end
 
   test "collection partial in block" do

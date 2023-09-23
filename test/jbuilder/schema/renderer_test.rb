@@ -34,7 +34,7 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
     @user_schema = YAML.load_file(file_fixture("schemas/user.yaml"))
     @article_schema = YAML.load_file(file_fixture("schemas/article.yaml"))
 
-    @renderer = Jbuilder::Schema.renderer(%w[test/fixtures/app/views/api/v1 test/fixtures/app/views], locals: { current_user: @user})
+    @renderer = Jbuilder::Schema.renderer(%w[test/fixtures/app/views/api/v1 test/fixtures/app/views], locals: {current_user: @user})
   end
 
   teardown { I18n.reload! }
