@@ -1,13 +1,13 @@
 ---
 type: object
 title: Article
-description: Article description
+description: Article in the blog
 required:
   - id
 properties:
   id:
     type: integer
-    description: test
+    description: Article ID
   status:
     type:
       - string
@@ -16,36 +16,38 @@ properties:
       - pending
       - published
       - archived
-    description: test
+    description: Article Status
   title:
     type:
       - string
       - 'null'
-    description: test
+    description: Article Title
   body:
     type:
       - string
       - 'null'
     pattern: "\\w+"
-    description: test
+    description: Article Body
   author:
     type:
       - object
       - 'null'
     "$ref": "#/components/schemas/user"
-    description: test
+    description: Article Author
   ratings:
     type:
       - array
       - 'null'
     items:
       "$ref": "#/components/schemas/rating"
-    description: test
+    description: Article Ratings
   comments:
-    type: array
+    type:
+      - array
+      - 'null'
     items:
       "$ref": "#/components/schemas/comment"
-    description: test
+    description: Article Comments
 example:
   id: 1
   status: pending

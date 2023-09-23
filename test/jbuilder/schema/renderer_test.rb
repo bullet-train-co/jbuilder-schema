@@ -22,7 +22,10 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
         title: {description: "Article Title"},
         body: {description: "Article Body"},
         created_at: {description: "Article Creation Date"},
-        updated_at: {description: "Article Update Date"}
+        updated_at: {description: "Article Update Date"},
+        author: {description: "Article Author"},
+        ratings: {description: "Article Ratings"},
+        comments: {description: "Article Comments"}
       }}
 
     @user = User.first
@@ -64,7 +67,9 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
 
   test "renders a schema from a fixture" do
     schema = @renderer.render @article, title: "Article", description: "Article in the blog"
-    assert_equal(@article_schema, schema)
+    schema = schema.deep_transform_values { |v| (v == /\w+/) ? "\\w+" : v }
+    schema = schema.deep_transform_keys(&:to_s).deep_transform_values { |v| v.is_a?(Symbol) ? v.to_s : v }
+    assert_equal @article_schema, schema
   end
 
   test "renders a schema from a fixture to yaml" do

@@ -59,7 +59,11 @@ class Jbuilder::Schema
     end
 
     def schema!
-      if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) }
+      # TODO: Not sure why it was like that, when it was meant to be used,
+      # but that seems to fix the problem with disappearance of root properties
+      # https://github.com/bullet-train-co/jbuilder-schema/issues/46
+      # if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) } # && 1 == 0
+      if ([@attributes] + @attributes.first.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) } # && 1 == 0
         @attributes
       else
         _object(@attributes, _required!(@attributes.keys))
