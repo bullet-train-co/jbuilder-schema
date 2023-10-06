@@ -111,7 +111,10 @@ class Jbuilder::Schema
         # TODO: Find where it is being used
         _render_active_model_partial model
       else
-        _set_ref(partial || model, array: collection&.any?)
+        local = options.except(:partial, :as, :collection, :cached, :schema).first
+        as = options[:as] || ((local.is_a?(::Array) && local.size == 2 && local.first.is_a?(::Symbol) && local.last.is_a?(::Object)) ? local.first.to_s : nil)
+
+        _set_ref(as&.to_s || partial || model, array: collection&.any?)
       end
     end
 
