@@ -37,7 +37,17 @@ class Jbuilder::Schema::Renderer
     options[:locals].merge! @default_locals if @default_locals
     options[:locals][:__jbuilder_schema_options] = {json: json, object: object, title: title, description: description}
 
-    @view_renderer.render(options)
+    return_val = @view_renderer.render(options)
+
+    # TODO: Figure out why the statement above started to return a different thing in Rails 7.1.0.
+    # In Rails 7.0.x it returned a regular Ruby Hash. In 7.1.0 is started returning a String that
+    # looks like `.to_s` had been called on a Hash. Calling `eval` on that String turns it back
+    # into a Hash that we can use.
+    if return_val.is_a?(String)
+      return_val = eval(return_val)
+    end
+
+    return return_val
   end
 
   # Thin wrapper around the regular Jbuilder JSON output render, which also parses it into a hash.
