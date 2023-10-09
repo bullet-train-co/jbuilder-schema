@@ -54,8 +54,22 @@ class Jbuilder::Schema
       @ignore_nil = false
     end
 
+    class TargetWrapper
+      def initialize(object)
+        @object = object
+      end
+
+      # Rails 7.1 calls `to_s` on our `target!` (the return value from our templates).
+      # To get around that and let our inner Hash through, we add this override.
+      # `unwrap_target!` is added for backwardscompatibility so we get the inner Hash on Rails < 7.1.
+      def to_s
+        @object
+      end
+      alias unwrap_target! to_s
+    end
+
     def target!
-      schema!
+      TargetWrapper.new(schema!)
     end
 
     def schema!

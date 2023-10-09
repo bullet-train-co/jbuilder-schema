@@ -37,7 +37,9 @@ class Jbuilder::Schema::Renderer
     options[:locals].merge! @default_locals if @default_locals
     options[:locals][:__jbuilder_schema_options] = {json: json, object: object, title: title, description: description}
 
-    @view_renderer.render(options)
+    @view_renderer.render(options).then do |result|
+      result.respond_to?(:unwrap_target!) ? result.unwrap_target! : result
+    end
   end
 
   # Thin wrapper around the regular Jbuilder JSON output render, which also parses it into a hash.

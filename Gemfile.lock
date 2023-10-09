@@ -3,7 +3,7 @@ PATH
   specs:
     jbuilder-schema (2.3.1)
       jbuilder
-      rails (>= 5.0.0, < 7.1.0)
+      rails (>= 5.0.0)
 
 GEM
   remote: https://rubygems.org/
@@ -207,6 +207,7 @@ PLATFORMS
 DEPENDENCIES
   jbuilder-schema!
   mocha
+  rails (~> 7.0.8.0)
   rake (~> 13.0)
   sqlite3
   standard (~> 1.3)
