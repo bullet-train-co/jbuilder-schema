@@ -55,7 +55,7 @@ class Article < ActiveRecord::Base
   has_many :ratings
   has_many :comments
 
-  enum :status, %w[pending published archived].index_by(&:itself)
+  enum status: %w[pending published archived].index_by(&:itself)
 end
 
 class Rating < ActiveRecord::Base
