@@ -8,17 +8,27 @@ on:
   pull_request:
 
 jobs:
-  tests:
-    runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby-version }}
+  test:
     strategy:
+      fail-fast: false
       matrix:
+        rails-version:
+          - "7.1"
+          - "6.1"
+          - "main"
         ruby-version:
           - "3.0"
           - "3.2"
 
+    env:
+      RAILS_ENV: test
+      RAILS_VERSION: ${{ matrix.rails-version }}
+
+    name: ${{ format('Test rails@{0} ruby@{1}', matrix.rails-version, matrix.ruby-version) }}
+    runs-on: "ubuntu-latest"
+
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
