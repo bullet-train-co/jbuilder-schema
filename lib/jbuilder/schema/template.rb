@@ -52,6 +52,7 @@ class Jbuilder::Schema
       @configuration = Configuration.new(**options)
       super(context)
       @ignore_nil = false
+      @within_block = false
     end
 
     class TargetWrapper
@@ -87,21 +88,26 @@ class Jbuilder::Schema
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
+      @within_block = !block.nil?
 
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
 
         # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
         if block.nil? && keys.blank? && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
+          ::Rails.logger.debug(">>>set! 1")
           _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true) })
         elsif _partial_options?(options)
+          ::Rails.logger.debug(">>>set! 2")
           _set_value(key, _scope { _set_ref(options[:as].to_s, array: _is_collection?(value)) })
         else
+          ::Rails.logger.debug(">>>set! 3")
           super(key, value, *keys, **options, &block)
         end
       end
     ensure
       @configuration = old_configuration if old_configuration
+      @within_block = false
     end
 
     alias_method :method_missing, :set! # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
@@ -121,6 +127,8 @@ class Jbuilder::Schema
     end
 
     def partial!(model = nil, *args, partial: nil, collection: nil, **options)
+      ::Rails.logger.debug(">>>partial! #{model}, #{args}, #{partial}, #{collection}, #{options}")
+
       if args.none? && _is_active_model?(model)
         # TODO: Find where it is being used
         _render_active_model_partial model
@@ -128,8 +136,45 @@ class Jbuilder::Schema
         local = options.except(:partial, :as, :collection, :cached, :schema).first
         as = options[:as] || ((local.is_a?(::Array) && local.size == 2 && local.first.is_a?(::Symbol) && local.last.is_a?(::Object)) ? local.first.to_s : nil)
 
-        _set_ref(as&.to_s || partial || model, array: collection&.any?)
+
+        if @within_block
+          ::Rails.logger.debug(">>>Ppartial! IN block #{as}, #{partial}, #{model}, #{collection}, #{options}")
+
+          _set_ref(as&.to_s || partial || model, array: collection&.any?)
+        else
+
+          ::Rails.logger.debug(">>>Ppartial! OUT OF block #{as}, #{partial}, #{model}, #{collection}, #{options}")
+
+          # MERGE!
+          _set_ref(as&.to_s || partial || model, array: collection&.any?)
+        end
+        #
+        # if within_block_context?
+        #   ::Rails.logger.debug(">>>Ppartial! IN block #{as}, #{partial}, #{model}, #{collection}, #{options}")
+        #
+        #   _set_ref(as&.to_s || partial || model, array: collection&.any?)
+        # else
+        #   ::Rails.logger.debug(">>>Ppartial! OUT OF block #{as}, #{partial}, #{model}, #{collection}, #{options}")
+        #
+        #   # MERGE!
+        #   _set_ref(as&.to_s || partial || model, array: collection&.any?)
+        # end
+
+        # if _partial_options?(options)
+        #   partial!(collection: collection, **options)
+        # else
+        #   _with_schema_overrides(schema) do
+        #     _attributes.merge! type: :array, items: _scope { super(collection, *args, &block) }
+        #   end
+        # end
+
+
       end
+    end
+
+    def within_block_context?
+      caller.any? { |loc| loc.include?('block in') }
+      # ::Thread.current[:within_block_context] == true
     end
 
     def merge!(object)
@@ -166,6 +211,7 @@ class Jbuilder::Schema
 
     def _nullify_non_required_types(attributes, required)
       attributes.transform_values! {
+        ::Rails.logger.debug(">>>_nullify_non_required_types #{_1} - #{attributes}")
         _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1))
         _1
       }
