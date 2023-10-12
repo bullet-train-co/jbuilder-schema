@@ -146,7 +146,30 @@ class Jbuilder::Schema
           ::Rails.logger.debug(">>>Ppartial! OUT OF block #{as}, #{partial}, #{model}, #{collection}, #{options}")
 
           # MERGE!
-          _set_ref(as&.to_s || partial || model, array: collection&.any?)
+
+          json = ::Jbuilder::Schema.renderer.original_render partial: model, locals: options
+
+          render_options = {}
+          render_options[:partial] = model
+          render_options[:locals] = {}
+          render_options[:locals][:__jbuilder_schema_options] = {json: json }
+          render_options[:locals].merge! options
+
+          ::Rails.logger.debug(">>>render_options! #{render_options}")
+
+          renderer = ::Jbuilder::Schema.renderer.instance_variable_get("@view_renderer")
+          result = renderer.render(render_options).then { |res| res.unwrap_target! }
+
+          ::Rails.logger.debug(">>>result! #{result}")
+
+          properties = result[:properties].each { |k, v| _set_description k, v }
+
+          ::Rails.logger.debug(">>>properties! #{properties}")
+
+          _attributes.merge! properties
+
+          # Jbuilder::Schema.renderer.render
+          # _set_ref(as&.to_s || partial || model, array: collection&.any?)
         end
         #
         # if within_block_context?
@@ -218,6 +241,7 @@ class Jbuilder::Schema
     end
 
     def _set_description(key, value)
+      ::Rails.logger.debug(">>>_set_description: #{key}, #{value}")
       if !value.key?(:description) && @configuration.object
         value[:description] = @configuration.translate_field(key)
       end
