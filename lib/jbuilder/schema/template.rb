@@ -66,7 +66,7 @@ class Jbuilder::Schema
       def to_s
         @object
       end
-      alias unwrap_target! to_s
+      alias_method :unwrap_target!, :to_s
     end
 
     def target!
@@ -172,7 +172,10 @@ class Jbuilder::Schema
     end
 
     def _nullify_non_required_types(attributes, required)
-      attributes.transform_values! { _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1)); _1 }
+      attributes.transform_values! {
+        _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1))
+        _1
+      }
     end
 
     def _set_description(key, value)
