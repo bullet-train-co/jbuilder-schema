@@ -83,7 +83,8 @@ class Jbuilder::Schema
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
-      @within_block = !block.nil? && !_partial_options?(options)
+      @within_block = !block.nil? && block.source.lines[1..-2].size == 1
+      ::Rails.logger.debug(">>>BLOCK1: #{block.source.lines.size} - #{block.source.lines[1..-2].size} - #{block.source.lines[1..-2].size > 1} - #{block.source}") unless block.nil?
 
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
@@ -94,6 +95,7 @@ class Jbuilder::Schema
         elsif _partial_options?(options)
           _set_value(key, _scope { _set_ref(options[:as].to_s, array: _is_collection?(value)) })
         else
+          ::Rails.logger.debug(">>>SET: #{key}, #{value}, *#{keys}, **#{options}")
           super(key, value, *keys, **options, &block)
         end
       end
@@ -105,7 +107,7 @@ class Jbuilder::Schema
     alias_method :method_missing, :set! # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
 
     def array!(collection = [], *args, schema: nil, **options, &block)
-      @within_block = !block.nil? && !_partial_options?(options)
+      @within_block = !block.nil? && block.source.lines[1..-2].size == 1
 
       if _partial_options?(options)
         partial!(collection: collection, **options)
