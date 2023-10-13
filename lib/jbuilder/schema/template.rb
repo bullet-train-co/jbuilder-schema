@@ -83,7 +83,6 @@ class Jbuilder::Schema
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
-      # ::Rails.logger.debug(">>>BLOCK1: #{block.source.lines.size} - #{block.source.lines[1..-2].size} - #{block.source.lines[1..-2].size > 1} - #{block.source}") unless block.nil?
       @within_block = _within_block?(&block)
 
       _with_schema_overrides(key => schema) do
@@ -95,7 +94,6 @@ class Jbuilder::Schema
         elsif _partial_options?(options)
           _set_value(key, _scope { _set_ref(options[:as].to_s, array: _is_collection?(value)) })
         else
-          ::Rails.logger.debug(">>>SET: #{key}, #{value}, *#{keys}, **#{options}")
           super(key, value, *keys, **options, &block)
         end
       end
@@ -107,11 +105,11 @@ class Jbuilder::Schema
     alias_method :method_missing, :set! # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
 
     def array!(collection = [], *args, schema: nil, **options, &block)
-      @within_block = _within_block?(&block)
-
       if _partial_options?(options)
         partial!(collection: collection, **options)
       else
+        @within_block = _within_block?(&block)
+
         _with_schema_overrides(schema) do
           _attributes.merge! type: :array, items: _scope { super(collection, *args, &block) }
         end
@@ -128,14 +126,16 @@ class Jbuilder::Schema
       if args.none? && _is_active_model?(model)
         # TODO: Find where it is being used
         _render_active_model_partial model
-      elsif @within_block
+      else
         local = options.except(:partial, :as, :collection, :cached, :schema).first
         as = options[:as] || ((local.is_a?(::Array) && local.size == 2 && local.first.is_a?(::Symbol) && local.last.is_a?(::Object)) ? local.first.to_s : nil)
 
-        _set_ref(as&.to_s || partial || model, array: collection&.any?)
-      else
-        json = ::Jbuilder::Schema.renderer.original_render partial: model, locals: options
-        json.each { |key, value| set!(key, value) }
+        if @within_block
+          _set_ref(as&.to_s || partial || model, array: collection&.any?)
+        else
+          json = ::Jbuilder::Schema.renderer.original_render partial: model || partial, locals: options
+          json.each { |key, value| set!(key, value) }
+        end
       end
     end
 
@@ -264,6 +264,7 @@ class Jbuilder::Schema
     end
 
     def _one_line?(text)
+      text = text.gsub("{", " do\n").gsub("}", "\nend").tr(";", "\n")
       lines = text.lines[1..-2].reject { |line| line.strip.empty? || line.strip.start_with?("#") }
       lines.size == 1
     end

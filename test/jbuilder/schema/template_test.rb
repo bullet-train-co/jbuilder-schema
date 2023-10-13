@@ -297,7 +297,6 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
   end
 
   test "one-line text is defined correctly" do
-    skip
     json = Jbuilder::Schema::Template.new nil
     def json._one_line?(...) = super
 
@@ -305,6 +304,9 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.articles do
         json.partial! 'api/v1/articles/article', article: user.article
       end
+    JBUILDER
+    one_line_inline = <<-JBUILDER
+      json.articles { json.partial! 'api/v1/articles/article', article: user.article }
     JBUILDER
     one_line_with_extra_lines = <<-JBUILDER
       json.articles do
@@ -318,16 +320,25 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
         # ^ Line with spaces
       end
     JBUILDER
+    one_line_with_extra_lines_inline = <<-JBUILDER
+      json.articles { ;   ;#comment;    #another comment; json.partial! 'api/v1/articles/article', article: user.article }
+    JBUILDER
     many_lines = <<~JBUILDER
       json.articles do
         json.partial! 'api/v1/articles/article', article: user.article
         json.comments_count user.article.comments.count
       end
     JBUILDER
+    many_lines_inline = <<~JBUILDER
+      json.articles { json.partial! 'api/v1/articles/article', article: user.article; json.comments_count user.article.comments.count }
+    JBUILDER
 
     assert_equal true, json._one_line?(one_line)
+    assert_equal true, json._one_line?(one_line_inline)
     assert_equal true, json._one_line?(one_line_with_extra_lines)
+    assert_equal true, json._one_line?(one_line_with_extra_lines_inline)
     assert_equal false, json._one_line?(many_lines)
+    assert_equal false, json._one_line?(many_lines_inline)
   end
 
   private
