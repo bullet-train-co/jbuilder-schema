@@ -130,7 +130,7 @@ class Jbuilder::Schema
         local = options.except(:partial, :as, :collection, :cached, :schema).first
         as = options[:as] || ((local.is_a?(::Array) && local.size == 2 && local.first.is_a?(::Symbol) && local.last.is_a?(::Object)) ? local.first.to_s : nil)
 
-        if @within_block
+        if @within_block || collection.present?
           _set_ref(as&.to_s || partial || model, array: collection&.any?)
         else
           json = ::Jbuilder::Schema.renderer.original_render partial: model || partial, locals: options
@@ -260,7 +260,7 @@ class Jbuilder::Schema
     end
 
     def _within_block?(&block)
-      !block.nil? && _one_line?(block.source)
+      block.present? && _one_line?(block.source)
     end
 
     def _one_line?(text)
