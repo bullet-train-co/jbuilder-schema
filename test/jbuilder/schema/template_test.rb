@@ -296,6 +296,40 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     assert_equal({type: :array, items: {"title" => {type: :string, description: "test"}}}, json.schema!)
   end
 
+  test "one-line text is defined correctly" do
+    skip
+    json = Jbuilder::Schema::Template.new nil
+    def json._one_line?(...) = super
+
+    one_line = <<-JBUILDER
+      json.articles do
+        json.partial! 'api/v1/articles/article', article: user.article
+      end
+    JBUILDER
+    one_line_with_extra_lines = <<-JBUILDER
+      json.articles do
+
+        # ^ Empty line
+                        
+        # This is comment
+            # This is comment with spaces
+        json.partial! 'api/v1/articles/article', article: user.article
+                                          
+        # ^ Line with spaces
+      end
+    JBUILDER
+    many_lines = <<~JBUILDER
+      json.articles do
+        json.partial! 'api/v1/articles/article', article: user.article
+        json.comments_count user.article.comments.count
+      end
+    JBUILDER
+
+    assert_equal true, json._one_line?(one_line)
+    assert_equal true, json._one_line?(one_line_with_extra_lines)
+    assert_equal false, json._one_line?(many_lines)
+  end
+
   private
 
   def json_for(model, **options, &block)

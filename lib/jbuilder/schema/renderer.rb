@@ -44,7 +44,7 @@ class Jbuilder::Schema::Renderer
 
   # Thin wrapper around the regular Jbuilder JSON output render, which also parses it into a hash.
   def original_render(options = {}, locals = {})
-    JSON.parse @view_renderer.render(options, locals).to_s
+    JSON.parse @view_renderer.render(options, locals)
   end
 
   private

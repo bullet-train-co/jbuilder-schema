@@ -83,8 +83,8 @@ class Jbuilder::Schema
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
-      @within_block = !block.nil? && block.source.lines[1..-2].size == 1
-      ::Rails.logger.debug(">>>BLOCK1: #{block.source.lines.size} - #{block.source.lines[1..-2].size} - #{block.source.lines[1..-2].size > 1} - #{block.source}") unless block.nil?
+      # ::Rails.logger.debug(">>>BLOCK1: #{block.source.lines.size} - #{block.source.lines[1..-2].size} - #{block.source.lines[1..-2].size > 1} - #{block.source}") unless block.nil?
+      @within_block = _within_block?(&block)
 
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
@@ -107,7 +107,7 @@ class Jbuilder::Schema
     alias_method :method_missing, :set! # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
 
     def array!(collection = [], *args, schema: nil, **options, &block)
-      @within_block = !block.nil? && block.source.lines[1..-2].size == 1
+      @within_block = _within_block?(&block)
 
       if _partial_options?(options)
         partial!(collection: collection, **options)
@@ -257,6 +257,15 @@ class Jbuilder::Schema
       value = _scope { yield self }
       value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:$ref)
       _merge_values(current_value, value)
+    end
+
+    def _within_block?(&block)
+      !block.nil? && _one_line?(block.source)
+    end
+
+    def _one_line?(text)
+      lines = text.lines[1..-2].reject { |line| line.strip.empty? || line.strip.start_with?("#") }
+      lines.size == 1
     end
   end
 end
