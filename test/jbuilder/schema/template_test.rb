@@ -9,6 +9,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
 
   setup do
     I18n.stubs(:t).returns("test")
+    @user_schema = YAML.load_file(file_fixture("schemas/user.yaml"))
   end
 
   test "user fields" do
@@ -80,7 +81,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.user User.first, :id, :name
     end
 
-    assert_equal({"user" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: [:string, "null"]}}}}, result)
+    assert_equal({"user" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {type: :integer, description: "test"}, "name" => {type: :string, nullable: true, description: "test"}}}}, result)
   end
 
   test "object with schema attributes" do
@@ -88,7 +89,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.user User.first, :id, :name, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
     end
 
-    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: [:string, "null"]}}}}, result)
+    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: ["id"], properties: {"id" => {type: :integer, description: "test"}, "name" => {type: :string, nullable: true, description: "test"}}}}, result)
   end
 
   test "simple block" do
@@ -96,7 +97,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.author { json.id 123 }
     end
 
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {type: :integer, description: "test"}}}}, result)
   end
 
   test "block with schema object attribute" do
@@ -150,23 +151,82 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     end
 
     # TODO: should the merged name be a symbol or string here? E.g. should it pass through `_key`?
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, :name => {description: "test", type: [:string, "null"]}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {type: :integer, description: "test"}, :name => {type: :string, nullable: true, description: "test"}}}}, result)
   end
 
-  test "collection partial in block" do
-    result = json_for(Article) do |json|
+  test "one-line object block with partial" do
+    partial = json_for(User) do |json|
+      json.user do
+        json.partial! "users/user", user: User.first
+      end
+    end
+    partial_with_extra_lines = json_for(User) do |json|
+      json.user do
+        # These are the
+        # extra lines
+        json.partial! "users/user", user: User.first
+
+        # to test
+      end
+    end
+    partial_with_inline_block = json_for(User) do |json|
+      json.user { json.partial! "users/user", user: User.first }
+    end
+    result = {"user" => {allOf: {"$ref": "#/components/schemas/user"}, description: "test"}}
+
+    assert_equal(result, partial)
+    assert_equal(result, partial_with_extra_lines)
+    assert_equal(result, partial_with_inline_block)
+  end
+
+  test "one-line array with partial" do
+    partial = json_for(Article) do |json|
       json.partial! "articles/article", collection: Article.all, as: :article
     end
+    partial_with_extra_lines = json_for(Article) do |json|
 
-    assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
+      # These are the
+      # extra lines
+      json.partial! "articles/article", collection: Article.all, as: :article
+
+      # to test
+    end
+    result = {type: :array, items: {"$ref": "#/components/schemas/article"}}
+
+    assert_equal(result, partial)
+    assert_equal(result, partial_with_extra_lines)
   end
 
-  test "object partial in block" do
-    result = json_for(User) do |json|
-      json.user { json.partial! "api/v1/users/user", user: User.first }
+  test "one-line array block with partial" do
+    partial = json_for(Article) do |json|
+      json.articles User.first.articles do |article|
+        json.partial! "articles/article", article: article
+      end
     end
+    partial_with_collection = json_for(Article) do |json|
+      json.articles do
+        json.partial! "articles/article", collection: Article.all, as: :article
+      end
+    end
+    partial_with_extra_lines = json_for(Article) do |json|
+      json.articles do
 
-    assert_equal({"user" => {description: "test", type: :object, "$ref": "#/components/schemas/user"}}, result)
+        # These are the
+        # extra lines
+        json.partial! "articles/article", collection: Article.all, as: :article
+
+        # to test
+      end
+    end
+    partial_with_inline_block = json_for(User) do |json|
+      json.articles { json.partial! "articles/article", collection: Article.all, as: :article }
+    end
+    result = {"articles" => {type: :array, items: {"$ref": "#/components/schemas/article"}, description: "test"}}
+
+    assert_equal(result, partial)
+    assert_equal(result, partial_with_collection)
+    assert_equal(result, partial_with_extra_lines)
+    assert_equal(result, partial_with_inline_block)
   end
 
   test "collection partial inline" do
@@ -182,7 +242,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.author Article.first.user, partial: "api/v1/users/user", as: :user
     end
 
-    assert_equal({"author" => {type: :object, "$ref": "#/components/schemas/user", description: "test"}}, result)
+    assert_equal({"author" => {allOf: {"$ref": "#/components/schemas/user"}, description: "test"}}, result)
   end
 
   test "block with array with partial" do
@@ -192,7 +252,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       end
     end
 
-    assert_equal({"articles" => {description: "test", type: :array, items: {"$ref": "#/components/schemas/article"}}}, result)
+    assert_equal({"articles" => {type: :array, items: {"$ref": "#/components/schemas/article"}, description: "test"}}, result)
   end
 
   test "collections" do
@@ -257,7 +317,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       }
     end
 
-    assert_equal({"Id" => {description: "test", type: :integer}, "Title" => {description: "test", type: :string}, "Author" => {type: :object, title: "test", description: "test", required: ["Id"], properties: {"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: [:string, "null"]}}}}, result)
+    assert_equal({"Id" => {description: "test", type: :integer}, "Title" => {description: "test", type: :string}, "Author" => {type: :object, title: "test", description: "test", required: ["Id"], properties: {"Id" => {type: :integer, description: "test"}, "Name" => {type: :string, nullable: true, description: "test"}}}}, result)
   end
 
   test "deep key format with array" do
