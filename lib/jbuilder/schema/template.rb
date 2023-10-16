@@ -173,10 +173,7 @@ class Jbuilder::Schema
     end
 
     def _nullify_non_required_types(attributes, required)
-      attributes.transform_values! {
-        _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1))
-        _1
-      }
+      attributes.transform_values! { _1[:nullable] = true unless required.include?(attributes.key(_1)); _1 }
     end
 
     def _set_description(key, value)
