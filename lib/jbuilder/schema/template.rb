@@ -2,6 +2,7 @@
 
 require "jbuilder/jbuilder_template"
 require "active_support/inflections"
+require "method_source"
 
 class Jbuilder::Schema
   class Template < ::JbuilderTemplate
