@@ -33,8 +33,8 @@ Gem::Specification.new do |spec|
 
   # Uncomment to register a new dependency of your gem
   spec.add_dependency "jbuilder"
-
   spec.add_dependency "rails", ">= 5.0.0"
+  spec.add_dependency "method_source"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

@@ -2,6 +2,7 @@
 
 require "jbuilder/jbuilder_template"
 require "active_support/inflections"
+require "method_source"
 
 class Jbuilder::Schema
   class Template < ::JbuilderTemplate
@@ -52,6 +53,7 @@ class Jbuilder::Schema
       @configuration = Configuration.new(**options)
       super(context)
       @ignore_nil = false
+      @within_block = false
     end
 
     class TargetWrapper
@@ -65,7 +67,7 @@ class Jbuilder::Schema
       def to_s
         @object
       end
-      alias unwrap_target! to_s
+      alias_method :unwrap_target!, :to_s
     end
 
     def target!
@@ -73,11 +75,6 @@ class Jbuilder::Schema
     end
 
     def schema!
-      # TODO: Not sure why it was like that, when it was meant to be used,
-      # but that seems to fix the problem with disappearance of root properties
-      # https://github.com/bullet-train-co/jbuilder-schema/issues/46
-      # if ([@attributes] + @attributes.each_value.grep(::Hash)).any? { _1[:type] == :array && _1.key?(:items) }
-
       if [@attributes, *@attributes.first].select { |a| a.is_a?(::Hash) && a[:type] == :array && a.key?(:items) }.any?
         @attributes
       else
@@ -87,6 +84,7 @@ class Jbuilder::Schema
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
+      @within_block = _within_block?(&block)
 
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
@@ -102,6 +100,7 @@ class Jbuilder::Schema
       end
     ensure
       @configuration = old_configuration if old_configuration
+      @within_block = false
     end
 
     alias_method :method_missing, :set! # TODO: Remove once Jbuilder passes keyword arguments along to `set!` in its `method_missing`.
@@ -110,10 +109,14 @@ class Jbuilder::Schema
       if _partial_options?(options)
         partial!(collection: collection, **options)
       else
+        @within_block = _within_block?(&block)
+
         _with_schema_overrides(schema) do
           _attributes.merge! type: :array, items: _scope { super(collection, *args, &block) }
         end
       end
+    ensure
+      @within_block = false
     end
 
     def extract!(object, *attributes, schema: nil)
@@ -128,7 +131,12 @@ class Jbuilder::Schema
         local = options.except(:partial, :as, :collection, :cached, :schema).first
         as = options[:as] || ((local.is_a?(::Array) && local.size == 2 && local.first.is_a?(::Symbol) && local.last.is_a?(::Object)) ? local.first.to_s : nil)
 
-        _set_ref(as&.to_s || partial || model, array: collection&.any?)
+        if @within_block || collection.present?
+          _set_ref(as&.to_s || partial || model, array: collection&.any?)
+        else
+          json = ::Jbuilder::Schema.renderer.original_render partial: model || partial, locals: options
+          json.each { |key, value| set!(key, value) }
+        end
       end
     end
 
@@ -253,6 +261,16 @@ class Jbuilder::Schema
       value = _scope { yield self }
       value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:$ref)
       _merge_values(current_value, value)
+    end
+
+    def _within_block?(&block)
+      block.present? && _one_line?(block.source)
+    end
+
+    def _one_line?(text)
+      text = text.gsub("{", " do\n").gsub("}", "\nend").tr(";", "\n")
+      lines = text.lines[1..-2].reject { |line| line.strip.empty? || line.strip.start_with?("#") }
+      lines.size == 1
     end
   end
 end
