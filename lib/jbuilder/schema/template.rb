@@ -179,7 +179,10 @@ class Jbuilder::Schema
     end
 
     def _nullify_non_required_types(attributes, required)
-      attributes.transform_values! { _1[:nullable] = true unless required.include?(attributes.key(_1)); _1 }
+      attributes.transform_values! {
+        _1[:nullable] = true unless required.include?(attributes.key(_1))
+        _1
+      }
     end
 
     def _set_description(key, value)
@@ -239,7 +242,7 @@ class Jbuilder::Schema
     end
 
     def _set_value(key, value)
-      value = _schema(key, value) unless value.is_a?(::Hash) && (value.key?(:type) || value.key?(:allOf))
+      value = _schema(key, value) unless value.is_a?(::Hash) && (value.key?(:type) || value.key?(:allOf)) # rubocop:disable Style/UnlessLogicalOperators
       _set_description(key, value)
       super
     end

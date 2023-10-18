@@ -9,27 +9,23 @@ properties:
     type: integer
     description: User ID
   name:
-    type:
-      - string
-      - 'null'
+    type: string
     description: User Name
+    nullable: true
   email:
-    type:
-      - string
-      - 'null'
+    type: string
     description: User Email
+    nullable: true
   created_at:
-    type:
-      - string
-      - 'null'
+    type: string
     format: date-time
     description: User Creation Date
+    nullable: true
   updated_at:
-    type:
-      - string
-      - 'null'
+    type: string
     format: date-time
     description: User Update Date
+    nullable: true
 example:
   id: 1
   name: Generic name 0

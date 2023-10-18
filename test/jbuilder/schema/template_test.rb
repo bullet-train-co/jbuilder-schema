@@ -172,7 +172,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     partial_with_inline_block = json_for(User) do |json|
       json.user { json.partial! "users/user", user: User.first }
     end
-    result = {"user" => {allOf: {"$ref": "#/components/schemas/user"}, description: "test"}}
+    result = {"user" => {allOf: [{"$ref": "#/components/schemas/user"}], description: "test"}}
 
     assert_equal(result, partial)
     assert_equal(result, partial_with_extra_lines)
@@ -184,7 +184,6 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.partial! "articles/article", collection: Article.all, as: :article
     end
     partial_with_extra_lines = json_for(Article) do |json|
-
       # These are the
       # extra lines
       json.partial! "articles/article", collection: Article.all, as: :article
@@ -210,7 +209,6 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     end
     partial_with_extra_lines = json_for(Article) do |json|
       json.articles do
-
         # These are the
         # extra lines
         json.partial! "articles/article", collection: Article.all, as: :article
@@ -242,7 +240,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.author Article.first.user, partial: "api/v1/users/user", as: :user
     end
 
-    assert_equal({"author" => {allOf: {"$ref": "#/components/schemas/user"}, description: "test"}}, result)
+    assert_equal({"author" => {allOf: [{"$ref": "#/components/schemas/user"}], description: "test"}}, result)
   end
 
   test "block with array with partial" do

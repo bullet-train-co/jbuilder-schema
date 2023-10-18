@@ -9,45 +9,39 @@ properties:
     type: integer
     description: Article ID
   status:
-    type:
-      - string
-      - 'null'
+    type: string
     enum:
       - pending
       - published
       - archived
     description: Article Status
+    nullable: true
   title:
-    type:
-      - string
-      - 'null'
+    type: string
     description: Article Title
+    nullable: true
   body:
-    type:
-      - string
-      - 'null'
+    type: string
     pattern: "\\w+"
     description: Article Body
+    nullable: true
   author:
-    type:
-      - object
-      - 'null'
-    "$ref": "#/components/schemas/user"
+    allOf:
+      - "$ref": "#/components/schemas/user"
     description: Article Author
+    nullable: true
   ratings:
-    type:
-      - array
-      - 'null'
+    type: array
     items:
       "$ref": "#/components/schemas/rating"
     description: Article Ratings
+    nullable: true
   comments:
-    type:
-      - array
-      - 'null'
+    type: array
     items:
       "$ref": "#/components/schemas/comment"
     description: Article Comments
+    nullable: true
 example:
   id: 1
   status: pending
