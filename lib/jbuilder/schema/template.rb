@@ -188,7 +188,8 @@ class Jbuilder::Schema
       if array
         _attributes.merge! type: :array, items: ref
       else
-        _attributes.merge! type: :object, **ref
+        # _attributes.merge! type: :object, **ref
+        _attributes.merge! allOf: [ref]
       end
     end
 
@@ -201,6 +202,8 @@ class Jbuilder::Schema
 
     def _schema(key, value, **options)
       options = @schema_overrides&.dig(key).to_h if options.empty?
+
+      ::Rails.logger.debug(">>_schema options #{key}, #{value}, #{options}")
 
       unless options[:type]
         options[:type] = _primitive_type value
@@ -218,10 +221,12 @@ class Jbuilder::Schema
       end
 
       _set_description key, options
+      ::Rails.logger.debug(">>_schema options2 #{key}, #{value}, #{options}")
       options
     end
 
     def _primitive_type(value)
+      ::Rails.logger.debug(">>>_primitive_type #{value} - #{value.class.name}")
       case value
       when ::Array then :array
       when ::Float, ::BigDecimal then :number
@@ -233,7 +238,7 @@ class Jbuilder::Schema
     end
 
     def _set_value(key, value)
-      value = _schema(key, value) unless value.is_a?(::Hash) && value.key?(:type)
+      value = _schema(key, value) unless value.is_a?(::Hash) && (value.key?(:type) || value.key?(:allOf))
       _set_description(key, value)
       super
     end
@@ -256,8 +261,12 @@ class Jbuilder::Schema
       raise NullError.build(key) if current_value.nil?
 
       value = _scope { yield self }
-      value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:$ref)
-      _merge_values(current_value, value)
+      value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:allOf) || value.key?(:$ref)
+
+      ::Rails.logger.debug(">_merge_block value: #{value}")
+      mv = _merge_values(current_value, value)
+      ::Rails.logger.debug(">_merge_block result: #{mv}")
+      mv
     end
 
     def _within_block?(&block)
