@@ -112,7 +112,13 @@ class Jbuilder::Schema
         @within_block = _within_block?(&block)
 
         _with_schema_overrides(schema) do
-          _attributes.merge! type: :array, items: _scope { super(collection, *args, &block) }
+          # TODO: Find a better solution
+          # Here we basically remove allOf key from items, because it's redundant, although valid.
+          # Better would be not to set it if it's not needed, but I couldn't figure how,
+          # as we have array of separate object partials hare, so each one of them would legally have allOf key.
+          items = _scope { super(collection, *args, &block) }
+          items = items[:allOf].first if items.key?(:allOf)
+          _attributes.merge! type: :array, items: items
         end
       end
     ensure
@@ -188,7 +194,6 @@ class Jbuilder::Schema
       if array
         _attributes.merge! type: :array, items: ref
       else
-        # _attributes.merge! type: :object, **ref
         _attributes.merge! allOf: [ref]
       end
     end
@@ -202,8 +207,6 @@ class Jbuilder::Schema
 
     def _schema(key, value, **options)
       options = @schema_overrides&.dig(key).to_h if options.empty?
-
-      ::Rails.logger.debug(">>_schema options #{key}, #{value}, #{options}")
 
       unless options[:type]
         options[:type] = _primitive_type value
@@ -221,12 +224,10 @@ class Jbuilder::Schema
       end
 
       _set_description key, options
-      ::Rails.logger.debug(">>_schema options2 #{key}, #{value}, #{options}")
       options
     end
 
     def _primitive_type(value)
-      ::Rails.logger.debug(">>>_primitive_type #{value} - #{value.class.name}")
       case value
       when ::Array then :array
       when ::Float, ::BigDecimal then :number
@@ -263,10 +264,7 @@ class Jbuilder::Schema
       value = _scope { yield self }
       value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:allOf) || value.key?(:$ref)
 
-      ::Rails.logger.debug(">_merge_block value: #{value}")
-      mv = _merge_values(current_value, value)
-      ::Rails.logger.debug(">_merge_block result: #{mv}")
-      mv
+      _merge_values(current_value, value)
     end
 
     def _within_block?(&block)
