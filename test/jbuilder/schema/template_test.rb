@@ -77,19 +77,21 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
   end
 
   test "object without schema attributes" do
+    # TODO: This also should probably include :name as required
+    # https://github.com/bullet-train-co/jbuilder-schema/issues/65
     result = json_for(Article) do |json|
-      json.user User.first, :id, :name
+      json.user User.first, :id, :name, :created_at
     end
 
-    assert_equal({"user" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {type: :integer, description: "test"}, "name" => {type: :string, nullable: true, description: "test"}}}}, result)
+    assert_equal({"user" => {type: :object, title: "test", description: "test", required: %w[id], properties: {"id" => {type: :integer, description: "test"}, "name" => {type: :string, description: "test", nullable: true}, "created_at" => {type: :string, format: "date-time", description: "test", nullable: true}}}}, result)
   end
 
   test "object with schema attributes" do
     result = json_for(Article) do |json|
-      json.user User.first, :id, :name, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
+      json.user User.first, :id, :name, :created_at, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
     end
 
-    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: ["id"], properties: {"id" => {type: :integer, description: "test"}, "name" => {type: :string, nullable: true, description: "test"}}}}, result)
+    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: %w[id name], properties: {"id" => {type: :integer, description: "test"}, "name" => {type: :string, description: "test"}, "created_at" => {type: :string, format: "date-time", description: "test", nullable: true}}}}, result)
   end
 
   test "simple block" do
@@ -257,6 +259,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     assert_equal({description: "test", type: :array, items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}, json.articles(Article.all, :id, :title))
     assert_equal({description: "test", type: :array, items: {
       "id" => {description: "test", type: :integer},
+      "public_id" => {description: "test", type: :string},
       "status" => {description: "test", type: :string, enum: ["pending", "published", "archived"]},
       "title" => {description: "test", type: :string},
       "body" => {description: "test", type: :string},

@@ -1,5 +1,6 @@
+json.partial! "api/v1/shared/id", resource: user
+
 json.extract! user,
-  :id,
   :name,
   :email,
   :created_at,

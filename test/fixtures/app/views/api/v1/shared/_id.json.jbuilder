@@ -1,2 +1,2 @@
 json.id resource.id
-json.class resource.class.name
+json.public_id "#{resource.class.name}-#{resource.id}"

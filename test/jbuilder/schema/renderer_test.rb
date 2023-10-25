@@ -10,6 +10,7 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
         description: "User in the blog",
         fields: {
           id: {description: "User ID"},
+          public_id: {description: "User Public ID"},
           name: {description: "User Name"},
           email: {description: "User Email"},
           created_at: {description: "User Creation Date"},
@@ -18,6 +19,7 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
       },
       articles: {fields: {
         id: {description: "Article ID"},
+        public_id: {description: "Article Public ID"},
         status: {description: "Article Status"},
         title: {description: "Article Title"},
         body: {description: "Article Body"},

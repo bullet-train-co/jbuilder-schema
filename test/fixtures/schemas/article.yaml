@@ -4,10 +4,17 @@ title: Article
 description: Article in the blog
 required:
   - id
+  - status
+  - title
+  - body
 properties:
   id:
     type: integer
     description: Article ID
+  public_id:
+    type: string
+    description: Article Public ID
+    nullable: true
   status:
     type: string
     enum:
@@ -15,20 +22,19 @@ properties:
       - published
       - archived
     description: Article Status
-    nullable: true
   title:
     type: string
     description: Article Title
-    nullable: true
   body:
     type: string
     pattern: "\\w+"
     description: Article Body
-    nullable: true
   author:
     allOf:
       - "$ref": "#/components/schemas/user"
     description: Article Author
+    # TODO: nullable: true should not be here https://github.com/bullet-train-co/jbuilder-schema/issues/65
+    # as author is a user which is required
     nullable: true
   ratings:
     type: array
@@ -44,11 +50,13 @@ properties:
     nullable: true
 example:
   id: 1
+  public_id: Article-1
   status: pending
   title: Generic title 0
   body: Lorem ipsum… 0
   author:
     id: 1
+    public_id: User-1
     name: Generic name 0
     email: user-0@example.com
     created_at: '2023-01-01T12:00:00.000Z'
@@ -57,6 +65,7 @@ example:
     - value: 5
       author:
         id: 1
+        public_id: User-1
         name: Generic name 0
         email: user-0@example.com
         created_at: '2023-01-01T12:00:00.000Z'
@@ -64,6 +73,7 @@ example:
     - value: 4
       author:
         id: 2
+        public_id: User-2
         name: Generic name 1
         email: user-1@example.com
         created_at: '2023-01-01T12:00:00.000Z'
@@ -71,6 +81,7 @@ example:
     - value: 3
       author:
         id: 3
+        public_id: User-3
         name: Generic name 2
         email: user-2@example.com
         created_at: '2023-01-01T12:00:00.000Z'
@@ -79,6 +90,7 @@ example:
   - text: Lorem ipsum… 0
     author:
       id: 3
+      public_id: User-3
       name: Generic name 2
       email: user-2@example.com
       created_at: '2023-01-01T12:00:00.000Z'
@@ -86,6 +98,7 @@ example:
   - text: Lorem ipsum… 1
     author:
       id: 2
+      public_id: User-2
       name: Generic name 1
       email: user-1@example.com
       created_at: '2023-01-01T12:00:00.000Z'
@@ -93,6 +106,7 @@ example:
   - text: Lorem ipsum… 2
     author:
       id: 1
+      public_id: User-1
       name: Generic name 0
       email: user-0@example.com
       created_at: '2023-01-01T12:00:00.000Z'
