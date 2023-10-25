@@ -1,5 +1,6 @@
+json.partial! "api/v1/shared/id", resource: article
+
 json.extract! article,
-  :id,
   :status,
   :title,
   :body,
