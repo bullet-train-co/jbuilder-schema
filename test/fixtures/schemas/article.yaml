@@ -4,8 +4,8 @@ title: Article
 description: Article in the blog
 required:
   - id
-  - status
   - title
+  - status
   - body
 properties:
   id:
@@ -15,6 +15,9 @@ properties:
     type: string
     description: Article Public ID
     nullable: true
+  title:
+    type: string
+    description: Article Title
   status:
     type: string
     enum:
@@ -22,9 +25,6 @@ properties:
       - published
       - archived
     description: Article Status
-  title:
-    type: string
-    description: Article Title
   body:
     type: string
     pattern: "\\w+"

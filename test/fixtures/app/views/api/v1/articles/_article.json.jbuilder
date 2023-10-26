@@ -11,10 +11,10 @@ json.extract! article,
     }
   }
 
-# Partial in block only with object and no arguments
-json.author do
-  json.partial! article.user
-end
+# TODO: Partial in block only with object and no arguments
+# json.author do
+#   json.partial! article.user
+# end
 
 # Inline array partial
 json.ratings article.ratings, partial: "api/v1/ratings/rating", as: :rating
