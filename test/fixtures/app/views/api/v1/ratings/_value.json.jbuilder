@@ -1,1 +1,1 @@
-json.extract! rating.value
+json.extract! rating, :value

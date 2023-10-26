@@ -11,15 +11,15 @@ json.extract! article,
     }
   }
 
-# TODO: Partial in block only with object and no arguments
+# TODO: Partial in block only with object and no arguments — should be a ref
 # json.author do
 #   json.partial! article.user
 # end
 
-# Inline array partial
+# Inline array partial — should be a ref
 json.ratings article.ratings, partial: "api/v1/ratings/rating", as: :rating
 
-# Array partial with deep name in block
+# Array partial with deep name in block — should be a ref
 json.comments do
   json.array! article.comments, partial: "api/v1/articles/comments/comment", as: :comment
 end
