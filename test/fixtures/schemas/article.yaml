@@ -82,33 +82,33 @@ example:
         text: Lorem ipsum… 0
         count: 3
   comments:
-  - text: Lorem ipsum… 0
-    author:
-      name: Generic name 2
-    ratings:
-      - value: 5
-        count: 3
-      - value: 4
-        count: 3
-      - value: 3
-        count: 3
-  - text: Lorem ipsum… 1
-    author:
-      name: Generic name 1
-    ratings:
-      - value: 5
-        count: 3
-      - value: 4
-        count: 3
-      - value: 3
-        count: 3
-  - text: Lorem ipsum… 2
-    author:
-      name: Generic name 0
-    ratings:
-      - value: 5
-        count: 3
-      - value: 4
-        count: 3
-      - value: 3
-        count: 3
+    - text: Lorem ipsum… 0
+      author:
+        name: Generic name 2
+      ratings:
+        - value: 5
+          count: 3
+        - value: 4
+          count: 3
+        - value: 3
+          count: 3
+    - text: Lorem ipsum… 1
+      author:
+        name: Generic name 1
+      ratings:
+        - value: 5
+          count: 3
+        - value: 4
+          count: 3
+        - value: 3
+          count: 3
+    - text: Lorem ipsum… 2
+      author:
+        name: Generic name 0
+      ratings:
+        - value: 5
+          count: 3
+        - value: 4
+          count: 3
+        - value: 3
+          count: 3

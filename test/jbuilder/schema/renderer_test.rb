@@ -14,7 +14,9 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
           name: {description: "User Name"},
           email: {description: "User Email"},
           created_at: {description: "User Creation Date"},
-          updated_at: {description: "User Update Date"}
+          updated_at: {description: "User Update Date"},
+          articles: {description: "User Articles"},
+          comments: {description: "User Comments"}
         }
       },
       articles: {fields: {
