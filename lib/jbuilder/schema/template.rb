@@ -265,7 +265,7 @@ class Jbuilder::Schema
       raise NullError.build(key) if current_value.nil?
 
       value = _scope { yield self }
-      value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:allOf) || value.key?(:$ref)
+      value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:allOf)
 
       _merge_values(current_value, value)
     end
