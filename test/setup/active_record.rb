@@ -10,31 +10,33 @@ ActiveRecord::Base.time_zone_aware_attributes = true
 
 ActiveRecord::Schema.define do
   create_table :users, force: true do |t|
+    t.string :public_id
     t.string :name, null: false
     t.string :email, null: false
-    t.timestamps null: false
+    t.timestamps
   end
 
   create_table :articles, force: true do |t|
+    t.string :public_id
     t.references :user
     t.string :status, default: "pending", null: false
     t.string :title, null: false
     t.text :body, null: false
-    t.timestamps null: false
+    t.timestamps
   end
 
   create_table :ratings, force: true do |t|
     t.references :user
     t.references :article
     t.integer :value, null: false
-    t.timestamps null: false
+    t.timestamps
   end
 
   create_table :comments, force: true do |t|
     t.references :user
     t.references :article
     t.text :text, null: false
-    t.timestamps null: false
+    t.timestamps
   end
 end
 
@@ -42,6 +44,8 @@ class User < ActiveRecord::Base
   has_many :articles
   has_many :ratings
   has_many :comments
+
+  validates_presence_of :name, :email
 end
 
 time = DateTime.parse("2023-1-1 12:00")
@@ -56,16 +60,22 @@ class Article < ActiveRecord::Base
   has_many :comments
 
   enum status: %w[pending published archived].index_by(&:itself)
+
+  validates_presence_of :user, :status, :title, :body
 end
 
 class Rating < ActiveRecord::Base
   belongs_to :user
   belongs_to :article
+
+  validates_presence_of :user, :article, :value
 end
 
 class Comment < ActiveRecord::Base
   belongs_to :user
   belongs_to :article
+
+  validates_presence_of :user, :article, :text
 end
 
 3.times do |n|

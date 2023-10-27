@@ -37,7 +37,7 @@ class Jbuilder::Schema
     if paths.nil? && locals.nil?
       @renderer ||= Renderer.new("app/views")
     else
-      Renderer.new(paths, locals)
+      @renderer = Renderer.new(paths, locals)
     end
   end
   singleton_class.delegate :yaml, :json, :render, to: :renderer

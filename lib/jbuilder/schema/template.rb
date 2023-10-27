@@ -112,7 +112,13 @@ class Jbuilder::Schema
         @within_block = _within_block?(&block)
 
         _with_schema_overrides(schema) do
-          _attributes.merge! type: :array, items: _scope { super(collection, *args, &block) }
+          # TODO: Find a better solution
+          # Here we basically remove allOf key from items, because it's redundant, although valid.
+          # Better would be not to set it if it's not needed, but I couldn't figure how,
+          # as we have array of separate object partials hare, so each one of them would legally have allOf key.
+          items = _scope { super(collection, *args, &block) }
+          items = items[:allOf].first if items.key?(:allOf)
+          _attributes.merge! type: :array, items: items
         end
       end
     ensure
@@ -174,7 +180,7 @@ class Jbuilder::Schema
 
     def _nullify_non_required_types(attributes, required)
       attributes.transform_values! {
-        _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1))
+        _1[:nullable] = true unless required.include?(attributes.key(_1))
         _1
       }
     end
@@ -191,7 +197,7 @@ class Jbuilder::Schema
       if array
         _attributes.merge! type: :array, items: ref
       else
-        _attributes.merge! type: :object, **ref
+        _attributes.merge! allOf: [ref]
       end
     end
 
@@ -236,7 +242,7 @@ class Jbuilder::Schema
     end
 
     def _set_value(key, value)
-      value = _schema(key, value) unless value.is_a?(::Hash) && value.key?(:type)
+      value = _schema(key, value) unless value.is_a?(::Hash) && (value.key?(:type) || value.key?(:allOf)) # rubocop:disable Style/UnlessLogicalOperators
       _set_description(key, value)
       super
     end
@@ -259,7 +265,8 @@ class Jbuilder::Schema
       raise NullError.build(key) if current_value.nil?
 
       value = _scope { yield self }
-      value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:$ref)
+      value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:allOf)
+
       _merge_values(current_value, value)
     end
 

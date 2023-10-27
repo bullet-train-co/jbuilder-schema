@@ -4,35 +4,218 @@ title: User
 description: User in the blog
 required:
   - id
+  - name
+  - email
 properties:
   id:
     type: integer
     description: User ID
+  public_id:
+    type: string
+    description: User Public ID
+    nullable: true
   name:
-    type:
-      - string
-      - 'null'
+    type: string
     description: User Name
   email:
-    type:
-      - string
-      - 'null'
+    type: string
     description: User Email
   created_at:
-    type:
-      - string
-      - 'null'
+    type: string
     format: date-time
     description: User Creation Date
+    nullable: true
   updated_at:
-    type:
-      - string
-      - 'null'
+    type: string
     format: date-time
     description: User Update Date
+    nullable: true
+  articles:
+    type: array
+    items:
+      "$ref": "#/components/schemas/article"
+    description: User Articles
+    nullable: true
+  comments:
+    type: array
+    items:
+      "$ref": "#/components/schemas/comment"
+    description: User Comments
+    nullable: true
 example:
   id: 1
+  public_id: User-1
   name: Generic name 0
   email: user-0@example.com
   created_at: '2023-01-01T12:00:00.000Z'
   updated_at: '2023-01-01T12:00:00.000Z'
+  articles:
+    - id: 1
+      public_id: Article-1
+      title: Generic title 0
+      status: pending
+      body: Lorem ipsum… 0
+      ratings:
+        - value: 5
+          author:
+            name: Generic name 0
+          comments:
+            text: Lorem ipsum… 0
+            count: 3
+        - value: 4
+          author:
+            name: Generic name 1
+          comments:
+            text: Lorem ipsum… 0
+            count: 3
+        - value: 3
+          author:
+            name: Generic name 2
+          comments:
+            text: Lorem ipsum… 0
+            count: 3
+      comments:
+        - text: Lorem ipsum… 0
+          author:
+            name: Generic name 2
+          ratings:
+            - value: 5
+              count: 3
+            - value: 4
+              count: 3
+            - value: 3
+              count: 3
+        - text: Lorem ipsum… 1
+          author:
+            name: Generic name 1
+          ratings:
+            - value: 5
+              count: 3
+            - value: 4
+              count: 3
+            - value: 3
+              count: 3
+        - text: Lorem ipsum… 2
+          author:
+            name: Generic name 0
+          ratings:
+            - value: 5
+              count: 3
+            - value: 4
+              count: 3
+            - value: 3
+              count: 3
+    - id: 2
+      public_id: Article-2
+      title: Generic title 1
+      status: pending
+      body: Lorem ipsum… 1
+      ratings:
+        - value: 5
+          author:
+            name: Generic name 0
+          comments:
+            text: Lorem ipsum… 0
+            count: 3
+        - value: 4
+          author:
+            name: Generic name 1
+          comments:
+            text: Lorem ipsum… 0
+            count: 3
+        - value: 3
+          author:
+            name: Generic name 2
+          comments:
+            text: Lorem ipsum… 0
+            count: 3
+      comments:
+        - text: Lorem ipsum… 0
+          author:
+            name: Generic name 2
+          ratings:
+            - value: 5
+              count: 3
+            - value: 4
+              count: 3
+            - value: 3
+              count: 3
+        - text: Lorem ipsum… 1
+          author:
+            name: Generic name 1
+          ratings:
+            - value: 5
+              count: 3
+            - value: 4
+              count: 3
+            - value: 3
+              count: 3
+        - text: Lorem ipsum… 2
+          author:
+            name: Generic name 0
+          ratings:
+            - value: 5
+              count: 3
+            - value: 4
+              count: 3
+            - value: 3
+              count: 3
+    - id: 3
+      public_id: Article-3
+      title: Generic title 2
+      status: pending
+      body: Lorem ipsum… 2
+      ratings:
+        - value: 5
+          author:
+            name: Generic name 0
+          comments:
+            text: Lorem ipsum… 0
+            count: 3
+        - value: 4
+          author:
+            name: Generic name 1
+          comments:
+            text: Lorem ipsum… 0
+            count: 3
+        - value: 3
+          author:
+            name: Generic name 2
+          comments:
+            text: Lorem ipsum… 0
+            count: 3
+      comments:
+        - text: Lorem ipsum… 0
+          author:
+            name: Generic name 2
+          ratings:
+          - value: 5
+            count: 3
+          - value: 4
+            count: 3
+          - value: 3
+            count: 3
+        - text: Lorem ipsum… 1
+          author:
+            name: Generic name 1
+          ratings:
+          - value: 5
+            count: 3
+          - value: 4
+            count: 3
+          - value: 3
+            count: 3
+        - text: Lorem ipsum… 2
+          author:
+            name: Generic name 0
+          ratings:
+          - value: 5
+            count: 3
+          - value: 4
+            count: 3
+          - value: 3
+            count: 3
+  comments:
+    - text: Lorem ipsum… 2
+    - text: Lorem ipsum… 2
+    - text: Lorem ipsum… 2

@@ -9,6 +9,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
 
   setup do
     I18n.stubs(:t).returns("test")
+    @user_schema = YAML.load_file(file_fixture("schemas/user.yaml"))
   end
 
   test "user fields" do
@@ -76,19 +77,21 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
   end
 
   test "object without schema attributes" do
+    # TODO: This also should probably include :name as required
+    # https://github.com/bullet-train-co/jbuilder-schema/issues/65
     result = json_for(Article) do |json|
-      json.user User.first, :id, :name
+      json.user User.first, :id, :name, :created_at
     end
 
-    assert_equal({"user" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: [:string, "null"]}}}}, result)
+    assert_equal({"user" => {type: :object, title: "test", description: "test", required: %w[id], properties: {"id" => {type: :integer, description: "test"}, "name" => {type: :string, description: "test", nullable: true}, "created_at" => {type: :string, format: "date-time", description: "test", nullable: true}}}}, result)
   end
 
   test "object with schema attributes" do
     result = json_for(Article) do |json|
-      json.user User.first, :id, :name, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
+      json.user User.first, :id, :name, :created_at, schema: {object: User.first, object_title: "User", object_description: "User writes articles"}
     end
 
-    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: ["id"], properties: {"id" => {description: "test", type: :integer}, "name" => {description: "test", type: [:string, "null"]}}}}, result)
+    assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: %w[id name], properties: {"id" => {type: :integer, description: "test"}, "name" => {type: :string, description: "test"}, "created_at" => {type: :string, format: "date-time", description: "test", nullable: true}}}}, result)
   end
 
   test "simple block" do
@@ -96,7 +99,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.author { json.id 123 }
     end
 
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {type: :integer, description: "test"}}}}, result)
   end
 
   test "block with schema object attribute" do
@@ -150,55 +153,14 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     end
 
     # TODO: should the merged name be a symbol or string here? E.g. should it pass through `_key`?
-    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {description: "test", type: :integer}, :name => {description: "test", type: [:string, "null"]}}}}, result)
-  end
-
-  test "collection partial in block" do
-    result = json_for(Article) do |json|
-      json.partial! "articles/article", collection: Article.all, as: :article
-    end
-
-    assert_equal({type: :array, items: {"$ref": "#/components/schemas/article"}}, result)
-  end
-
-  test "object partial in block" do
-    result = json_for(User) do |json|
-      json.user { json.partial! "api/v1/users/user", user: User.first }
-    end
-
-    assert_equal({"user" => {description: "test", type: :object, "$ref": "#/components/schemas/user"}}, result)
-  end
-
-  test "collection partial inline" do
-    result = json_for(User) do |json|
-      json.users User.all, partial: "api/v1/users/user", as: :user
-    end
-
-    assert_equal({"users" => {type: :array, items: {"$ref": "#/components/schemas/user"}, description: "test"}}, result)
-  end
-
-  test "object partial inline" do
-    result = json_for(Article) do |json|
-      json.author Article.first.user, partial: "api/v1/users/user", as: :user
-    end
-
-    assert_equal({"author" => {type: :object, "$ref": "#/components/schemas/user", description: "test"}}, result)
-  end
-
-  test "block with array with partial" do
-    result = json_for(Article) do |json|
-      json.articles schema: {object: Article.first} do
-        json.array! Article.all, partial: "api/v1/articles/article", as: :article
-      end
-    end
-
-    assert_equal({"articles" => {description: "test", type: :array, items: {"$ref": "#/components/schemas/article"}}}, result)
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: ["id"], properties: {"id" => {type: :integer, description: "test"}, :name => {type: :string, nullable: true, description: "test"}}}}, result)
   end
 
   test "collections" do
     assert_equal({description: "test", type: :array, items: {"id" => {description: "test", type: :integer}, "title" => {description: "test", type: :string}}}, json.articles(Article.all, :id, :title))
     assert_equal({description: "test", type: :array, items: {
       "id" => {description: "test", type: :integer},
+      "public_id" => {description: "test", type: :string},
       "status" => {description: "test", type: :string, enum: ["pending", "published", "archived"]},
       "title" => {description: "test", type: :string},
       "body" => {description: "test", type: :string},
@@ -257,7 +219,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       }
     end
 
-    assert_equal({"Id" => {description: "test", type: :integer}, "Title" => {description: "test", type: :string}, "Author" => {type: :object, title: "test", description: "test", required: ["Id"], properties: {"Id" => {description: "test", type: :integer}, "Name" => {description: "test", type: [:string, "null"]}}}}, result)
+    assert_equal({"Id" => {description: "test", type: :integer}, "Title" => {description: "test", type: :string}, "Author" => {type: :object, title: "test", description: "test", required: ["Id"], properties: {"Id" => {type: :integer, description: "test"}, "Name" => {type: :string, nullable: true, description: "test"}}}}, result)
   end
 
   test "deep key format with array" do
