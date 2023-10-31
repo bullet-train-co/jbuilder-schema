@@ -118,6 +118,7 @@ class Jbuilder::Schema
           # as we have array of separate object partials hare, so each one of them would legally have allOf key.
           items = _scope { super(collection, *args, &block) }
           items = items[:allOf].first if items.key?(:allOf)
+          items = _object(items, _required!(items.keys)) unless items.key?(:$ref) || items.key?(:object)
           _attributes.merge! type: :array, items: items
         end
       end
