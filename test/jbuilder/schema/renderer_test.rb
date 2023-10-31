@@ -57,8 +57,14 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
       assert_equal({
         type: :array,
         items: {
-          "id" => {type: :integer},
-          "title" => {type: :string}
+          type: :object,
+          title: "Translation missing: en.title",
+          description: "Translation missing: en.description",
+          required: ["id"],
+          properties: {
+            "id" => {type: :integer},
+            "title" => {type: [:string, "null"]}
+          }
         },
         example: [
           {"id" => 1, "title" => "Generic title 0"},
