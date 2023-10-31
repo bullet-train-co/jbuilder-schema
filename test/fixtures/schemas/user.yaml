@@ -11,9 +11,10 @@ properties:
     type: integer
     description: User ID
   public_id:
-    type: string
+    type:
+      - string
+      - 'null'
     description: User Public ID
-    nullable: true
   name:
     type: string
     description: User Name
@@ -21,27 +22,31 @@ properties:
     type: string
     description: User Email
   created_at:
-    type: string
+    type:
+      - string
+      - 'null'
     format: date-time
     description: User Creation Date
-    nullable: true
   updated_at:
-    type: string
+    type:
+      - string
+      - 'null'
     format: date-time
     description: User Update Date
-    nullable: true
   articles:
-    type: array
+    type:
+      - array
+      - 'null'
     items:
       "$ref": "#/components/schemas/article"
     description: User Articles
-    nullable: true
   comments:
-    type: array
+    type:
+      - array
+      - 'null'
     items:
       "$ref": "#/components/schemas/comment"
     description: User Comments
-    nullable: true
 example:
   id: 1
   public_id: User-1

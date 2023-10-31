@@ -12,9 +12,10 @@ properties:
     type: integer
     description: Article ID
   public_id:
-    type: string
+    type:
+      - string
+      - 'null'
     description: Article Public ID
-    nullable: true
   title:
     type: string
     description: Article Title
@@ -38,17 +39,19 @@ properties:
     # as author is a user which is required
 #    nullable: true
   ratings:
-    type: array
+    type:
+      - array
+      - 'null'
     items:
       "$ref": "#/components/schemas/rating"
     description: Article Ratings
-    nullable: true
   comments:
-    type: array
+    type:
+      - array
+      - 'null'
     items:
       "$ref": "#/components/schemas/comment"
     description: Article Comments
-    nullable: true
 example:
   id: 1
   public_id: Article-1
