@@ -117,8 +117,10 @@ class Jbuilder::Schema
           # Better would be not to set it if it's not needed, but I couldn't figure how,
           # as we have array of separate object partials hare, so each one of them would legally have allOf key.
           items = _scope { super(collection, *args, &block) }
-          items = items[:allOf].first if items.key?(:allOf)
-          items = _object(items, _required!(items.keys)) unless items.key?(:$ref) || items.key?(:object)
+          if items.is_a?(::Hash)
+            items = items[:allOf].first if items.key?(:allOf)
+            items = _object(items, _required!(items.keys)) unless items.key?(:$ref) || items.key?(:object)
+          end
           _attributes.merge! type: :array, items: items
         end
       end
