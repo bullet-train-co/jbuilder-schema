@@ -212,14 +212,34 @@ class Jbuilder::Schema
     FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
 
     def _schema(key, value, **options)
+      within_array = options.delete(:within_array)
       options = @schema_overrides&.dig(key).to_h if options.empty?
 
       unless options[:type]
         options[:type] = _primitive_type value
 
         if options[:type] == :array && (types = value.map { _primitive_type _1 }.uniq).any?
+          ::Rails.logger.debug(">>> value #{value}")
+          ::Rails.logger.debug(">>> types #{types}")
+          ::Rails.logger.debug(">>> options #{options}")
           options[:minContains] = 0
-          options[:contains] = {type: types.many? ? types : types.first}
+          # options[:contains] = types.many? ? {anyOf: types.map { |type| {type: type} }} : {type: types.first}
+          #
+          # options[:contains][:properties] = value.first.to_h { [_1, _schema(_1, _2)] } if options[:contains][:type] == :object
+
+          options[:contains] = if types.many?
+            {anyOf: types.map do |type|
+              if type == :array
+                _schema(key, value[types.find_index(type)], within_array: true)
+              else
+                contains = {type: type}
+                contains[:properties] = value[types.find_index(type)].to_h { [_1, _schema("#{key}.#{_1}", _2)] } if type == :object
+                contains
+              end
+            end}
+          else
+            {type: types.first}
+          end
         end
 
         format = FORMATS[value.class] and options[:format] ||= format
@@ -229,12 +249,13 @@ class Jbuilder::Schema
         options[:enum] = defined_enum.keys
       end
 
-      _set_description key, options
+      _set_description key, options unless within_array
       options
     end
 
     def _primitive_type(value)
       case value
+      when ::Hash then :object
       when ::Array then :array
       when ::Float, ::BigDecimal then :number
       when true, false then :boolean
