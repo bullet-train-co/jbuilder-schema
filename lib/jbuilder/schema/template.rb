@@ -219,13 +219,7 @@ class Jbuilder::Schema
         options[:type] = _primitive_type value
 
         if options[:type] == :array && (types = value.map { _primitive_type _1 }.uniq).any?
-          ::Rails.logger.debug(">>> value #{value}")
-          ::Rails.logger.debug(">>> types #{types}")
-          ::Rails.logger.debug(">>> options #{options}")
           options[:minContains] = 0
-          # options[:contains] = types.many? ? {anyOf: types.map { |type| {type: type} }} : {type: types.first}
-          #
-          # options[:contains][:properties] = value.first.to_h { [_1, _schema(_1, _2)] } if options[:contains][:type] == :object
 
           options[:contains] = if types.many?
             {anyOf: types.map do |type|
@@ -242,7 +236,7 @@ class Jbuilder::Schema
           end
         end
 
-        format = FORMATS[value.class] and options[:format] ||= format
+        (format = FORMATS[value.class]) and options[:format] ||= format
       end
 
       if (klass = @configuration.object&.class) && (defined_enum = klass.try(:defined_enums)&.dig(key.to_s))
