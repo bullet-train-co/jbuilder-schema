@@ -218,19 +218,21 @@ class Jbuilder::Schema
       unless options[:type]
         options[:type] = _primitive_type value
 
-        if options[:type] == :array && (types = value.map { _primitive_type _1 }.uniq).any?
+        if options[:type] == :array && (types = value.map { _primitive_type _1 }).any?
           options[:minContains] = 0
 
-          options[:contains] = if types.many?
-            {anyOf: types.map do |type|
+          options[:contains] = if types.uniq { |type| (type == :object) ? type.object_id : type }.many?
+            any_of = types.map.with_index do |type, index|
               if type == :array
-                _schema(key, value[types.find_index(type)], within_array: true)
+                _schema(key, value[index], within_array: true)
               else
                 contains = {type: type}
-                contains[:properties] = value[types.find_index(type)].to_h { [_1, _schema("#{key}.#{_1}", _2)] } if type == :object
+                contains[:properties] = value[index].to_h { [_1, _schema("#{key}.#{_1}", _2)] } if type == :object
                 contains
               end
-            end}
+            end
+
+            {anyOf: any_of.uniq}
           else
             {type: types.first}
           end
