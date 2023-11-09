@@ -221,13 +221,21 @@ class Jbuilder::Schema
         if options[:type] == :array && (types = value.map { _primitive_type _1 }).any?
           options[:minContains] = 0
 
+          # Combine all arrays in one so we have all possible array items in one place
+          if types.include?(:array) && types.count(:array) > 1
+            array_indices = types.each_index.select { |i| types[i] == :array }
+            merged_array = array_indices.each_with_object([]) { |i, arr| arr.concat(value[i]) }
+            array_indices.each { |i| value[i] = merged_array }
+          end
+
           options[:contains] = if types.uniq { |type| (type == :object) ? type.object_id : type }.many?
             any_of = types.map.with_index do |type, index|
               if type == :array
                 _schema(key, value[index], within_array: true)
               else
                 contains = {type: type}
-                contains[:properties] = value[index].to_h { [_1, _schema("#{key}.#{_1}", _2)] } if type == :object
+                value[index] = value[index].attributes if value[index].is_a?(::ActiveRecord::Base)
+                contains[:properties] = value[index].each_with_object({}) { |(attr_name, attr_value), properties| properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value) } if type == :object
                 contains
               end
             end
@@ -251,7 +259,7 @@ class Jbuilder::Schema
 
     def _primitive_type(value)
       case value
-      when ::Hash then :object
+      when ::Hash, ::Struct, ::OpenStruct, ::ActiveRecord::Base then :object
       when ::Array then :array
       when ::Float, ::BigDecimal then :number
       when true, false then :boolean
