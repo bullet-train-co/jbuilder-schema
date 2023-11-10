@@ -212,29 +212,70 @@ class Jbuilder::Schema
     FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
 
     def _schema(key, value, **options)
+      within_array = options.delete(:within_array)
       options = @schema_overrides&.dig(key).to_h if options.empty?
 
       unless options[:type]
         options[:type] = _primitive_type value
 
-        if options[:type] == :array && (types = value.map { _primitive_type _1 }.uniq).any?
+        if options[:type] == :array && (types = value.map { _primitive_type _1 }).any?
           options[:minContains] = 0
-          options[:contains] = {type: types.many? ? types : types.first}
+
+          # Merge all arrays in one so we have all possible array items in one place
+          if types.include?(:array) && types.count(:array) > 1
+            array_indices = types.each_index.select { |i| types[i] == :array }
+            merged_array = array_indices.each_with_object([]) { |i, arr| arr.concat(value[i]) }
+            array_indices.each { |i| value[i] = merged_array }
+          end
+
+          options[:contains] = if types.uniq { |type| (type == :object) ? type.object_id : type }.many?
+            any_of = types.map.with_index do |type, index|
+              _fill_contains(key, value[index], type)
+            end
+
+            {anyOf: any_of.uniq}
+          else
+            _fill_contains(key, value[0], types.first)
+          end
+        elsif options[:type] == :object
+          options[:properties] = _set_properties(key, value)
         end
 
-        format = FORMATS[value.class] and options[:format] ||= format
+        (format = FORMATS[value.class]) and options[:format] ||= format
       end
 
       if (klass = @configuration.object&.class) && (defined_enum = klass.try(:defined_enums)&.dig(key.to_s))
         options[:enum] = defined_enum.keys
       end
 
-      _set_description key, options
+      _set_description key, options unless within_array
       options
+    end
+
+    def _fill_contains(key, value, type)
+      case type
+      when :array
+        _schema(key, value, within_array: true)
+      when :object
+        value = value.attributes if value.is_a?(::ActiveRecord::Base)
+        {
+          type: type,
+          properties: _set_properties(key, value)
+        }
+      else
+        {type: type}
+      end
+    end
+
+    def _set_properties(key, value)
+      value.each_with_object({}) do |(attr_name, attr_value), properties|
+        properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value)
+      end
     end
 
     def _primitive_type(value)
       case value
+      when ::Hash, ::Struct, ::OpenStruct, ::ActiveRecord::Base then :object
       when ::Array then :array
       when ::Float, ::BigDecimal then :number
       when true, false then :boolean
