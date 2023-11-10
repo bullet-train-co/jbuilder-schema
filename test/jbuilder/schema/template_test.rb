@@ -25,7 +25,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     assert_equal({description: "test", type: :boolean}, json.true_method(true))
     assert_equal({description: "test", type: :boolean}, json.false_method(false))
     assert_equal({description: "test", type: :array, contains: {type: :string}, minContains: 0}.as_json, json.string_array(%w[a b c d]).as_json)
-    assert_equal({description: "test", type: :array, contains: {type: %i[string integer number boolean]}, minContains: 0}.as_json, json.multitype_array(["a", 1, 1.5, false]).as_json)
+    assert_equal({description: "test", type: :array, contains: {anyOf: [{type: :string}, {type: :integer}, {type: :number}, {type: :boolean}]}, minContains: 0}.as_json, json.multitype_array(["a", 1, 1.5, false]).as_json)
   end
 
   test "user fields with schema types" do
@@ -239,20 +239,20 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     json = Jbuilder::Schema::Template.new nil
     def json._schema(...) = super # We're marking it public on the singleton, but can't use `public` since we're ultimately a BasicObject.
 
-    # assert_equal({type: :integer}, json._schema(nil, 1))
-    # assert_equal({type: :number}, json._schema(nil, 1.5))
-    # assert_equal({type: :number}, json._schema(nil, BigDecimal("1.5", 1)))
-    # assert_equal({type: :string}, json._schema(nil, "String"))
-    # assert_equal({type: :string}, json._schema(nil, nil))
-    # assert_equal({type: :string, format: "date"}, json._schema(nil, Date.new(2012, 12, 0o1)))
-    # assert_equal({type: :string, format: "time"}, json._schema(nil, Time.now))
-    # assert_equal({type: :string, format: "date-time"}, json._schema(nil, DateTime.new(2012, 12, 0o1)))
-    # assert_equal({type: :string, format: "date-time"}, json._schema(nil, ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample)))
-    # assert_equal({type: :boolean}, json._schema(nil, true))
-    # assert_equal({type: :boolean}, json._schema(nil, false))
-    # assert_equal({type: :array, minContains: 0, contains: {type: :string}}.as_json, json._schema(nil, %w[a b c d]).as_json)
-    # assert_equal({type: :array, minContains: 0, contains: {anyOf: [{type: :string}, {type: :integer}, {type: :number}, {type: :boolean}]}}.as_json, json._get_type(["a", 1, 1.5, false]).as_json)
-    # assert_equal({type: :array, minContains: 0, contains: {anyOf: [{type: :string}, {type: :integer}]}}.as_json, json._get_type(["a", 1, "b", 2]).as_json)
+    assert_equal({type: :integer}, json._schema(nil, 1))
+    assert_equal({type: :number}, json._schema(nil, 1.5))
+    assert_equal({type: :number}, json._schema(nil, BigDecimal("1.5", 1)))
+    assert_equal({type: :string}, json._schema(nil, "String"))
+    assert_equal({type: :string}, json._schema(nil, nil))
+    assert_equal({type: :string, format: "date"}, json._schema(nil, Date.new(2012, 12, 0o1)))
+    assert_equal({type: :string, format: "time"}, json._schema(nil, Time.now))
+    assert_equal({type: :string, format: "date-time"}, json._schema(nil, DateTime.new(2012, 12, 0o1)))
+    assert_equal({type: :string, format: "date-time"}, json._schema(nil, ActiveSupport::TimeWithZone.new(Time.now, ActiveSupport::TimeZone.all.sample)))
+    assert_equal({type: :boolean}, json._schema(nil, true))
+    assert_equal({type: :boolean}, json._schema(nil, false))
+    assert_equal({type: :array, minContains: 0, contains: {type: :string}}.as_json, json._schema(nil, %w[a b c d]).as_json)
+    assert_equal({type: :array, minContains: 0, contains: {anyOf: [{type: :string}, {type: :integer}, {type: :number}, {type: :boolean}]}}.as_json, json._get_type(["a", 1, 1.5, false]).as_json)
+    assert_equal({type: :array, minContains: 0, contains: {anyOf: [{type: :string}, {type: :integer}]}}.as_json, json._get_type(["a", 1, "b", 2]).as_json)
     assert_equal({type: :array, minContains: 0, contains: {anyOf: [{type: :string}, {type: :integer}, {type: :array, minContains: 0, contains: {anyOf: [{type: :integer}, {type: :string}, {type: :number}, {type: :object, properties: {o: {type: :integer}, p: {type: :string}}}]}}, {type: :object, properties: {a: {type: :integer}, b: {type: :string}}}, {type: :object, properties: {c: {type: :integer}, d: {type: :object, properties: {z: {type: :integer}, x: {type: :string}}}}}]}}.as_json, json._get_type(["a", 1, [1, 2, "a"], {a: 1, b: "b"}, [3, 4.55, {o: 5, p: "p"}], {c: 2, d: {z: 3, x: "b"}}]).as_json)
   end
 

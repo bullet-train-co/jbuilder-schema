@@ -238,9 +238,7 @@ class Jbuilder::Schema
             _fill_contains(key, value[0], types.first)
           end
         elsif options[:type] == :object
-          options[:properties] = value.each_with_object({}) do |(attr_name, attr_value), properties|
-            properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value)
-          end
+          options[:properties] = _set_properties(key, value)
         end
 
         (format = FORMATS[value.class]) and options[:format] ||= format
@@ -262,12 +260,16 @@ class Jbuilder::Schema
         value = value.attributes if value.is_a?(::ActiveRecord::Base)
         {
           type: type,
-          properties: value.each_with_object({}) do |(attr_name, attr_value), properties|
-            properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value)
-          end
+          properties: _set_properties(key, value)
         }
       else
         {type: type}
+      end
+    end
+
+    def _set_properties(key, value)
+      value.each_with_object({}) do |(attr_name, attr_value), properties|
+        properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value)
       end
     end
 
