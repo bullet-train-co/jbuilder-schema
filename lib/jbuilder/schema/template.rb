@@ -221,7 +221,7 @@ class Jbuilder::Schema
         if options[:type] == :array && (types = value.map { _primitive_type _1 }).any?
           options[:minContains] = 0
 
-          # Combine all arrays in one so we have all possible array items in one place
+          # Merge all arrays in one so we have all possible array items in one place
           if types.include?(:array) && types.count(:array) > 1
             array_indices = types.each_index.select { |i| types[i] == :array }
             merged_array = array_indices.each_with_object([]) { |i, arr| arr.concat(value[i]) }
@@ -230,19 +230,16 @@ class Jbuilder::Schema
 
           options[:contains] = if types.uniq { |type| (type == :object) ? type.object_id : type }.many?
             any_of = types.map.with_index do |type, index|
-              if type == :array
-                _schema(key, value[index], within_array: true)
-              else
-                contains = {type: type}
-                value[index] = value[index].attributes if value[index].is_a?(::ActiveRecord::Base)
-                contains[:properties] = value[index].each_with_object({}) { |(attr_name, attr_value), properties| properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value) } if type == :object
-                contains
-              end
+              _fill_contains(key, value[index], type)
             end
 
             {anyOf: any_of.uniq}
           else
-            {type: types.first}
+            _fill_contains(key, value[0], types.first)
+          end
+        elsif options[:type] == :object
+          options[:properties] = value.each_with_object({}) do |(attr_name, attr_value), properties|
+            properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value)
           end
         end
 
@@ -255,6 +252,23 @@ class Jbuilder::Schema
 
       _set_description key, options unless within_array
       options
+    end
+
+    def _fill_contains(key, value, type)
+      case type
+      when :array
+        _schema(key, value, within_array: true)
+      when :object
+        value = value.attributes if value.is_a?(::ActiveRecord::Base)
+        {
+          type: type,
+          properties: value.each_with_object({}) do |(attr_name, attr_value), properties|
+            properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value)
+          end
+        }
+      else
+        {type: type}
+      end
     end
 
     def _primitive_type(value)
