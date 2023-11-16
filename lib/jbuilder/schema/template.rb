@@ -63,7 +63,7 @@ class Jbuilder::Schema
 
       # Rails 7.1 calls `to_s` on our `target!` (the return value from our templates).
       # To get around that and let our inner Hash through, we add this override.
-      # `unwrap_target!` is added for backwardscompatibility so we get the inner Hash on Rails < 7.1.
+      # `unwrap_target!` is added for backwards compatibility so we get the inner Hash on Rails < 7.1.
       def to_s
         @object
       end
@@ -257,19 +257,12 @@ class Jbuilder::Schema
       when :array
         _schema(key, value, within_array: true)
       when :object
-        value = value.attributes if value.is_a?(::ActiveRecord::Base)
         {
           type: type,
           properties: _set_properties(key, value)
         }
       else
         {type: type}
-      end
-    end
-
-    def _set_properties(key, value)
-      value.each_with_object({}) do |(attr_name, attr_value), properties|
-        properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value)
       end
     end
 
@@ -286,9 +279,20 @@ class Jbuilder::Schema
     end
 
     def _set_value(key, value)
+      value = _value(value)
       value = _schema(key, value) unless value.is_a?(::Hash) && (value.key?(:type) || value.key?(:allOf)) # rubocop:disable Style/UnlessLogicalOperators
       _set_description(key, value)
       super
+    end
+
+    def _set_properties(key, value)
+      _value(value).each_with_object({}) do |(attr_name, attr_value), properties|
+        properties[attr_name] = _schema("#{key}.#{attr_name}", attr_value)
+      end
+    end
+
+    def _value(value)
+      value.respond_to?(:attributes) ? value.attributes : value
     end
 
     def _required!(keys)
