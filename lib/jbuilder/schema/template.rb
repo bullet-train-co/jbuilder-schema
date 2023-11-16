@@ -268,7 +268,7 @@ class Jbuilder::Schema
 
     def _primitive_type(value)
       case value
-      when ::Hash, ::Struct, ::OpenStruct, ::ActiveRecord::Base, ::ActionText::RichText then :object
+      when ::Hash, ::Struct, ::OpenStruct, ::ActiveRecord::Base then :object
       when ::Array then :array
       when ::Float, ::BigDecimal then :number
       when true, false then :boolean
