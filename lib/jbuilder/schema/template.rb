@@ -292,12 +292,7 @@ class Jbuilder::Schema
     end
 
     def _value(value)
-      case value
-      when ::ActiveRecord::Base, ::ActionText::RichText
-        value.attributes
-      else
-        value
-      end
+      value.respond_to?(:attributes) ? value.attributes : value
     end
 
     def _required!(keys)
