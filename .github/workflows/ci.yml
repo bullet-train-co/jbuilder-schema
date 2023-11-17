@@ -62,7 +62,7 @@ jobs:
           bundler-cache: true
       - run: mkdir -p ./tmp/starter
       - name: Checkout & Link Starter Repo
-        run: bin/checkout-and-link-starter-repo
+        run: ../../bin/checkout-and-link-starter-repo
         working-directory: ./tmp/starter
         env:
           TARGET_BRANCH: ${{ github.ref }}
