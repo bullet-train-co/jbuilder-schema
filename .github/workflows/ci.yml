@@ -105,6 +105,9 @@ jobs:
           #cache: 'yarn'
       - run: mkdir -p ./tmp/core
       - run: mkdir -p ./tmp/starter
+
+      - uses: ./.github/actions/checkout-starter-repo
+
       - name: Checkout Core Repo
         run: ../../bin/checkout-core-repo
         working-directory: ./tmp/core
