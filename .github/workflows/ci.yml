@@ -55,6 +55,13 @@ jobs:
   starter_repo:
     runs-on: ubuntu-latest
     name: Bullet Train Minitest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Set identifiers for parallel jobs. These can be anything.
+        # For instance if you want a Three Amigos themed pipeline you could use:
+        # ci_node_index: [Dusty, Ned, Lucky]
+        ci_node_index: [1,2,3,4]
     services:
       postgres:
         image: postgres:11-alpine
@@ -137,9 +144,7 @@ jobs:
           # Use the index from matrix as an environment variable
           CI_NODE_INDEX: ${{ strategy.job-index }}
         continue-on-error: false
-        #run : ./bin/parallel-ci
-        run : rails test
-
+        run : ./bin/parallel-ci
       - name: Test Summary
         uses: test-summary/action@v2
         with:
