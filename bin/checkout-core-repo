@@ -5,6 +5,7 @@ CORE_REPO_BRANCH="main"
 
 # Look for a matching branch on the starter repository when running tests in CI
 CI_BRANCH=$TARGET_BRANCH
+echo "Looking for branch ${TARGET_BRANCH}"
 if [[ -v CI_BRANCH ]]
 then
   BRANCH_RESPONSE=$(curl https://api.github.com/repos/bullet-train-co/bullet_train-core/branches/$CI_BRANCH)
