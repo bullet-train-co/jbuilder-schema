@@ -11,6 +11,7 @@ runs:
   steps:
     - name: Create Target Dir
       run: mkdir -p ${{ inputs.target_dir }}
+      shell: bash
 
     - run: pwd
       working-directory: ${{ inputs.target_dir }}
