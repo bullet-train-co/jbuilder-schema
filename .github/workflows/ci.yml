@@ -62,5 +62,5 @@ jobs:
           bundler-cache: true
       - name: Checkout & Link Starter Repo
         run: bin/checkout-and-link-starter-repo
-        with:
-          target_branch: ${{ github.ref }}
+        env:
+          TARGET_BRANCH: ${{ github.ref }}
