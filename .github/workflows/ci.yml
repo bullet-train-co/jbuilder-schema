@@ -55,6 +55,36 @@ jobs:
   starter_repo:
     runs-on: ubuntu-latest
     name: Bullet Train Minitest
+    services:
+      postgres:
+        image: postgres:11-alpine
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_DB: rails_test
+          POSTGRES_USER: rails
+          POSTGRES_PASSWORD: password
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis
+        ports:
+          - "6379:6379"
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: "postgres://rails:password@localhost:5432/rails_test"
+      BUNDLE_JOBS: 2
+      BUNDLE_RETRY: 3
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
@@ -62,6 +92,10 @@ jobs:
         with:
           ruby-version: "3.2"
           bundler-cache: true
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
       - run: mkdir -p ./tmp/core
       - run: mkdir -p ./tmp/starter
       - name: Checkout Core Repo
@@ -76,3 +110,39 @@ jobs:
           TARGET_BRANCH: ${{ github.head_ref }}
       - run: cat tmp/starter/Gemfile
       - run: cat tmp/starter/Gemfile.lock
+
+      - name: Set up database schema
+        run: bin/rails db:schema:load
+        working-directory: ./tmp/starter
+
+      - run: yarn install
+        working-directory: ./tmp/starter
+      - run: yarn build
+        working-directory: ./tmp/starter
+      - run: yarn build:css
+        working-directory: ./tmp/starter
+
+      # Add or replace test runners here
+      - name: Run Tests
+        id: run-tests
+        working-directory: ./tmp/starter
+        env:
+          # Specifies how many jobs you would like to run in parallel,
+          # used for partitioning
+          CI_NODE_TOTAL: ${{ strategy.job-total }}
+          # Use the index from matrix as an environment variable
+          CI_NODE_INDEX: ${{ strategy.job-index }}
+        continue-on-error: false
+        #run : ./bin/parallel-ci
+        run : rails test
+
+      - name: Test Summary
+        uses: test-summary/action@v2
+        working-directory: ./tmp/starter
+        with:
+          paths: "test/reports/**/TEST-*.xml"
+          #output: test-summary.md
+        if: always()
+
+
+
