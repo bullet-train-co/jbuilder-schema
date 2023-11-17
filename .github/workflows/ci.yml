@@ -103,17 +103,23 @@ jobs:
         #with:
           #node-version-file: .nvmrc
           #cache: 'yarn'
-      - run: mkdir -p ./tmp/core
       - run: mkdir -p ./tmp/starter
 
       - uses: ./.github/actions/checkout-core-repo/
-      - uses: ./.github/actions/checkout-starter-repo
+        with:
+          target_dir: ./tmp/core
 
-      - name: Checkout Core Repo
-        run: ../../bin/checkout-core-repo
-        working-directory: ./tmp/core
-        env:
-          TARGET_BRANCH: ${{ github.head_ref }}
+      - uses: ./.github/actions/checkout-starter-repo
+        #with:
+          #target_dir: ./tmp/starter
+
+      #- uses: ./.github/actions/link-starter-repo
+        #with:
+          #starter_dir: ./tmp/starter
+          #linked_dir:
+            #- .
+            #- tmp/core
+
       - name: Checkout & Link Starter Repo
         run: ../../bin/checkout-and-link-starter-repo
         working-directory: ./tmp/starter
