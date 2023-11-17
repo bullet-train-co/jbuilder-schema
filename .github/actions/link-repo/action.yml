@@ -5,8 +5,8 @@ inputs:
     description: 'The directory where the starter repo lives'
     required: true
     type: string
-  linked_dirs:
-    description: 'The directories to link'
+  linked_dir:
+    description: 'The directory to link'
     required: true
     type: string
 
@@ -26,7 +26,7 @@ runs:
       shell: bash
       env:
         STARTER_DIR: ${{ inputs.starter_dir }}
-        LINKED_DIRS: ${{ inputs.linked_dirs }}
+        LINKED_DIR: ${{ inputs.linked_dir }}
         WORKSPACE: ${{ github.workspace }}
 
     - run: pwd
