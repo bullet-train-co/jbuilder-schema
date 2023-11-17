@@ -105,13 +105,17 @@ jobs:
           #cache: 'yarn'
       - run: mkdir -p ./tmp/starter
 
-      - uses: ./.github/actions/checkout-core-repo/
+      - name: Checkout Core Repo
+        uses: ./.github/actions/checkout-repo-with-matching-branch
         with:
           target_dir: tmp/core
+          target_repo: bullet-train-co/bullet_train-core
 
-      - uses: ./.github/actions/checkout-starter-repo
+      - name: Checkout Starter Repo
+        uses: ./.github/actions/checkout-repo-with-matching-branch
         with:
           target_dir: tmp/starter
+          target_repo: bullet-train-co/bullet_train
 
       #- uses: ./.github/actions/link-starter-repo
         #with:

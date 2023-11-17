@@ -1,0 +1,43 @@
+name: 'Checkout Repo with matching branch'
+description: 'Checks out a repo, trying to get the branch that matches the name of the current branch'
+inputs:
+  target_dir:
+    description: 'The directory where the core repo should be placed'
+    required: true
+    type: string
+  target_repo:
+    description: 'The repo to be checked out'
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create Target Dir
+      run: mkdir -p ${{ inputs.target_dir }}
+      shell: bash
+
+    - run: pwd
+      working-directory: ${{ inputs.target_dir }}
+      shell: bash
+    - run: ls -al
+      working-directory: ${{ inputs.target_dir }}
+      shell: bash
+
+    - name: Test a script
+      working-directory: ${{ github.action_path }}
+      run: ./checkout-repo.sh
+      shell: bash
+      env:
+        TARGET_REPO: ${{ inputs.target_repo }}
+        TARGET_BRANCH: ${{ github.head_ref }}
+        TARGET_DIR: ${{ format('{0}/{1}', github.workspace, inputs.target_dir) }}
+
+    - run: pwd
+      working-directory: ${{ inputs.target_dir }}
+      shell: bash
+    - run: ls -al
+      working-directory: ${{ inputs.target_dir }}
+      shell: bash
+
+
