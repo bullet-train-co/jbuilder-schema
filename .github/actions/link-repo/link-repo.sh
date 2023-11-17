@@ -8,17 +8,13 @@ echo "LINKED_PATH = ${LINKED_PATH}"
 
 cd $STARTER_PATH
 
-GEMSPEC_PATH=$LINKED_PATH/*.gemspec
-echo "GEMSPEC_PATH = $GEMSPEC_PATH"
-GEMSPEC=$(ls $GEMSPEC_PATH)
-echo "GEMSPEC= $GEMSPEC"
-
-GEMSPEC_FILE=$(basename -- "$GEMSPEC")
-echo "GEMSPEC_FILE = $GEMSPEC_FILE"
-
-GEM_NAME="${GEMSPEC_FILE%.*}"
-echo "GEM_NAME = $GEM_NAME"
+# TODO: This might be a clumsy, long way to get the name of the gem that we're linking to, but it works.
+GEMSPEC_PATH=$LINKED_PATH/*.gemspec # /home/runner/work/jbuilder-schema/jbuilder-schema/./*.gemspec
+GEMSPEC=$(ls $GEMSPEC_PATH) # /home/runner/work/jbuilder-schema/jbuilder-schema/./jbuilder-schema.gemspec
+GEMSPEC_FILE=$(basename -- "$GEMSPEC") # jbuilder-schema.gemspec
+GEM_NAME="${GEMSPEC_FILE%.*}" # jbuilder-schema
 
 echo "gem \"$GEM_NAME\", path: \"$LINKED_PATH\"" >> Gemfile
 
+# TODO: We should be able to add this line back once we un-pin jbuilder-schema
 #bundle lock --conservative --update $GEM_NAME
