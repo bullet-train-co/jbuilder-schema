@@ -8,7 +8,7 @@ runs:
       run: echo "just testing"
       shell: bash
     - name: Test a script
-      run: ./checkout-core-repo.sh
+      run: checkout-core-repo.sh
       shell: bash
 
 
