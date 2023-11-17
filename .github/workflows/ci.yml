@@ -138,9 +138,8 @@ jobs:
 
       - name: Test Summary
         uses: test-summary/action@v2
-        working-directory: ./tmp/starter
         with:
-          paths: "test/reports/**/TEST-*.xml"
+          paths: "tmp/starter/test/reports/**/TEST-*.xml"
           #output: test-summary.md
         if: always()
 
