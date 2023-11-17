@@ -92,10 +92,10 @@ jobs:
         with:
           ruby-version: "3.2"
           bundler-cache: true
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-          cache: 'yarn'
+      #- uses: actions/setup-node@v3
+        #with:
+          #node-version-file: .nvmrc
+          #cache: 'yarn'
       - run: mkdir -p ./tmp/core
       - run: mkdir -p ./tmp/starter
       - name: Checkout Core Repo
