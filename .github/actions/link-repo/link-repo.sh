@@ -21,19 +21,4 @@ echo "GEM_NAME = $GEM_NAME"
 
 echo "gem \"$GEM_NAME\", path: \"$LINKED_PATH\"" >> Gemfile
 
-# This searches two directories up because we're in tmp/starter (the CI working directory).
-#packages_string=$(find ./../../ -name 'jbuilder-schema*.gemspec' | grep -o 'jbuilder-schema.*' | sed "s/\/.*//")
-#readarray -t packages <<<"$packages_string" # Convert to an array.
-
-#for package in "${packages[@]}"
-#do
-  #:
-  #grep -v "gem \"$package\"" Gemfile > Gemfile.tmp
-  #mv Gemfile.tmp Gemfile
-  #echo "gem \"$package\", path: \"../../tmp/core/$package\"" >> Gemfile
-#done
-
-
-
-#updates="${packages[@]}"
-#bundle lock --conservative --update $updates
+bundle lock --conservative --update $GEM_NAME
