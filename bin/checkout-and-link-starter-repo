@@ -23,4 +23,4 @@ git clone -b $STARTER_REPO_BRANCH --depth 1 https://github.com/bullet-train-co/b
 
 echo "gem \"jbuilder-schema\", path: \"../../\"" >> Gemfile
 
-bundle lock --conservative --update jbuilder-schema
+# bundle lock --conservative --update jbuilder-schema
