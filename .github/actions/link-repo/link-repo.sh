@@ -21,4 +21,4 @@ echo "GEM_NAME = $GEM_NAME"
 
 echo "gem \"$GEM_NAME\", path: \"$LINKED_PATH\"" >> Gemfile
 
-bundle lock --conservative --update $GEM_NAME
+#bundle lock --conservative --update $GEM_NAME
