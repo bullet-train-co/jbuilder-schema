@@ -19,7 +19,7 @@ echo "GEMSPEC_FILE = $GEMSPEC_FILE"
 GEM_NAME="${GEMSPEC_FILE%.*}"
 echo "GEM_NAME = $GEM_NAME"
 
-echo "gem \"jbuilder-schema\", path: \"$LINKED_PATH\"" >> Gemfile
+echo "gem \"$GEM_NAME\", path: \"$LINKED_PATH\"" >> Gemfile
 
 # This searches two directories up because we're in tmp/starter (the CI working directory).
 #packages_string=$(find ./../../ -name 'jbuilder-schema*.gemspec' | grep -o 'jbuilder-schema.*' | sed "s/\/.*//")
