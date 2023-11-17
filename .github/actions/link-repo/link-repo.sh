@@ -8,6 +8,16 @@ echo "LINKED_PATH = ${LINKED_PATH}"
 
 cd $STARTER_PATH
 
+GEMSPEC_PATH=$LINKED_PATH/*.gemspec
+echo "GEMSPEC_PATH = $GEMSPEC_PATH"
+GEMSPEC=$(ls $GEMSPEC_PATH)
+echo "GEMSPEC= $GEMSPEC"
+
+GEMSPEC_FILE=$(basename -- "$GEMSPEC")
+echo "GEMSPEC_FILE = $GEMSPEC_FILE"
+
+GEM_NAME="${GEMSPEC_FILE%.*}"
+echo "GEM_NAME = $GEM_NAME"
 
 echo "gem \"jbuilder-schema\", path: \"$LINKED_PATH\"" >> Gemfile
 
