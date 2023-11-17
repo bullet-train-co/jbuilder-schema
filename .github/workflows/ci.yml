@@ -49,3 +49,18 @@ jobs:
           bundler-cache: true
       - name: Run Standard
         run: bundle exec rake standard
+
+  starter_repo:
+    runs-on: ubuntu-latest
+    name: Bullet Train Minitest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+      - name: Checkout & Link Starter Repo
+        run: bin/checkout-and-link-starter-repo
+        with:
+          target_branch: ${{ github.ref }}
