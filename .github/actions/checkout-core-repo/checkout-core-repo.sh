@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+STARTING_DIR=$pwd
+cd $TARGET_DIR
+
 # Default to the main branch if we don't find a matching branch on the starter repository.
 CORE_REPO_BRANCH="main"
 
@@ -23,3 +26,5 @@ echo "Cloning from ${CORE_REPO_BRANCH}..."
 git clone -b $CORE_REPO_BRANCH --depth 1 https://github.com/bullet-train-co/bullet_train-core.git .
 
 ls -al
+
+cd $STARTING_DIR

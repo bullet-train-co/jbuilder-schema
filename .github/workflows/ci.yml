@@ -110,8 +110,8 @@ jobs:
           target_dir: ./tmp/core
 
       - uses: ./.github/actions/checkout-starter-repo
-        #with:
-          #target_dir: ./tmp/starter
+        with:
+          target_dir: ./tmp/starter
 
       #- uses: ./.github/actions/link-starter-repo
         #with:
@@ -120,11 +120,12 @@ jobs:
             #- .
             #- tmp/core
 
-      - name: Checkout & Link Starter Repo
-        run: ../../bin/checkout-and-link-starter-repo
-        working-directory: ./tmp/starter
-        env:
-          TARGET_BRANCH: ${{ github.head_ref }}
+      #- name: Checkout & Link Starter Repo
+        #run: ../../bin/checkout-and-link-starter-repo
+        #working-directory: ./tmp/starter
+        #env:
+          #TARGET_BRANCH: ${{ github.head_ref }}
+
       - run: cat tmp/starter/Gemfile
       - run: cat tmp/starter/Gemfile.lock
 
