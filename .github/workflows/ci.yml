@@ -106,7 +106,7 @@ jobs:
       - run: mkdir -p ./tmp/core
       - run: mkdir -p ./tmp/starter
 
-      - uses: ./.github/actions/checkout-core-repo
+      - uses: ./.github/actions/checkout-core-repo/
       - uses: ./.github/actions/checkout-starter-repo
 
       - name: Checkout Core Repo

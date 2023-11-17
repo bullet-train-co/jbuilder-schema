@@ -7,6 +7,10 @@ runs:
     - name: Just a test
       run: echo "just testing"
       shell: bash
+    - run: pwd
+      shell: bash
+    - run: ls -al
+      shell: bash
     - name: Test a script
       run: checkout-core-repo.sh
       shell: bash
