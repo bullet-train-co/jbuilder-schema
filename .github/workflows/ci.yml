@@ -60,7 +60,13 @@ jobs:
         with:
           ruby-version: "3.2"
           bundler-cache: true
+      - run: mkdir -p ./tmp/core
       - run: mkdir -p ./tmp/starter
+      - name: Checkout Core Repo
+        run: ../../bin/checkout-core-repo
+        working-directory: ./tmp/core
+        env:
+          TARGET_BRANCH: ${{ github.ref }}
       - name: Checkout & Link Starter Repo
         run: ../../bin/checkout-and-link-starter-repo
         working-directory: ./tmp/starter
