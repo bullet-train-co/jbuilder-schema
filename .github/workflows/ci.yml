@@ -66,3 +66,5 @@ jobs:
         working-directory: ./tmp/starter
         env:
           TARGET_BRANCH: ${{ github.ref }}
+      - run: cat tmp/starter/Gemfile
+      - run: cat tmp/starter/Gemfile.lock
