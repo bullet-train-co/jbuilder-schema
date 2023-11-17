@@ -68,11 +68,11 @@ jobs:
         run: ../../bin/checkout-core-repo
         working-directory: ./tmp/core
         env:
-          TARGET_BRANCH: ${{ github.ref }}
+          TARGET_BRANCH: ${{ github.head_ref }}
       - name: Checkout & Link Starter Repo
         run: ../../bin/checkout-and-link-starter-repo
         working-directory: ./tmp/starter
         env:
-          TARGET_BRANCH: ${{ github.ref }}
+          TARGET_BRANCH: ${{ github.head_ref }}
       - run: cat tmp/starter/Gemfile
       - run: cat tmp/starter/Gemfile.lock
