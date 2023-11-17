@@ -133,10 +133,8 @@ jobs:
       - run: yarn build:css
         working-directory: ./tmp/starter
 
-      # Add or replace test runners here
       - name: Run Tests
         id: run-tests
-        working-directory: ./tmp/starter
         env:
           # Specifies how many jobs you would like to run in parallel,
           # used for partitioning
@@ -144,7 +142,9 @@ jobs:
           # Use the index from matrix as an environment variable
           CI_NODE_INDEX: ${{ strategy.job-index }}
         continue-on-error: false
-        run : ./bin/parallel-ci
+        run : bin/parallel-ci
+        working-directory: ./tmp/starter
+
       - name: Test Summary
         uses: test-summary/action@v2
         with:
