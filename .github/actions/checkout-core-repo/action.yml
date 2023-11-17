@@ -13,6 +13,13 @@ runs:
       run: mkdir -p ${{ inputs.target_dir }}
       shell: bash
 
+    - run: pwd
+      working-directory: ${{ inputs.target_dir }}
+      shell: bash
+    - run: ls -al
+      working-directory: ${{ inputs.target_dir }}
+      shell: bash
+
     - name: Test a script
       working-directory: ${{ github.action_path }}
       run: ./checkout-core-repo.sh

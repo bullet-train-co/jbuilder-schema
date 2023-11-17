@@ -107,11 +107,11 @@ jobs:
 
       - uses: ./.github/actions/checkout-core-repo/
         with:
-          target_dir: ./tmp/core
+          target_dir: tmp/core
 
       - uses: ./.github/actions/checkout-starter-repo
         with:
-          target_dir: ./tmp/starter
+          target_dir: tmp/starter
 
       #- uses: ./.github/actions/link-starter-repo
         #with:

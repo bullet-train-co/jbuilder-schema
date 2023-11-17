@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+
+echo "The TARGET_DIR = $TARGET_DIR"
+
 STARTING_DIR=$pwd
 cd $TARGET_DIR
 
