@@ -133,6 +133,12 @@ jobs:
       - run: yarn build:css
         working-directory: ./tmp/starter
 
+      - run: ls -al
+        working-directory: ./tmp/starter
+
+      - run: ls -al bin
+        working-directory: ./tmp/starter
+
       - name: Run Tests
         id: run-tests
         env:
