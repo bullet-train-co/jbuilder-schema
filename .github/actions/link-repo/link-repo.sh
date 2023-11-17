@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
 STARTER_PATH=$WORKSPACE/$STARTER_DIR
+LINKED_PATH=$WORKSPACE/$LINKED_DIR
 
 echo "STARTER_PATH = ${STARTER_PATH}"
+echo "LINKED_PATH = ${LINKED_PATH}"
+
 cd $STARTER_PATH
 
-echo "gem \"jbuilder-schema\", path: \"../../\"" >> Gemfile
+
+echo "gem \"jbuilder-schema\", path: \"$LINKED_PATH\"" >> Gemfile
 
 # This searches two directories up because we're in tmp/starter (the CI working directory).
 #packages_string=$(find ./../../ -name 'jbuilder-schema*.gemspec' | grep -o 'jbuilder-schema.*' | sed "s/\/.*//")
