@@ -15,7 +15,7 @@ runs:
       shell: bash
     - name: Test a script
       working-directory: ${{ github.action_path }}
-      run: checkout-core-repo.sh
+      run: ./checkout-core-repo.sh
       shell: bash
 
 
