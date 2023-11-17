@@ -5,8 +5,6 @@ STARTER_PATH=$WORKSPACE/$STARTER_DIR
 echo "STARTER_PATH = ${STARTER_PATH}"
 cd $STARTER_PATH
 
-echo "gem \"jbuilder-schema\", path: \"../../\"" >> Gemfile
-
 # This searches two directories up because we're in tmp/starter (the CI working directory).
 packages_string=$(find ./../../tmp/core -name 'bullet_train*.gemspec' | grep -o 'bullet_train.*' | sed "s/\/.*//")
 readarray -t packages <<<"$packages_string" # Convert to an array.
