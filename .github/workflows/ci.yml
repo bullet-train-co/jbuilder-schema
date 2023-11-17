@@ -117,7 +117,10 @@ jobs:
           target_dir: tmp/starter
           target_repo: bullet-train-co/bullet_train
 
-      - uses: ./.github/actions/link-starter-repo
+      - run: tree ./.github/actions
+
+      - name: Link Starter Repo
+        uses: ./.github/actions/link-starter-repo
         with:
           starter_dir: tmp/starter
           linked_dirs: |-
