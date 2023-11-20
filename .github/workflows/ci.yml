@@ -124,7 +124,8 @@ jobs:
           cache-dependency-path: tmp/starter/yarn.lock
 
       - name: Link This Repo
-        uses: ./.github/actions/link-local-gem
+        uses: bullet-train-co/link-local-gem@v1
+        #uses: ./.github/actions/link-local-gem
         with:
           application_dir: tmp/starter
           local_gem_dir: .
