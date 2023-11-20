@@ -1,11 +1,10 @@
-name: 'Checkout Bullet Train Core Repo'
-description: 'Checks out the Bullet Train Core Repo'
+name: 'Link the Core Repo'
 inputs:
-  starter_dir:
+  application_dir:
     description: 'The directory where the starter repo lives'
     required: true
     type: string
-  linked_dir:
+  core_dir:
     description: 'The directory to link'
     required: true
     type: string
@@ -14,10 +13,10 @@ runs:
   using: "composite"
   steps:
     - run: pwd
-      working-directory: ${{ inputs.starter_dir }}
+      working-directory: ${{ inputs.application_dir }}
       shell: bash
     - run: ls -al
-      working-directory: ${{ inputs.starter_dir }}
+      working-directory: ${{ inputs.application_dir }}
       shell: bash
 
     - name: Link local repos
@@ -25,15 +24,15 @@ runs:
       run: ./link-repo.sh
       shell: bash
       env:
-        STARTER_DIR: ${{ inputs.starter_dir }}
-        LINKED_DIR: ${{ inputs.linked_dir }}
+        APPLICATION_DIR: ${{ inputs.application_dir }}
+        CORE_DIR: ${{ inputs.core_dir }}
         WORKSPACE: ${{ github.workspace }}
 
     - run: pwd
-      working-directory: ${{ inputs.starter_dir }}
+      working-directory: ${{ inputs.application_dir }}
       shell: bash
     - run: ls -al
-      working-directory: ${{ inputs.starter_dir }}
+      working-directory: ${{ inputs.application_dir }}
       shell: bash
 
 

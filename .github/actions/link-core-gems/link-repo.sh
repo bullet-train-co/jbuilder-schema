@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-STARTER_PATH=$WORKSPACE/$STARTER_DIR
+APPLICATION_PATH=$WORKSPACE/$APPLICATION_DIR
+CORE_PATH=$WORKSPACE/$CORE_DIR
 
-echo "STARTER_PATH = ${STARTER_PATH}"
-cd $STARTER_PATH
+echo "APPLICATION_PATH = ${APPLICATION_PATH}"
+cd $APPLICATION_PATH
 
-# This searches two directories up because we're in tmp/starter (the CI working directory).
-packages_string=$(find ./../../tmp/core -name 'bullet_train*.gemspec' | grep -o 'bullet_train.*' | sed "s/\/.*//")
+packages_string=$(find $CORE_PATH -name 'bullet_train*.gemspec' | grep -o 'bullet_train.*' | sed "s/\/.*//")
 readarray -t packages <<<"$packages_string" # Convert to an array.
 
 for package in "${packages[@]}"
@@ -14,7 +14,7 @@ do
   :
   grep -v "gem \"$package\"" Gemfile > Gemfile.tmp
   mv Gemfile.tmp Gemfile
-  echo "gem \"$package\", path: \"../../tmp/core/$package\"" >> Gemfile
+  echo "gem \"$package\", path: \"$CORE_PATH/$package\"" >> Gemfile
 done
 
 updates="${packages[@]}"
@@ -37,7 +37,7 @@ do
   echo "linking package: $package"
   echo "npm package: $npm_package"
 
-  cd ../../tmp/core/$package
+  cd $CORE_PATH/$package
   yarn install
   yarn build
   npx yalc publish
@@ -57,7 +57,7 @@ npm_package="fields"
 echo "linking package: $package"
 echo "npm package: $npm_package"
 
-cd ../../tmp/core/$package
+cd $CORE_PATH/$package
 yarn install
 yarn build
 npx yalc publish

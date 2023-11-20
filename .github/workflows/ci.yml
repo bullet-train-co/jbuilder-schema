@@ -122,19 +122,19 @@ jobs:
       - run: tree ./.github/actions
 
       - name: Link This Repo
-        uses: ./.github/actions/link-repo
+        uses: ./.github/actions/link-local-gem
         with:
-          starter_dir: tmp/starter
-          linked_dir: .
+          application_dir: tmp/starter
+          local_gem_dir: .
 
       - run: cat tmp/starter/Gemfile
       - run: cat tmp/starter/Gemfile.lock
 
       - name: Link Core Repo
-        uses: ./.github/actions/link-core-repo
+        uses: ./.github/actions/link-core-gems
         with:
-          starter_dir: tmp/starter
-          linked_dir: tmp/core
+          application_dir: tmp/starter
+          core_dir: tmp/core
 
       - run: cat tmp/starter/Gemfile
       - run: cat tmp/starter/Gemfile.lock

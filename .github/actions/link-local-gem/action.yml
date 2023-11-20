@@ -1,0 +1,39 @@
+name: 'Link local gem'
+description: 'Link a local gem into an application Gemfile'
+inputs:
+  application_dir:
+    description: 'The directory where the application lives'
+    required: true
+    type: string
+  local_gem_dir:
+    description: 'The directory containing the gem to link'
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - run: pwd
+      working-directory: ${{ inputs.application_dir }}
+      shell: bash
+    - run: ls -al
+      working-directory: ${{ inputs.application_dir }}
+      shell: bash
+
+    - name: Link local repos
+      working-directory: ${{ github.action_path }}
+      run: ./link-repo.sh
+      shell: bash
+      env:
+        application_dir: ${{ inputs.application_dir }}
+        local_gem_dir: ${{ inputs.local_gem_dir }}
+        WORKSPACE: ${{ github.workspace }}
+
+    - run: pwd
+      working-directory: ${{ inputs.application_dir }}
+      shell: bash
+    - run: ls -al
+      working-directory: ${{ inputs.application_dir }}
+      shell: bash
+
+
