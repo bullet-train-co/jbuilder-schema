@@ -101,16 +101,11 @@ jobs:
         with:
           ruby-version: "3.2"
           bundler-cache: true
-      #- uses: actions/setup-node@v3
-        #with:
-          #node-version-file: .nvmrc
-          #cache: 'yarn'
 
-      - name: Checkout Core Repo
-        uses: ./.github/actions/checkout-repo-with-matching-branch
+      - uses: actions/setup-node@v3
         with:
-          target_dir: tmp/core
-          target_repo: bullet-train-co/bullet_train-core
+          node-version-file: .nvmrc
+          cache: 'yarn'
 
       - name: Checkout Starter Repo
         uses: ./.github/actions/checkout-repo-with-matching-branch
@@ -118,7 +113,11 @@ jobs:
           target_dir: tmp/starter
           target_repo: bullet-train-co/bullet_train
 
-      - run: tree ./.github/actions
+      - name: Checkout Core Repo
+        uses: ./.github/actions/checkout-repo-with-matching-branch
+        with:
+          target_dir: tmp/core
+          target_repo: bullet-train-co/bullet_train-core
 
       - name: Link This Repo
         uses: ./.github/actions/link-local-gem
@@ -126,26 +125,14 @@ jobs:
           application_dir: tmp/starter
           local_gem_dir: .
 
-      - run: cat tmp/starter/Gemfile
-      - run: cat tmp/starter/Gemfile.lock
-
       - name: Link Core Repo
         uses: ./.github/actions/link-core-gems
         with:
           application_dir: tmp/starter
           core_dir: tmp/core
 
-      - run: cat tmp/starter/Gemfile
-      - run: cat tmp/starter/Gemfile.lock
-
       - name: Set up database schema
         run: bin/rails db:schema:load
-        working-directory: ./tmp/starter
-
-      - run: ls -al
-        working-directory: ./tmp/starter
-
-      - run: ls -al bin
         working-directory: ./tmp/starter
 
       - name: Run Tests
