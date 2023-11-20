@@ -121,6 +121,7 @@ jobs:
         with:
           node-version-file: tmp/starter/.nvmrc
           cache: 'yarn'
+          cache-dependency-path: tmp/starter/yarn.lock
 
       - name: Link This Repo
         uses: ./.github/actions/link-local-gem
