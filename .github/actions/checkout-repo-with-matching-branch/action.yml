@@ -5,7 +5,7 @@ inputs:
     description: 'The directory where the core repo should be placed'
     required: true
     type: string
-  target_repo:
+  repository:
     description: 'The repo to be checked out'
     required: true
     type: string
@@ -29,7 +29,7 @@ runs:
       shell: bash
       id: determine-branch
       env:
-        TARGET_REPO: ${{ inputs.target_repo }}
+        REPOSITORY: ${{ inputs.repository }}
         TARGET_BRANCH: ${{ inputs.target_branch }}
         DEFAULT_BRANCH: ${{ inputs.default_branch }}
 
@@ -39,6 +39,6 @@ runs:
 
     - uses: actions/checkout@v4
       with:
-        repository: ${{ inputs.target_repo }}
+        repository: ${{ inputs.repository }}
         path: ${{ inputs.target_dir }}
         ref: ${{ steps.determine-branch.outputs.BRANCH_TO_CHECKOUT }}

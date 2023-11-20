@@ -111,13 +111,13 @@ jobs:
         uses: ./.github/actions/checkout-repo-with-matching-branch
         with:
           target_dir: tmp/starter
-          target_repo: bullet-train-co/bullet_train
+          repository: bullet-train-co/bullet_train
 
       - name: Checkout Core Repo
         uses: ./.github/actions/checkout-repo-with-matching-branch
         with:
           target_dir: tmp/core
-          target_repo: bullet-train-co/bullet_train-core
+          repository: bullet-train-co/bullet_train-core
 
       - name: Link This Repo
         uses: ./.github/actions/link-local-gem

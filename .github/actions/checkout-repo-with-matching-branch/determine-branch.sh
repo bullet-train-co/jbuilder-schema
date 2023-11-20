@@ -2,7 +2,7 @@
 
 set -e
 
-echo "The TARGET_REPO = $TARGET_REPO"
+echo "The REPOSITORY = $REPOSITORY"
 echo "The TARGET_BRANCH= $TARGET_BRANCH"
 echo "The DEFAULT_BRANCH= $DEFAULT_BRANCH"
 
@@ -14,7 +14,7 @@ CI_BRANCH=$TARGET_BRANCH
 echo "Looking for branch ${TARGET_BRANCH}"
 if [[ -v CI_BRANCH ]]
 then
-  BRANCH_RESPONSE=$(curl https://api.github.com/repos/$TARGET_REPO/branches/$CI_BRANCH)
+  BRANCH_RESPONSE=$(curl https://api.github.com/repos/$REPOSITORY/branches/$CI_BRANCH)
 
   echo "Branch response ===================="
   echo $BRANCH_RESPONSE
