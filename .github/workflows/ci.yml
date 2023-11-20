@@ -100,14 +100,12 @@ jobs:
 
       - name: Checkout Starter Repo
         uses: bullet-train-co/checkout-repo-with-matching-branch@v1
-        #uses: ./.github/actions/checkout-repo-with-matching-branch
         with:
           target_dir: tmp/starter
           repository: bullet-train-co/bullet_train
 
       - name: Checkout Core Repo
         uses: bullet-train-co/checkout-repo-with-matching-branch@v1
-        #uses: ./.github/actions/checkout-repo-with-matching-branch
         with:
           target_dir: tmp/core
           repository: bullet-train-co/bullet_train-core
