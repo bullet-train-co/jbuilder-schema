@@ -116,12 +116,12 @@ jobs:
           working-directory: tmp/starter
           bundler-cache: true
 
-      #- name: Set up Node
-        #uses: actions/setup-node@v3
-        #with:
-          #node-version-file: tmp/starter/.nvmrc
-          #cache: 'yarn'
-          #cache-dependency-path: tmp/starter/yarn.lock
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: tmp/starter/.nvmrc
+          cache: 'yarn'
+          cache-dependency-path: tmp/starter/yarn.lock
 
       - name: Link This Repo
         uses: ./.github/actions/link-local-gem
