@@ -22,7 +22,7 @@ runs:
 
     - name: Link local repos
       working-directory: ${{ github.action_path }}
-      run: ./link-repo.sh
+      run: ./link-gem.sh
       shell: bash
       env:
         application_dir: ${{ inputs.application_dir }}
