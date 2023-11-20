@@ -47,6 +47,7 @@ runs:
 
     - name: Check branch output
       run: echo "${{ steps.determine-branch.outputs.BRANCH_TO_CHECKOUT }}"
+      shell: bash
 
     - uses: actions/checkout@v4
       with:
