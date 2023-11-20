@@ -23,9 +23,9 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Create Target Dir
-      run: mkdir -p ${{ inputs.target_dir }}
-      shell: bash
+    #- name: Create Target Dir
+      #run: mkdir -p ${{ inputs.target_dir }}
+      #shell: bash
 
     - name: Look for matching branch
       working-directory: ${{ github.action_path }}
