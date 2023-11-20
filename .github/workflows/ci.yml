@@ -105,7 +105,6 @@ jobs:
         #with:
           #node-version-file: .nvmrc
           #cache: 'yarn'
-      - run: mkdir -p ./tmp/starter
 
       - name: Checkout Core Repo
         uses: ./.github/actions/checkout-repo-with-matching-branch
@@ -139,19 +138,8 @@ jobs:
       - run: cat tmp/starter/Gemfile
       - run: cat tmp/starter/Gemfile.lock
 
-      - name: Bundle install
-        run: bundle install
-        working-directory: ./tmp/starter
-
       - name: Set up database schema
         run: bin/rails db:schema:load
-        working-directory: ./tmp/starter
-
-      - run: yarn install
-        working-directory: ./tmp/starter
-      - run: yarn build
-        working-directory: ./tmp/starter
-      - run: yarn build:css
         working-directory: ./tmp/starter
 
       - run: ls -al

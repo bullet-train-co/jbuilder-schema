@@ -19,6 +19,7 @@ done
 
 updates="${packages[@]}"
 bundle lock --conservative --update $updates
+bundle install
 
 packages=(
   "bullet_train"
@@ -73,5 +74,7 @@ cat package.json
 # needing to modify the lock file.
 
 yarn install
+yarn build
+yarn build:css
 
 
