@@ -131,7 +131,8 @@ jobs:
           local_gem_dir: .
 
       - name: Link Core Repo
-        uses: ./.github/actions/link-core-gems
+        uses: bullet-train-co/link-core-gems@v1
+        #uses: ./.github/actions/link-core-gems
         with:
           application_dir: tmp/starter
           core_dir: tmp/core
