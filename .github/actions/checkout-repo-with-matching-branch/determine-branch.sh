@@ -2,14 +2,13 @@
 
 set -e
 
-echo "The TARGET_DIR = $TARGET_DIR"
+#echo "The TARGET_DIR = $TARGET_DIR"
 echo "The TARGET_REPO = $TARGET_REPO"
-
-STARTING_DIR=$pwd
-cd $TARGET_DIR
+echo "The TARGET_BRANCH= $TARGET_BRANCH"
+echo "The DEFAULT_BRANCH= $DEFAULT_BRANCH"
 
 # Default to the main branch if we don't find a matching branch on the starter repository.
-REPO_BRANCH="main"
+REPO_BRANCH=$DEFAULT_BRANCH
 
 # Look for a matching branch on the starter repository when running tests in CI
 CI_BRANCH=$TARGET_BRANCH
@@ -27,9 +26,12 @@ then
   fi
 fi
 
-echo "Cloning from ${REPO_BRANCH}..."
-git clone -b $REPO_BRANCH --depth 1 https://github.com/$TARGET_REPO.git .
+echo "Using branch: ${REPO_BRANCH}"
 
-ls -al
+echo "BRANCH_TO_CHECKOUT=${REPO_BRANCH}" >> "$GITHUB_OUTPUT"
 
-cd $STARTING_DIR
+#git clone -b $REPO_BRANCH --depth 1 https://github.com/$TARGET_REPO.git .
+
+#ls -al
+
+#cd $STARTING_DIR

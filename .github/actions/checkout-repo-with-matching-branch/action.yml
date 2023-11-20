@@ -9,6 +9,16 @@ inputs:
     description: 'The repo to be checked out'
     required: true
     type: string
+  target_branch:
+    description: 'The branch to try to match'
+    required: true
+    default: ${{ github.head_ref }}
+    type: string
+  default_branch:
+    description: 'The branch to use if a match is not found'
+    required: true
+    default: main
+    type: string
 
 runs:
   using: "composite"
@@ -24,14 +34,24 @@ runs:
       working-directory: ${{ inputs.target_dir }}
       shell: bash
 
-    - name: Test a script
+    - name: Look for matching branch
       working-directory: ${{ github.action_path }}
-      run: ./checkout-repo.sh
+      run: ./determine-branch.sh
       shell: bash
+      id: determine-branch
       env:
         TARGET_REPO: ${{ inputs.target_repo }}
-        TARGET_BRANCH: ${{ github.head_ref }}
-        TARGET_DIR: ${{ format('{0}/{1}', github.workspace, inputs.target_dir) }}
+        TARGET_BRANCH: ${{ inputs.target_branch }}
+        DEFAULT_BRANCH: ${{ inputs.default_branch }}
+        #TARGET_DIR: ${{ format('{0}/{1}', github.workspace, inputs.target_dir) }}
+
+    - name: Check branch output
+      run: echo "${{ steps.determine-branch.outputs.BRANCH_TO_CHECKOUT }}"
+
+    - uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.target_repo }}
+        path: ${{ inputs.target_dir }}
 
     - run: pwd
       working-directory: ${{ inputs.target_dir }}
