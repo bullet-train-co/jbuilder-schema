@@ -2,7 +2,6 @@
 
 set -e
 
-#echo "The TARGET_DIR = $TARGET_DIR"
 echo "The TARGET_REPO = $TARGET_REPO"
 echo "The TARGET_BRANCH= $TARGET_BRANCH"
 echo "The DEFAULT_BRANCH= $DEFAULT_BRANCH"
@@ -29,9 +28,3 @@ fi
 echo "Using branch: ${REPO_BRANCH}"
 
 echo "BRANCH_TO_CHECKOUT=${REPO_BRANCH}" >> "$GITHUB_OUTPUT"
-
-#git clone -b $REPO_BRANCH --depth 1 https://github.com/$TARGET_REPO.git .
-
-#ls -al
-
-#cd $STARTING_DIR
