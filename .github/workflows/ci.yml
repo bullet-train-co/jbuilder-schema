@@ -95,17 +95,8 @@ jobs:
       BUNDLE_JOBS: 2
       BUNDLE_RETRY: 3
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.2"
-          bundler-cache: true
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-          cache: 'yarn'
+      - name: Checkout This Repo
+        uses: actions/checkout@v4
 
       - name: Checkout Starter Repo
         uses: ./.github/actions/checkout-repo-with-matching-branch
@@ -118,6 +109,18 @@ jobs:
         with:
           target_dir: tmp/core
           repository: bullet-train-co/bullet_train-core
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          working-directory: tmp/starter
+          bundler-cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: tmp/starter/.nvmrc
+          cache: 'yarn'
 
       - name: Link This Repo
         uses: ./.github/actions/link-local-gem
