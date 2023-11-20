@@ -6,6 +6,10 @@ CORE_PATH=$WORKSPACE/$CORE_DIR
 echo "APPLICATION_PATH = ${APPLICATION_PATH}"
 cd $APPLICATION_PATH
 
+# We do this to preve bundler from complaining that we're changing the lock file.
+# Because we NEED to change the lock file.
+bundle config unset deployment
+
 packages_string=$(find $CORE_PATH -name 'bullet_train*.gemspec' | grep -o 'bullet_train.*' | sed "s/\/.*//")
 readarray -t packages <<<"$packages_string" # Convert to an array.
 
@@ -18,6 +22,7 @@ do
 done
 
 updates="${packages[@]}"
+
 bundle lock --conservative --update $updates
 bundle install
 
