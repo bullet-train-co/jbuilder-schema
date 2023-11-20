@@ -45,3 +45,4 @@ runs:
       with:
         repository: ${{ inputs.target_repo }}
         path: ${{ inputs.target_dir }}
+        ref: ${{ steps.determine-branch.outputs.BRANCH_TO_CHECKOUT }}
