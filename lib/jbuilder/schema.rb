@@ -2,6 +2,7 @@
 
 require "jbuilder"
 require "jbuilder/schema/version"
+require "jbuilder/schema/template"
 require "active_support/core_ext/module/delegation"
 
 class Jbuilder::Schema
