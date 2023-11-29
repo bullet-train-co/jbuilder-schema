@@ -183,7 +183,7 @@ class Jbuilder::Schema
 
     def _nullify_non_required_types(attributes, required)
       attributes.transform_values! {
-        _1[:type] = [_1[:type], "null"] unless required.include?(attributes.key(_1))
+        _1[:type] = [_1[:type], "null"] if _1[:type].present? && !required.include?(attributes.key(_1))
         _1
       }
     end
@@ -200,7 +200,7 @@ class Jbuilder::Schema
       if array
         _attributes.merge! type: :array, items: ref
       else
-        _attributes.merge! allOf: [ref]
+        _attributes.merge! type: :object, allOf: [ref]
       end
     end
 
