@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name = "jbuilder-schema"
   spec.version = JBUILDER_SCHEMA_VERSION
   spec.authors = ["Yuri Sidorov"]
-  spec.email = ["hey@yurisidorov.com"]
+  spec.email = ["git@yurisidorov.com"]
 
   spec.summary = "Generate JSON Schema from Jbuilder files"
   spec.description = spec.summary
