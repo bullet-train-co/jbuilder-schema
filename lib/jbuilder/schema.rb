@@ -32,6 +32,7 @@ class Jbuilder::Schema
   @components_path, @title_name, @description_name = "components/schemas", "title", "description"
 
   autoload :Renderer, "jbuilder/schema/renderer"
+  autoload :Template, "jbuilder/schema/template"
 
   def self.renderer(paths = nil, locals: nil)
     if paths.nil? && locals.nil?
