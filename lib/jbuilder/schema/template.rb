@@ -24,9 +24,9 @@ class Jbuilder::Schema
       end
     end
 
-    class Configuration < ::Struct.new(:object, :title, :description, keyword_init: true)
-      def self.build(object: nil, object_title: nil, object_description: nil, **)
-        new(object: object, title: object_title, description: object_description)
+    class Configuration < ::Struct.new(:object, :title, :description, :required, keyword_init: true)
+      def self.build(object: nil, object_title: nil, object_description: nil, object_required: false, **)
+        new(object: object, title: object_title, description: object_description, required: object_required)
       end
 
       def title
@@ -84,6 +84,9 @@ class Jbuilder::Schema
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
+
+      ::Rails.logger.debug(">>>@configuration #{@configuration}")
+
       @within_block = _within_block?(&block)
 
       _with_schema_overrides(key => schema) do
