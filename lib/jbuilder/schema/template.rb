@@ -78,7 +78,7 @@ class Jbuilder::Schema
       if [@attributes, *@attributes.first].select { |a| a.is_a?(::Hash) && a[:type] == :array && a.key?(:items) }.any?
         @attributes
       else
-        _object(@attributes, _required!(@attributes.keys))
+        _object(@attributes, _required!(@attributes))
       end.merge(example: @json).compact
     end
 
@@ -119,7 +119,7 @@ class Jbuilder::Schema
           items = _scope { super(collection, *args, &block) }
           if items.is_a?(::Hash)
             items = items[:allOf].first if items.key?(:allOf)
-            items = _object(items, _required!(items.keys)) unless items.key?(:$ref) || items.key?(:object)
+            items = _object(items, _required!(items)) unless items.key?(:$ref) || items.key?(:object)
           end
           _attributes.merge! type: :array, items: items
         end
@@ -295,9 +295,18 @@ class Jbuilder::Schema
       value.respond_to?(:attributes) ? value.attributes : value
     end
 
-    def _required!(keys)
+    def _required!(attributes)
       presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
-      keys & [_key(:id), *presence_validated_attributes.flat_map { [_key(_1), _key("#{_1}_id")] }]
+
+      required_keys = attributes.each_with_object([]) do |(key, value), required|
+        if value.is_a?(::Hash) && value[:required] == true
+          required << key
+          attributes[key].delete(:required)
+        end
+      end
+
+      presence_validated_attributes += required_keys
+      attributes.keys & [_key(:id), *presence_validated_attributes.flat_map { [_key(_1), _key("#{_1}_id")] }]
     end
 
     ###
@@ -313,7 +322,7 @@ class Jbuilder::Schema
       raise NullError.build(key) if current_value.nil?
 
       value = _scope { yield self }
-      value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:allOf)
+      value = _object(value, _required!(value)) unless value[:type] == :array || value.key?(:allOf)
 
       _merge_values(current_value, value)
     end
