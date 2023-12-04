@@ -90,8 +90,8 @@ class Jbuilder::Schema
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
 
-        required = _schema_overrides_for(key)[:required]
-        ::Rails.logger.debug(">>>SET! key #{key} required #{required}")
+        ::Rails.logger.debug(">>>SETTT! #{key} --- #{value}")
+        _required << key if _schema_overrides_for(key)[:required]
 
         # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
         if block.nil? && keys.blank? && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
@@ -264,6 +264,8 @@ class Jbuilder::Schema
       end
 
       _set_description key, options unless within_array
+      ::Rails.logger.debug(">>>OOOPP #{options}")
+
       options
     end
 
@@ -311,7 +313,13 @@ class Jbuilder::Schema
       value.respond_to?(:attributes) ? value.attributes : value
     end
 
+    def _required
+      @required_keys ||= []
+    end
+
     def _required!(attributes)
+      ::Rails.logger.debug(">>>_required! #{attributes} --- #{_required}")
+
       presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
 
       required_keys = attributes.each_with_object([]) do |(key, value), required|
@@ -321,7 +329,7 @@ class Jbuilder::Schema
         end
       end
 
-      presence_validated_attributes += required_keys
+      presence_validated_attributes += required_keys + _required
       attributes.keys & [_key(:id), *presence_validated_attributes.flat_map { [_key(_1), _key("#{_1}_id")] }]
     end
 
