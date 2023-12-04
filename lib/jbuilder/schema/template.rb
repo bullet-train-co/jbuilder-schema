@@ -83,7 +83,6 @@ class Jbuilder::Schema
     end
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
-      ::Rails.logger.debug(">>>set! #{key}")
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
 
       # ::Rails.logger.debug(">>>@configuration #{@configuration}")
