@@ -84,10 +84,8 @@ class Jbuilder::Schema
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
-
+      _required << key if schema&.delete(:required) == true
       @within_block = _within_block?(&block)
-
-      _required << key if schema&.delete(:required)
 
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
