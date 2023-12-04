@@ -83,9 +83,10 @@ class Jbuilder::Schema
     end
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
+      ::Rails.logger.debug(">>>set! #{key}")
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
 
-      ::Rails.logger.debug(">>>@configuration #{@configuration}")
+      # ::Rails.logger.debug(">>>@configuration #{@configuration}")
 
       @within_block = _within_block?(&block)
 
@@ -312,6 +313,21 @@ class Jbuilder::Schema
       attributes.keys & [_key(:id), *presence_validated_attributes.flat_map { [_key(_1), _key("#{_1}_id")] }]
     end
 
+    def _within_block?(&block)
+      block.present? && _one_line?(block.source)
+    end
+
+    def _one_line?(text)
+      text = text.gsub("{", " do\n").gsub("}", "\nend").tr(";", "\n")
+      lines = text.lines[1..-2].reject do |line|
+        line.strip.empty? ||
+          line.strip.start_with?("#") ||
+          line.strip.start_with?("object:") ||
+          line.strip.start_with?("end do")
+      end
+      lines.size == 1
+    end
+
     ###
     # Jbuilder methods
     ###
@@ -328,16 +344,6 @@ class Jbuilder::Schema
       value = _object(value, _required!(value)) unless value[:type] == :array || value.key?(:allOf)
 
       _merge_values(current_value, value)
-    end
-
-    def _within_block?(&block)
-      block.present? && _one_line?(block.source)
-    end
-
-    def _one_line?(text)
-      text = text.gsub("{", " do\n").gsub("}", "\nend").tr(";", "\n")
-      lines = text.lines[1..-2].reject { |line| line.strip.empty? || line.strip.start_with?("#") }
-      lines.size == 1
     end
   end
 end
