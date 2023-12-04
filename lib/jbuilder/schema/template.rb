@@ -85,19 +85,23 @@ class Jbuilder::Schema
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
 
-      # ::Rails.logger.debug(">>>@configuration #{@configuration}")
-
       @within_block = _within_block?(&block)
 
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
 
+        required = _schema_overrides_for(key)[:required]
+        ::Rails.logger.debug(">>>SET! key #{key} required #{required}")
+
         # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
         if block.nil? && keys.blank? && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
-          _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true) })
+          ::Rails.logger.debug(">>>SET! 1")
+          _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true, required: required) })
         elsif _partial_options?(options)
-          _set_value(key, _scope { _set_ref(options[:as].to_s, array: _is_collection?(value)) })
+          ::Rails.logger.debug(">>>SET! 2")
+          _set_value(key, _scope { _set_ref(options[:as].to_s, array: _is_collection?(value), required: required) })
         else
+          ::Rails.logger.debug(">>>SET! 3")
           super(key, value, *keys, **options, &block)
         end
       end
@@ -136,6 +140,7 @@ class Jbuilder::Schema
     end
 
     def partial!(model = nil, *args, partial: nil, collection: nil, **options)
+      ::Rails.logger.debug(">>>partial! 1")
       if args.none? && _is_active_model?(model)
         # TODO: Find where it is being used
         _render_active_model_partial model
@@ -197,14 +202,21 @@ class Jbuilder::Schema
       end
     end
 
-    def _set_ref(part, array: false)
-      ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"}
+    def _set_ref(object, **options)
+      ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{object.split("/").last}"}
 
-      if array
+      if options[:array]
         _attributes.merge! type: :array, items: ref
       else
         _attributes.merge! type: :object, allOf: [ref]
       end
+
+      ::Rails.logger.debug(">>>_set_ref object #{object}, options #{options}, required #{options[:required]}. Attributes #{_attributes}")
+
+      _attributes[:required] = true if options[:required]
+      ::Rails.logger.debug(">>>Attributes2 #{_attributes}")
+
+      _attributes
     end
 
     def _attributes
@@ -216,7 +228,7 @@ class Jbuilder::Schema
 
     def _schema(key, value, **options)
       within_array = options.delete(:within_array)
-      options = @schema_overrides&.dig(key).to_h if options.empty?
+      options = _schema_overrides_for(key) if options.empty?
 
       unless options[:type]
         options[:type] = _primitive_type value
@@ -282,6 +294,7 @@ class Jbuilder::Schema
     end
 
     def _set_value(key, value)
+      ::Rails.logger.debug(">>>_set_value key #{key} value #{value}")
       value = _value(value)
       value = _schema(key, value) unless value.is_a?(::Hash) && (value.key?(:type) || value.key?(:allOf)) # rubocop:disable Style/UnlessLogicalOperators
       _set_description(key, value)
@@ -322,9 +335,16 @@ class Jbuilder::Schema
         line.strip.empty? ||
           line.strip.start_with?("#") ||
           line.strip.start_with?("object:") ||
+          line.strip.start_with?("title:") ||
+          line.strip.start_with?("description:") ||
+          line.strip.start_with?("required:") ||
           line.strip.start_with?("end do")
       end
       lines.size == 1
+    end
+
+    def _schema_overrides_for(key)
+      @schema_overrides&.dig(key).to_h
     end
 
     ###
