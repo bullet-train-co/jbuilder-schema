@@ -24,9 +24,9 @@ class Jbuilder::Schema
       end
     end
 
-    class Configuration < ::Struct.new(:object, :title, :description, :required, keyword_init: true)
-      def self.build(object: nil, object_title: nil, object_description: nil, object_required: false, **)
-        new(object: object, title: object_title, description: object_description, required: object_required)
+    class Configuration < ::Struct.new(:object, :title, :description, keyword_init: true)
+      def self.build(object: nil, object_title: nil, object_description: nil, **)
+        new(object: object, title: object_title, description: object_description)
       end
 
       def title
@@ -78,7 +78,7 @@ class Jbuilder::Schema
       if [@attributes, *@attributes.first].select { |a| a.is_a?(::Hash) && a[:type] == :array && a.key?(:items) }.any?
         @attributes
       else
-        _object(@attributes, _required!(@attributes))
+        _object(@attributes, _required!(@attributes.keys))
       end.merge(example: @json).compact
     end
 
@@ -87,21 +87,17 @@ class Jbuilder::Schema
 
       @within_block = _within_block?(&block)
 
+      _required << key if schema&.delete(:required)
+
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
 
-        ::Rails.logger.debug(">>>SETTT! #{key} --- #{value}")
-        _required << key if _schema_overrides_for(key)[:required]
-
         # Detect `json.articles user.articles` to override Jbuilder's logic, which wouldn't hit `array!` and set a `type: :array, items: {"$ref": "#/components/schemas/article"}` ref.
         if block.nil? && keys.blank? && _is_collection?(value) && (value.empty? || value.all? { _is_active_model?(_1) })
-          ::Rails.logger.debug(">>>SET! 1")
-          _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true, required: required) })
+          _set_value(key, _scope { _set_ref(key.to_s.singularize, array: true) })
         elsif _partial_options?(options)
-          ::Rails.logger.debug(">>>SET! 2")
-          _set_value(key, _scope { _set_ref(options[:as].to_s, array: _is_collection?(value), required: required) })
+          _set_value(key, _scope { _set_ref(options[:as].to_s, array: _is_collection?(value)) })
         else
-          ::Rails.logger.debug(">>>SET! 3")
           super(key, value, *keys, **options, &block)
         end
       end
@@ -126,7 +122,7 @@ class Jbuilder::Schema
           items = _scope { super(collection, *args, &block) }
           if items.is_a?(::Hash)
             items = items[:allOf].first if items.key?(:allOf)
-            items = _object(items, _required!(items)) unless items.key?(:$ref) || items.key?(:object)
+            items = _object(items, _required!(items.keys)) unless items.key?(:$ref) || items.key?(:object)
           end
           _attributes.merge! type: :array, items: items
         end
@@ -140,7 +136,6 @@ class Jbuilder::Schema
     end
 
     def partial!(model = nil, *args, partial: nil, collection: nil, **options)
-      ::Rails.logger.debug(">>>partial! 1")
       if args.none? && _is_active_model?(model)
         # TODO: Find where it is being used
         _render_active_model_partial model
@@ -210,13 +205,6 @@ class Jbuilder::Schema
       else
         _attributes.merge! type: :object, allOf: [ref]
       end
-
-      ::Rails.logger.debug(">>>_set_ref object #{object}, options #{options}, required #{options[:required]}. Attributes #{_attributes}")
-
-      _attributes[:required] = true if options[:required]
-      ::Rails.logger.debug(">>>Attributes2 #{_attributes}")
-
-      _attributes
     end
 
     def _attributes
@@ -224,11 +212,15 @@ class Jbuilder::Schema
       @attributes
     end
 
+    def _required
+      @required_keys ||= []
+    end
+
     FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
 
     def _schema(key, value, **options)
       within_array = options.delete(:within_array)
-      options = _schema_overrides_for(key) if options.empty?
+      options = @schema_overrides&.dig(key).to_h if options.empty?
 
       unless options[:type]
         options[:type] = _primitive_type value
@@ -264,8 +256,6 @@ class Jbuilder::Schema
       end
 
       _set_description key, options unless within_array
-      ::Rails.logger.debug(">>>OOOPP #{options}")
-
       options
     end
 
@@ -296,7 +286,6 @@ class Jbuilder::Schema
     end
 
     def _set_value(key, value)
-      ::Rails.logger.debug(">>>_set_value key #{key} value #{value}")
       value = _value(value)
       value = _schema(key, value) unless value.is_a?(::Hash) && (value.key?(:type) || value.key?(:allOf)) # rubocop:disable Style/UnlessLogicalOperators
       _set_description(key, value)
@@ -313,24 +302,9 @@ class Jbuilder::Schema
       value.respond_to?(:attributes) ? value.attributes : value
     end
 
-    def _required
-      @required_keys ||= []
-    end
-
-    def _required!(attributes)
-      ::Rails.logger.debug(">>>_required! #{attributes} --- #{_required}")
-
-      presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
-
-      required_keys = attributes.each_with_object([]) do |(key, value), required|
-        if value.is_a?(::Hash) && value[:required] == true
-          required << key
-          attributes[key].delete(:required)
-        end
-      end
-
-      presence_validated_attributes += required_keys + _required
-      attributes.keys & [_key(:id), *presence_validated_attributes.flat_map { [_key(_1), _key("#{_1}_id")] }]
+    def _required!(keys)
+      presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) } + _required
+      keys & [_key(:id), *presence_validated_attributes.flat_map { [_key(_1), _key("#{_1}_id")] }]
     end
 
     def _within_block?(&block)
@@ -339,20 +313,8 @@ class Jbuilder::Schema
 
     def _one_line?(text)
       text = text.gsub("{", " do\n").gsub("}", "\nend").tr(";", "\n")
-      lines = text.lines[1..-2].reject do |line|
-        line.strip.empty? ||
-          line.strip.start_with?("#") ||
-          line.strip.start_with?("object:") ||
-          line.strip.start_with?("title:") ||
-          line.strip.start_with?("description:") ||
-          line.strip.start_with?("required:") ||
-          line.strip.start_with?("end do")
-      end
+      lines = text.lines[1..-2].reject { |line| line.strip.empty? || !line.strip.start_with?("json.") }
       lines.size == 1
-    end
-
-    def _schema_overrides_for(key)
-      @schema_overrides&.dig(key).to_h
     end
 
     ###
@@ -368,7 +330,7 @@ class Jbuilder::Schema
       raise NullError.build(key) if current_value.nil?
 
       value = _scope { yield self }
-      value = _object(value, _required!(value)) unless value[:type] == :array || value.key?(:allOf)
+      value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:allOf)
 
       _merge_values(current_value, value)
     end
