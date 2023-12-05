@@ -37,7 +37,11 @@ class Jbuilder::Schema
         super || translate(Jbuilder::Schema.description_name)
       end
 
-      def translate_field(key)
+      def translate_title(key)
+        translate("fields.#{key}.#{Jbuilder::Schema.title_name}")
+      end
+
+      def translate_description(key)
         translate("fields.#{key}.#{Jbuilder::Schema.description_name}")
       end
 
@@ -86,6 +90,9 @@ class Jbuilder::Schema
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
       _required << key if schema&.delete(:required) == true
       @within_block = _within_block?(&block)
+
+
+      ::Rails.logger.debug(">>>SESESE #{schema}")
 
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
@@ -190,8 +197,9 @@ class Jbuilder::Schema
     end
 
     def _set_description(key, value)
-      if !value.key?(:description) && @configuration.object
-        value[:description] = @configuration.translate_field(key)
+      if @schema_overrides.try(:dig, key) || @configuration.object
+        value[:title] ||= @schema_overrides.try(:dig, key)&.to_h.try(:[], :title) || @configuration.translate_title(key)
+        value[:description] ||= @schema_overrides.try(:dig, key)&.to_h.try(:[], :description) || @configuration.translate_description(key)
       end
     end
 

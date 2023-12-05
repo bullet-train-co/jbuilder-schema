@@ -104,12 +104,12 @@ class Jbuilder::Schema::PartialsTest < ActionView::TestCase
 
   test "block with array with partial" do
     result = json_for(Article) do |json|
-      json.articles schema: {object: Article.first} do
+      json.articles schema: {object: Article.first, description: "Articles"} do
         json.array! Article.all, partial: "api/v1/articles/article", as: :article
       end
     end
 
-    assert_equal({"articles" => {type: :array, items: {"$ref": "#/components/schemas/article"}, description: "test"}}, result)
+    assert_equal({"articles" => {type: :array, items: {"$ref": "#/components/schemas/article"}, description: "Articles"}}, result)
   end
 
   test "one-line text is defined correctly" do
@@ -140,7 +140,7 @@ class Jbuilder::Schema::PartialsTest < ActionView::TestCase
       json.articles { ;   ;#comment;    #another comment; json.partial! 'api/v1/articles/article', article: user.article }
     JBUILDER
     many_lines = <<~JBUILDER
-      json.articles do
+      json.articles schema: {required: true} do
         json.partial! 'api/v1/articles/article', article: user.article
         json.comments_count user.article.comments.count
       end
