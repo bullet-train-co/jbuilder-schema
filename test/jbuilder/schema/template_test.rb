@@ -116,6 +116,21 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     assert_equal({"article" => {type: :object, title: "test", description: "test", required: %w[title author], properties: {"title" => {type: :string, description: "test"}, "author" => {type: :object, allOf: [{:$ref => "#/components/schemas/user"}], description: "test"}}}}, result)
   end
 
+  test "array with schema required attribute" do
+    user = Comment.first.user
+    articles = user.articles
+    result = json_for(Comment) do |json|
+      json.author schema: {object: user} do
+        json.name Comment.first.user.name
+        json.posts schema: {required: true} do |post|
+          json.array! Article.all, partial: "api/v1/articles/article", as: :article
+        end
+      end
+    end
+
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: %w[name posts], properties: {"name" => {type: :string, description: "test"}, "posts" => {type: :array, items: {:$ref => "#/components/schemas/article"}, description: "test"}}}}, result)
+  end
+
   test "simple block" do
     result = json_for(User) do |json|
       json.author { json.id 123 }
