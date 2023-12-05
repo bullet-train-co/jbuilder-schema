@@ -100,7 +100,7 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       end
     end
 
-    assert_equal({"user" => {type: :object, title: "test", description: "test", required: %w[id full_name], properties: {"id" => {type: :integer, description: "test"}, full_name: {type: :string, description: "test"}}}}, result)
+    assert_equal({"user" => {type: :object, title: "test", description: "test", required: %w[id full_name], properties: {"id" => {type: :integer, description: "test"}, "full_name" => {type: :string, description: "test"}}}}, result)
   end
 
   test "object with schema required attribute" do
@@ -117,13 +117,12 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
   end
 
   test "array with schema required attribute" do
-    user = Comment.first.user
-    articles = user.articles
+    user = Comment.last.user
     result = json_for(Comment) do |json|
       json.author schema: {object: user} do
         json.name Comment.first.user.name
         json.posts schema: {required: true} do |post|
-          json.array! Article.all, partial: "api/v1/articles/article", as: :article
+          json.array! user.articles, partial: "api/v1/articles/article", as: :article
         end
       end
     end

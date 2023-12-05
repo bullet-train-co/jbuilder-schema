@@ -91,9 +91,6 @@ class Jbuilder::Schema
       _required << key if schema&.delete(:required) == true
       @within_block = _within_block?(&block)
 
-
-      ::Rails.logger.debug(">>>SESESE #{schema}")
-
       _with_schema_overrides(key => schema) do
         keys = args.presence || _extract_possible_keys(value)
 
@@ -198,7 +195,7 @@ class Jbuilder::Schema
 
     def _set_description(key, value)
       if @schema_overrides.try(:dig, key) || @configuration.object
-        value[:title] ||= @schema_overrides.try(:dig, key)&.to_h.try(:[], :title) || @configuration.translate_title(key)
+        value[:title] ||= @schema_overrides.try(:dig, key)&.to_h.try(:[], :title) if @schema_overrides.try(:dig, key)&.to_h.try(:[], :title) # || @configuration.translate_title(key)
         value[:description] ||= @schema_overrides.try(:dig, key)&.to_h.try(:[], :description) || @configuration.translate_description(key)
       end
     end
