@@ -94,13 +94,26 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
 
   test "field with schema required attribute" do
     result = json_for(Article) do |json|
-      json.user do |user|
-        user.id User.first.id
-        user.full_name User.first.name, schema: {required: true}
+      json.user do
+        json.id User.first.id
+        json.full_name User.first.name, schema: {required: true}
       end
     end
 
-    assert_equal({"user" => {type: :object, title: "test", description: "test", required: %w[id full_name], properties: {"id" => {type: :integer, description: "test"}, "full_name" => {type: :string, description: "test"}}}}, result)
+    assert_equal({"user" => {type: :object, title: "test", description: "test", required: %w[id full_name], properties: {"id" => {type: :integer, description: "test"}, full_name: {type: :string, description: "test"}}}}, result)
+  end
+
+  test "object with schema required attribute" do
+    result = json_for(Comment) do |json|
+      json.article schema: {object: Article.first} do
+        json.title Article.first.title
+        json.author schema: {required: true} do
+          json.partial! "users/user", user: Article.first.user
+        end
+      end
+    end
+
+    assert_equal({"article" => {type: :object, title: "test", description: "test", required: %w[title author], properties: {"title" => {type: :string, description: "test"}, "author" => {type: :object, allOf: [{:$ref => "#/components/schemas/user"}], description: "test"}}}}, result)
   end
 
   test "simple block" do
