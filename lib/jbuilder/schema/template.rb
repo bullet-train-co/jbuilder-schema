@@ -194,10 +194,11 @@ class Jbuilder::Schema
     end
 
     def _set_description(key, value)
-      if @schema_overrides.try(:dig, key) || @configuration.object
-        value[:title] ||= @schema_overrides.try(:dig, key)&.to_h.try(:[], :title) if @schema_overrides.try(:dig, key)&.to_h.try(:[], :title) # || @configuration.translate_title(key)
-        value[:description] ||= @schema_overrides.try(:dig, key)&.to_h.try(:[], :description) || @configuration.translate_description(key)
-      end
+      overrides = @schema_overrides&.dig(key)&.to_h || {}
+      return unless overrides.any? || @configuration.object
+
+      value[:title] ||= overrides[:title] if overrides&.key?(:title)
+      value[:description] ||= overrides[:description] || @configuration.translate_description(key)
     end
 
     def _set_ref(object, **options)
