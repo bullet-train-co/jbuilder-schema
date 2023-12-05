@@ -193,7 +193,7 @@ class Jbuilder::Schema
       }
     end
 
-    def _set_description(key, value)
+    def _set_title_and_description(key, value)
       overrides = @schema_overrides&.dig(key)&.to_h || {}
       return unless overrides.any? || @configuration.object
 
@@ -259,7 +259,7 @@ class Jbuilder::Schema
         options[:enum] = defined_enum.keys
       end
 
-      _set_description key, options unless within_array
+      _set_title_and_description key, options unless within_array
       options
     end
 
@@ -292,7 +292,7 @@ class Jbuilder::Schema
     def _set_value(key, value)
       value = _value(value)
       value = _schema(key, value) unless value.is_a?(::Hash) && (value.key?(:type) || value.key?(:allOf)) # rubocop:disable Style/UnlessLogicalOperators
-      _set_description(key, value)
+      _set_title_and_description(key, value)
       super
     end
 
