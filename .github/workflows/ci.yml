@@ -1,10 +1,10 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
-
   pull_request:
 
 jobs:
@@ -118,6 +118,10 @@ jobs:
           node-version-file: tmp/starter/.nvmrc
           cache: 'yarn'
           cache-dependency-path: tmp/starter/yarn.lock
+
+      - name: Allow adding of this gem
+        run: bundle config unset deployment
+        working-directory: tmp/starter
 
       - name: Link This Repo
         uses: bullet-train-co/link-local-gem@v1
