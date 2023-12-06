@@ -81,6 +81,71 @@ properties:
     description: Timestamp when article was created
 ```
 
+### Handling Arrays and Objects
+
+The gem efficiently handles arrays and objects, including nested structures. Arrays with a single element type are straightforwardly represented, while arrays with mixed types use the `anyOf` keyword for versatility.
+
+Support of various object types like `Hash`, `Struct`, `OpenStruct`, and `ActiveRecord::Base` is also integrated. It simplifies object schemas by setting only type and properties.
+
+#### Example
+
+```ruby
+json.custom_array [1, article.user, 2, "Text", [3.14, 25.44], 5.33, [4, "Another text", {z: 7, x: "SDR"}], {a: 1, b: "Test"}, {c: 2, d: {z: 3, x: "b"}}]
+```
+
+#### Result
+
+```yaml
+properties:
+  custom_array:
+    type:
+      - array
+      - "null"
+    minContains: 0
+    contains:
+      anyOf:
+        - type: integer
+        - type: object
+          # ... ActiveRecord object properties ...
+        - type: string
+        - type: array
+          # All arrays are merged in one so all possible values of arrays are in one place
+          minContains: 0
+          contains:
+            anyOf:
+              - type: number
+              - type: integer
+              - type: string
+              - type: object
+                # ... object properties ...
+        - type: number
+        # ... additional types ...
+        - type: object
+          properties:
+            a:
+              type: integer
+              # ... description ...
+            b:
+              type: integer
+              # ... description ...
+        - type: object
+          properties:
+            c:
+              type: integer
+              # ... description ...
+            d:
+              type: object
+              properties:
+                z:
+                  type: integer
+                  # ... description ...
+                x:
+                  type: string
+                  # ... description ...
+```
+
+Each schema is unique, ensuring no duplication. Description fields are nested under parent field names for clarity.
+
 ### Customization
 
 Customize individual or multiple fields at once using the `schema:` attribute.
@@ -154,6 +219,7 @@ properties:
 ### Nested Partials and Arrays
 
 Nested partials and arrays will most commonly produce reference to the related schema component.
+Only if block with partial includes other fields, the inline object will be generated.
 
 #### Example
 
@@ -169,7 +235,7 @@ end
 #### Result
 
 ```yaml
-...
+# ... object description ...
 properties:
   author:
     type: object
@@ -182,6 +248,8 @@ properties:
       - "$ref": "#/components/schemas/Comment"
     description: Comment
 ```
+
+Reference name is taken from `:as` option or first of the `locals:`.
 
 The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
 
