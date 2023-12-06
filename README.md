@@ -23,6 +23,22 @@ Jbuilder::Schema.yaml(@article, title: 'Article', description: 'Article in the b
 
 This will render a Jbuilder template (e.g., `articles/_article.json.jbuilder`) and make `@article` available in the partial. You can also pass additional locals.
 
+### Contents
+
+- [Advanced Usage](#advanced-usage)
+    - [Rendering Specific Directories](#rendering-specific-directories)
+    - [Rendering Templates](#rendering-templates)
+- [Output](#output)
+- [Handling Arrays and Objects](#handling-arrays-and-objects)
+- [Nested Partials and Arrays](#nested-partials-and-arrays)
+- [Customization](#customization)
+    - [Titles & Descriptions](#titles--descriptions)
+- [Configuration](#configuration)
+- [Integration with RSwag](#integration-with-rswag)
+- [Contributing](#contributing)
+- [License](#license)
+- [Sponsor](#open-source-development-sponsored-by)
+
 ### Advanced Usage
 
 #### Rendering Specific Directories
@@ -90,7 +106,7 @@ Support of various object types like `Hash`, `Struct`, `OpenStruct`, and `Active
 #### Example
 
 ```ruby
-json.custom_array [1, article.user, 2, "Text", [3.14, 25.44], 5.33, [4, "Another text", {z: 7, x: "SDR"}], {a: 1, b: "Test"}, {c: 2, d: {z: 3, x: "b"}}]
+json.custom_array [1, article.user, 2, "Text", [3.14, 25.44], 5.33, [3, "Another text", {a: 4, b: "One more text"}], {c: 5, d: "And another"}, {e: 6, f: {g: 7, h: "Last Text"}}]
 ```
 
 #### Result
@@ -117,29 +133,34 @@ properties:
               - type: integer
               - type: string
               - type: object
-                # ... object properties ...
+                properties:
+                  a:
+                    type: integer
+                    # ... description ...
+                  b:
+                    type: integer
+                    # ... description ...
         - type: number
-        # ... additional types ...
-        - type: object
-          properties:
-            a:
-              type: integer
-              # ... description ...
-            b:
-              type: integer
-              # ... description ...
         - type: object
           properties:
             c:
               type: integer
               # ... description ...
             d:
+              type: integer
+              # ... description ...
+        - type: object
+          properties:
+            e:
+              type: integer
+              # ... description ...
+            f:
               type: object
               properties:
-                z:
+                h:
                   type: integer
                   # ... description ...
-                x:
+                g:
                   type: string
                   # ... description ...
 ```
@@ -253,7 +274,7 @@ properties:
         description: User Email
 ```
 
-### Titles & Descriptions
+#### Titles & Descriptions
 
 Set custom titles and descriptions directly or through locale files. For models, use `<underscored_plural_model_name>.<title_name>` and for fields, use `<underscored_plural_model_name>.fields.<field_name>.<description_name>` in locale files:
 
