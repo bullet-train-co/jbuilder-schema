@@ -146,6 +146,43 @@ properties:
 
 Each schema is unique, ensuring no duplication. Description fields are nested under parent field names for clarity.
 
+### Nested Partials and Arrays
+
+Nested partials and arrays will most commonly produce reference to the related schema component.
+Only if block with partial includes other fields, the inline object will be generated.
+
+#### Example
+
+```ruby
+json.author do
+  json.partial! "api/v1/users/user", user: article.user
+end
+json.comments do
+  json.array! article.comments, partial: "api/v1/articles/comments/comment", as: :article_comment
+end
+```
+
+#### Result
+
+```yaml
+# ... object description ...
+properties:
+  author:
+    type: object
+    allOf:
+      - "$ref": "#/components/schemas/User"
+    description: User
+  comments:
+    type: array
+    items:
+      - "$ref": "#/components/schemas/Comment"
+    description: Comment
+```
+
+Reference name is taken from `:as` option or first of the `locals:`.
+
+The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
+
 ### Customization
 
 Customize individual or multiple fields at once using the `schema:` attribute.
@@ -215,43 +252,6 @@ properties:
         pattern: "^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$"
         description: User Email
 ```
-
-### Nested Partials and Arrays
-
-Nested partials and arrays will most commonly produce reference to the related schema component.
-Only if block with partial includes other fields, the inline object will be generated.
-
-#### Example
-
-```ruby
-json.author do
-  json.partial! "api/v1/users/user", user: article.user
-end
-json.comments do
-  json.array! article.comments, partial: "api/v1/articles/comments/comment", as: :article_comment
-end
-```
-
-#### Result
-
-```yaml
-# ... object description ...
-properties:
-  author:
-    type: object
-    allOf:
-      - "$ref": "#/components/schemas/User"
-    description: User
-  comments:
-    type: array
-    items:
-      - "$ref": "#/components/schemas/Comment"
-    description: Comment
-```
-
-Reference name is taken from `:as` option or first of the `locals:`.
-
-The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
 
 ### Titles & Descriptions
 
