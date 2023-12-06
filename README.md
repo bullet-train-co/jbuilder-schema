@@ -23,7 +23,7 @@ Jbuilder::Schema.yaml(@article, title: 'Article', description: 'Article in the b
 
 This will render a Jbuilder template (e.g., `articles/_article.json.jbuilder`) and make `@article` available in the partial. You can also pass additional locals.
 
-### Contents
+## Contents
 
 - [Advanced Usage](#advanced-usage)
     - [Rendering Specific Directories](#rendering-specific-directories)
@@ -101,7 +101,7 @@ properties:
 
 The gem efficiently handles arrays and objects, including nested structures. Arrays with a single element type are straightforwardly represented, while arrays with mixed types use the `anyOf` keyword for versatility.
 
-Support of various object types like `Hash`, `Struct`, `OpenStruct`, and `ActiveRecord::Base` is also integrated. It simplifies object schemas by setting only type and properties.
+Support of various object types like `Hash`, `Struct`, `OpenStruct`, and `ActiveRecord::Base` is also integrated. It simplifies object schemas by setting only `type` and `properties`.
 
 #### Example
 
@@ -163,6 +163,7 @@ properties:
                 g:
                   type: string
                   # ... description ...
+    description: Very weird custom array
 ```
 
 Each schema is unique, ensuring no duplication. Description fields are nested under parent field names for clarity.
@@ -181,6 +182,12 @@ end
 json.comments do
   json.array! article.comments, partial: "api/v1/articles/comments/comment", as: :article_comment
 end
+json.ratings do
+    json.array! article.ratings, schema: {object: article.ratings.first, title: "Rating", description: "Article Rating"} do |rating|
+      json.partial! "api/v1/shared/id", resource: rating
+      json.extract! rating, :value
+    end
+end
 ```
 
 #### Result
@@ -197,10 +204,32 @@ properties:
     type: array
     items:
       - "$ref": "#/components/schemas/Comment"
-    description: Comment
+    description: Comments
+  ratings:
+    type: array
+    items:
+      type: object
+      title: Rating
+      description: Article Rating
+      required:
+        - id
+        - value
+      properties:
+        id:
+          type: integer
+          description: Rating ID
+        public_id:
+          type:
+            - string
+            - "null"
+          description: Rating Public ID
+        value:
+          type: integer
+          description: Rating Value
+    description: Article Ratings
 ```
 
-Reference name is taken from `:as` option or first of the `locals:`.
+Reference names are taken from `:as` option or first of the `locals:`.
 
 The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
 
