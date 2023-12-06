@@ -37,7 +37,11 @@ class Jbuilder::Schema
         super || translate(Jbuilder::Schema.description_name)
       end
 
-      def translate_field(key)
+      def translate_title(key)
+        translate("fields.#{key}.#{Jbuilder::Schema.title_name}")
+      end
+
+      def translate_description(key)
         translate("fields.#{key}.#{Jbuilder::Schema.description_name}")
       end
 
@@ -84,6 +88,7 @@ class Jbuilder::Schema
 
     def set!(key, value = BLANK, *args, schema: nil, **options, &block)
       old_configuration, @configuration = @configuration, Configuration.build(**schema) if schema&.dig(:object)
+      _required << key if schema&.delete(:required) == true
       @within_block = _within_block?(&block)
 
       _with_schema_overrides(key => schema) do
@@ -188,16 +193,18 @@ class Jbuilder::Schema
       }
     end
 
-    def _set_description(key, value)
-      if !value.key?(:description) && @configuration.object
-        value[:description] = @configuration.translate_field(key)
-      end
+    def _set_title_and_description(key, value)
+      overrides = @schema_overrides&.dig(key)&.to_h || {}
+      return unless overrides.any? || @configuration.object
+
+      value[:title] ||= overrides[:title] if overrides&.key?(:title)
+      value[:description] ||= overrides[:description] || @configuration.translate_description(key)
     end
 
-    def _set_ref(part, array: false)
-      ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{part.split("/").last}"}
+    def _set_ref(object, **options)
+      ref = {"$ref": "#/#{::Jbuilder::Schema.components_path}/#{object.split("/").last}"}
 
-      if array
+      if options[:array]
         _attributes.merge! type: :array, items: ref
       else
         _attributes.merge! type: :object, allOf: [ref]
@@ -207,6 +214,10 @@ class Jbuilder::Schema
     def _attributes
       @attributes = {} if _blank?
       @attributes
+    end
+
+    def _required
+      @required_keys ||= []
     end
 
     FORMATS = {::DateTime => "date-time", ::ActiveSupport::TimeWithZone => "date-time", ::Date => "date", ::Time => "time"}
@@ -248,7 +259,7 @@ class Jbuilder::Schema
         options[:enum] = defined_enum.keys
       end
 
-      _set_description key, options unless within_array
+      _set_title_and_description key, options unless within_array
       options
     end
 
@@ -281,7 +292,7 @@ class Jbuilder::Schema
     def _set_value(key, value)
       value = _value(value)
       value = _schema(key, value) unless value.is_a?(::Hash) && (value.key?(:type) || value.key?(:allOf)) # rubocop:disable Style/UnlessLogicalOperators
-      _set_description(key, value)
+      _set_title_and_description(key, value)
       super
     end
 
@@ -296,8 +307,18 @@ class Jbuilder::Schema
     end
 
     def _required!(keys)
-      presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) }
+      presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) } + _required
       keys & [_key(:id), *presence_validated_attributes.flat_map { [_key(_1), _key("#{_1}_id")] }]
+    end
+
+    def _within_block?(&block)
+      block.present? && _one_line?(block.source)
+    end
+
+    def _one_line?(text)
+      text = text.gsub("{", " do\n").gsub("}", "\nend").tr(";", "\n")
+      lines = text.lines[1..-2].reject { |line| line.strip.empty? || !line.strip.start_with?("json.") }
+      lines.size == 1
     end
 
     ###
@@ -316,16 +337,6 @@ class Jbuilder::Schema
       value = _object(value, _required!(value.keys)) unless value[:type] == :array || value.key?(:allOf)
 
       _merge_values(current_value, value)
-    end
-
-    def _within_block?(&block)
-      block.present? && _one_line?(block.source)
-    end
-
-    def _one_line?(text)
-      text = text.gsub("{", " do\n").gsub("}", "\nend").tr(";", "\n")
-      lines = text.lines[1..-2].reject { |line| line.strip.empty? || line.strip.start_with?("#") }
-      lines.size == 1
     end
   end
 end

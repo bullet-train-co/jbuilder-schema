@@ -1,62 +1,58 @@
 # Jbuilder::Schema
 
-Generate JSON Schema compatible with OpenAPI 3 specs from Jbuilder files
+Easily Generate JSON Schemas from Jbuilder Templates for OpenAPI 3.1
 
-## Installation
+## Quick Start
 
-In your Gemfile, put `gem "jbuilder-schema"` after Jbuilder:
+### Installation
+
+Add this to your Gemfile:
 
     gem "jbuilder"
     gem "jbuilder-schema"
 
-And run:
+Then, run `bundle` or install it manually using `gem install jbuilder-schema`.
 
-    $ bundle
+### Generating Schemas
 
-Or install it yourself as:
-
-    $ gem install jbuilder-schema
-
-## Usage
-
-Wherever you want to generate schemas, call `Jbuilder::Schema.yaml` or `Jbuilder::Schema.json`:
+Use `Jbuilder::Schema.yaml` or `Jbuilder::Schema.json` to create schemas. For example:
 
 ```ruby
 Jbuilder::Schema.yaml(@article, title: 'Article', description: 'Article in the blog', locals: { current_user: @user })
 ```
 
-Under the hood `Jbuilder::Schema.yaml`/`json` will use Action View's `render` method and support the same arguments.
+This will render a Jbuilder template (e.g., `articles/_article.json.jbuilder`) and make `@article` available in the partial. You can also pass additional locals.
 
-So in the above example, the `@article`'s `to_partial_path` path is used to find and render a `articles/_article.json.jbuilder` template, and `article` is available in the partial.
+## Contents
 
-Additionally, we can pass any needed `locals:`.
+- [Advanced Usage](#advanced-usage)
+    - [Rendering Specific Directories](#rendering-specific-directories)
+    - [Rendering Templates](#rendering-templates)
+- [Output](#output)
+- [Handling Arrays and Objects](#handling-arrays-and-objects)
+- [Nested Partials and Arrays](#nested-partials-and-arrays)
+- [Customization](#customization)
+    - [Titles & Descriptions](#titles--descriptions)
+- [Configuration](#configuration)
+- [Integration with RSwag](#integration-with-rswag)
+- [Contributing](#contributing)
+- [License](#license)
+- [Sponsor](#open-source-development-sponsored-by)
 
-The `title` and `description` set the title and description of the schema — though they can also come from locale files (see *[Titles & Descriptions](#titles--descriptions)*);
+### Advanced Usage
 
-### Use with a directory within app/views
+#### Rendering Specific Directories
 
-If you have a directory within app/views where your Jbuilder templates are, you can use `renderer` to capture that along with any `locals:` common to the templates you'll render:
+If your Jbuilder templates are in a specific directory, use `Jbuilder::Schema.renderer`:
 
 ```ruby
 jbuilder = Jbuilder::Schema.renderer('app/views/api/v1', locals: { current_user: @user })
 jbuilder.yaml @article, title: 'Article', description: 'Article in the blog'
 ```
 
-This means you don't have to write out the partial path, which gets tedious with multiple schema renders:
+#### Rendering Templates
 
-```ruby
-Jbuilder::Schema.yaml(partial: 'api/v1/articles/article', locals: { article: @article, current_user: @user }, title: 'Article', description: 'Article in the blog')
-```
-
-### Rendering a template
-
-If you're rendering a template like `app/views/articles/index.jbuilder`:
-
-```ruby
-json.articles @articles, :id, :title
-```
-
-You'll need to pass the relative template path in `template:` and any needed instance variables in `assigns:` like so:
+For templates like `app/views/articles/index.jbuilder`, specify the template path and variables:
 
 ```ruby
 Jbuilder::Schema.yaml(template: "articles/index", assigns: { articles: Article.first(3) })
@@ -64,15 +60,16 @@ Jbuilder::Schema.yaml(template: "articles/index", assigns: { articles: Article.f
 
 ### Output
 
-Jbuilder::Schema automatically sets `description`, `type`, and `required` options in JSON-Schema.
+Jbuilder::Schema automatically sets `description`, `type`, and `required` fields in the JSON Schema. You can *[customize](#customization)* these using the `schema:` hash.
 
-For example, if we have a `_article.json.jbuilder` file:
+#### Example
 
 ```ruby
+# _article.json.jbuilder
 json.extract! article, :id, :title, :body, :created_at
 ```
 
-This will produce the following:
+#### Result
 
 ```yaml
 type: object
@@ -84,136 +81,245 @@ required:
   - body
 properties:
   id:
-    description: ID of an article
     type: integer
+    description: Article ID
   title:
-    description: Title of an article
     type: string
+    description: Article Title
   body:
-    description: Contents of an article
     type: string
+    description: Article Contents
   created_at:
-    description: Timestamp when article was created
-    type: string
+    type:
+      - string
+      - "null"
     format: date-time
+    description: Timestamp when article was created
 ```
+
+### Handling Arrays and Objects
+
+The gem efficiently handles arrays and objects, including nested structures. Arrays with a single element type are straightforwardly represented, while arrays with mixed types use the `anyOf` keyword for versatility.
+
+Support of various object types like `Hash`, `Struct`, `OpenStruct`, and `ActiveRecord::Base` is also integrated. It simplifies object schemas by setting only `type` and `properties`.
+
+#### Example
+
+```ruby
+json.custom_array [1, article.user, 2, "Text", [3.14, 25.44], 5.33, [3, "Another text", {a: 4, b: "One more text"}], {c: 5, d: "And another"}, {e: 6, f: {g: 7, h: "Last Text"}}]
+```
+
+#### Result
+
+```yaml
+properties:
+  custom_array:
+    type:
+      - array
+      - "null"
+    minContains: 0
+    contains:
+      anyOf:
+        - type: integer
+        - type: object
+          # ... ActiveRecord object properties ...
+        - type: string
+        - type: array
+          # All arrays are merged in one so all possible values of arrays are in one place
+          minContains: 0
+          contains:
+            anyOf:
+              - type: number
+              - type: integer
+              - type: string
+              - type: object
+                properties:
+                  a:
+                    type: integer
+                    # ... description ...
+                  b:
+                    type: integer
+                    # ... description ...
+        - type: number
+        - type: object
+          properties:
+            c:
+              type: integer
+              # ... description ...
+            d:
+              type: integer
+              # ... description ...
+        - type: object
+          properties:
+            e:
+              type: integer
+              # ... description ...
+            f:
+              type: object
+              properties:
+                h:
+                  type: integer
+                  # ... description ...
+                g:
+                  type: string
+                  # ... description ...
+    description: Very weird custom array
+```
+
+Each schema is unique, ensuring no duplication. Description fields are nested under parent field names for clarity.
+
+### Nested Partials and Arrays
+
+Nested partials and arrays will most commonly produce reference to the related schema component.
+Only if block with partial includes other fields, the inline object will be generated.
+
+#### Example
+
+```ruby
+json.author do
+  json.partial! "api/v1/users/user", user: article.user
+end
+json.comments do
+  json.array! article.comments, partial: "api/v1/articles/comments/comment", as: :article_comment
+end
+json.ratings do
+    json.array! article.ratings, schema: {object: article.ratings.first, title: "Rating", description: "Article Rating"} do |rating|
+      json.partial! "api/v1/shared/id", resource: rating
+      json.extract! rating, :value
+    end
+end
+```
+
+#### Result
+
+```yaml
+# ... object description ...
+properties:
+  author:
+    type: object
+    allOf:
+      - "$ref": "#/components/schemas/User"
+    description: User
+  comments:
+    type: array
+    items:
+      - "$ref": "#/components/schemas/Comment"
+    description: Comments
+  ratings:
+    type: array
+    items:
+      type: object
+      title: Rating
+      description: Article Rating
+      required:
+        - id
+        - value
+      properties:
+        id:
+          type: integer
+          description: Rating ID
+        public_id:
+          type:
+            - string
+            - "null"
+          description: Rating Public ID
+        value:
+          type: integer
+          description: Rating Value
+    description: Article Ratings
+```
+
+Reference names are taken from `:as` option or first of the `locals:`.
+
+The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
 
 ### Customization
 
-#### Simple
+Customize individual or multiple fields at once using the `schema:` attribute.
+For nested objects and collections, use the `schema: {object: <nested_object>}` format.
 
-To set your own data in the generated JSON-Schema pass a `schema:` hash:
+#### Example
 
 ```ruby
 json.id article.id, schema: { type: :number, description: "Custom ID description" }
 json.title article.title, schema: { minLength: 5, maxLength: 20 }
-json.body article.body, schema: { type: :text, maxLength: 500 }
+json.contents article.body, schema: { type: :text, maxLength: 500, required: true }
 json.created_at article.created_at.strftime('%d/%m/%Y'), schema: { format: :date, pattern: /^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$/ }
+
+json.author schema: {object: article.user, title: "Article Author", description: "The person who wrote the article", required: true} do
+  json.extract! article.user, :id, :name, :email, schema: {id: {type: :string}, email: {type: :email, pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/}}
+end
 ```
 
-This will produce the following:
+#### Result
 
 ```yaml
-...
-  properties:
-    id:
-      description: Custom ID description
-      type: number
-    title:
-      description: Title of an article
-      type: string
-      minLength: 5
-      maxLength: 20
-    body:
-      description: Contents of an article
-      type: string
-      maxLength: 500
-    created_at:
-      description: Timestamp when article was created
-      type: string
-      format: date
-      pattern: "^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$"
+type: object
+title: Article
+description: Article in the blog
+required:
+  - id
+  - title
+  - contents
+  - author
+properties:
+  id:
+    type: number
+    description: Custom ID description
+  title:
+    type: string
+    minLength: 5
+    maxLength: 20
+    description: Title of an article
+  contents:
+    type: string
+    maxLength: 500
+    description: Contents of an article
+  created_at:
+    type:
+      - string
+      - "null"
+    format: date
+    pattern: "^(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9])\/[0-9]{4}$"
+    description: Timestamp when article was created
+  author:
+    type: object
+    title: Article Author
+    description: The person who wrote the article
+    required:
+      - id
+      - name
+      - email
+    properties:
+      id:
+        type: string
+        description: User ID
+      name:
+        type: string
+        description: User Name
+      email:
+        type: email
+        pattern: "^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$"
+        description: User Email
 ```
 
-#### Bulk
+#### Titles & Descriptions
 
-You can customize output for multiple fields at once:
-
-```ruby
-json.extract! user, :id, :name, :email, schema: {id: {type: :string}, email: {type: :email, pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/}}
-```
-
-### Nested objects
-
-When you have nested objects in your Jbuilder template, you have to pass it to `schema: {object: <nested_object>}` when the block starts:
-
-```ruby
-json.extract! article
-json.author schema: {object: article.user, object_title: "Author", object_description: "Authors are users who write articles"} do
-  json.extract! article.user
-end
-```
-
-This will help Jbuilder::Schema to process those fields right.
-
-### Collections
-
-If an object or an array of objects is generated in template, either in root or in some field through Jbuilder partials, JSON-Schema `$ref` is generated pointing to object with the same name as partial. By default those schemas should appear in `"#/components/schemas/"`.
-
-For example, if we have:
-
-```ruby
-json.user do
-  json.partial! 'api/v1/users/user', user: user
-end
-
-json.articles do
-  json.array! user.articles, partial: "api/v1/articles/article", as: :article
-end
-```
-
-The result would be:
-
-```yaml
-user:
-  type: object
-  $ref: #/components/schemas/user
-articles:
-  type: array
-  items:
-    $ref: #/components/schemas/article
-```
-
-The path to component schemas can be configured with `components_path` variable, which defaults to `components/schemas`. See *[Configuration](#configuration)* for more info.
-
-### Titles & Descriptions
-
-Custom titles and descriptions for objects can be specified when calling `jbuilder-schema` helper (see *[Usage](#usage)*), for fields and nested objects within `schema` attributes (see *[Customization](#simple)* and *[Nested objects](#nested-objects)*). If not set, they will be searched in locale files.
-
-Titles and descriptions for the models are supposed to be found in locale files under `<underscored_plural_model_name>.<title_name>` and `<underscored_plural_model_name>.<description_name>`, for example:
+Set custom titles and descriptions directly or through locale files. For models, use `<underscored_plural_model_name>.<title_name>` and for fields, use `<underscored_plural_model_name>.fields.<field_name>.<description_name>` in locale files:
 
 ```yaml
 en:
   articles:
     title: Article
     description: The main object on the blog
-```
-
-Descriptions for the fields are supposed to be found in locale files under `<underscored_plural_model_name>.fields.<field_name>.<description_name>`, for example:
-
-```yaml
-en:
-  articles:
     fields:
       title:
         description: The title of an article
 ```
 
-`<title_name>` and `<description_name>` can be configured (see *[Configuration](#configuration)*), it defaults to `title` and `description`.
-
 ### Configuration
 
-You can configure some variables that Jbuilder::Schema uses (for example, in `config/initializers/jbuilder_schema.rb`):
+Configure Jbuilder::Schema in `config/initializers/jbuilder_schema.rb`:
 
 ```ruby
 Jbuilder::Schema.configure do |config|
@@ -223,9 +329,9 @@ Jbuilder::Schema.configure do |config|
 end
 ```
 
-### RSwag
+### Integration with RSwag
 
-You can use the `yaml`/`json` methods in your `swagger_helper.rb` like this:
+Use `yaml`/`json` methods in your `swagger_helper.rb` for Swagger documentation:
 
 ```ruby
 RSpec.configure do |config|
@@ -246,11 +352,11 @@ end
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/bullet-train-co/jbuilder-schema.
+Contributions are welcome! Report bugs and submit pull requests on [GitHub](https://github.com/bullet-train-co/jbuilder-schema).
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+This gem is open source under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Open-source development sponsored by:
 

@@ -77,8 +77,6 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
   end
 
   test "object without schema attributes" do
-    # TODO: This also should probably include :name as required
-    # https://github.com/bullet-train-co/jbuilder-schema/issues/65
     result = json_for(Article) do |json|
       json.user User.first, :id, :name, :created_at
     end
@@ -92,6 +90,44 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
     end
 
     assert_equal({"user" => {type: :object, title: "User", description: "User writes articles", required: %w[id name], properties: {"id" => {type: :integer, description: "test"}, "name" => {type: :string, description: "test"}, "created_at" => {type: [:string, "null"], format: "date-time", description: "test"}}}}, result)
+  end
+
+  test "field with schema required attribute" do
+    result = json_for(Article) do |json|
+      json.user do
+        json.id User.first.id
+        json.full_name User.first.name, schema: {required: true}
+      end
+    end
+
+    assert_equal({"user" => {type: :object, title: "test", description: "test", required: %w[id full_name], properties: {"id" => {type: :integer, description: "test"}, "full_name" => {type: :string, description: "test"}}}}, result)
+  end
+
+  test "object with schema required attribute" do
+    result = json_for(Comment) do |json|
+      json.article schema: {object: Article.first} do
+        json.title Article.first.title
+        json.author schema: {required: true} do
+          json.partial! "users/user", user: Article.first.user
+        end
+      end
+    end
+
+    assert_equal({"article" => {type: :object, title: "test", description: "test", required: %w[title author], properties: {"title" => {type: :string, description: "test"}, "author" => {type: :object, allOf: [{:$ref => "#/components/schemas/user"}], description: "test"}}}}, result)
+  end
+
+  test "array with schema required attribute" do
+    user = Comment.last.user
+    result = json_for(Comment) do |json|
+      json.author schema: {object: user} do
+        json.name Comment.first.user.name
+        json.posts schema: {required: true} do |post|
+          json.array! user.articles, partial: "api/v1/articles/article", as: :article
+        end
+      end
+    end
+
+    assert_equal({"author" => {type: :object, title: "test", description: "test", required: %w[name posts], properties: {"name" => {type: :string, description: "test"}, "posts" => {type: :array, items: {:$ref => "#/components/schemas/article"}, description: "test"}}}}, result)
   end
 
   test "simple block" do
