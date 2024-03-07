@@ -30,25 +30,37 @@ class Jbuilder::Schema
       end
 
       def title
-        super || translate(Jbuilder::Schema.title_name)
+        super || translate(title_keys)
       end
 
       def description
-        super || translate(Jbuilder::Schema.description_name)
+        super || translate(description_keys)
       end
 
       def translate_title(key)
-        translate("fields.#{key}.#{Jbuilder::Schema.title_name}")
+        translate(title_keys.map { |k| "fields.#{key}.#{k}" })
       end
 
       def translate_description(key)
-        translate("fields.#{key}.#{Jbuilder::Schema.description_name}")
+        translate(description_keys.map { |k| "fields.#{key}.#{k}" })
       end
 
       private
 
-      def translate(key)
-        I18n.t(key, scope: @scope ||= object&.class&.name&.underscore&.pluralize)
+      def translate(keys)
+        keys.each do |key|
+          translation = I18n.t(key, scope: @scope ||= object&.class&.name&.underscore&.pluralize, default: nil)
+          return translation if translation.present?
+        end
+        nil
+      end
+
+      def title_keys
+        Array(Jbuilder::Schema.title_name)
+      end
+
+      def description_keys
+        Array(Jbuilder::Schema.description_name)
       end
     end
 
@@ -197,8 +209,10 @@ class Jbuilder::Schema
       overrides = @schema_overrides&.dig(key)&.to_h || {}
       return unless overrides.any? || @configuration.object
 
-      value[:title] ||= overrides[:title] if overrides&.key?(:title)
-      value[:description] ||= overrides[:description] || @configuration.translate_description(key)
+      title = overrides[:title] || @configuration.translate_title(key)
+      description = overrides[:description] || @configuration.translate_description(key)
+      value[:title] ||= title if title
+      value[:description] ||= description if description
     end
 
     def _set_ref(object, **options)

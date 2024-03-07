@@ -321,13 +321,17 @@ en:
 
 Configure Jbuilder::Schema in `config/initializers/jbuilder_schema.rb`:
 
+The `title_name` and `description_name` parameters can accept either a single string or an array of strings. This feature provides the flexibility to specify fallback keys.
+
 ```ruby
 Jbuilder::Schema.configure do |config|
-  config.components_path = "components/schemas"   # could be "definitions/schemas"
-  config.title_name = "title"                     # could be "label"
-  config.description_name = "description"         # could be "heading"
+  config.components_path = "components/schemas"                   # could be "definitions/schemas"
+  config.title_name = "title"                                     # could be "label"
+  config.description_name = ["api_description", "description"]    # could be "heading"
 end
 ```
+
+With this configuration, the system will first try to find a translation for <underscored_plural_model_name>.fields.<field_name>.api_description. If it doesn't find a translation for this key, it will then attempt to find a translation for <underscored_plural_model_name>.fields.<field_name>.description.
 
 ### Integration with RSwag
 
