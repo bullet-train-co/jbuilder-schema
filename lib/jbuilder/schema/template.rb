@@ -52,7 +52,7 @@ class Jbuilder::Schema
           translation = I18n.t(key, scope: @scope ||= object&.class&.name&.underscore&.pluralize, default: nil)
           return translation if translation.present?
         end
-        nil
+        I18n.t(keys.first, scope: @scope ||= object&.class&.name&.underscore&.pluralize)
       end
 
       def title_keys
@@ -209,10 +209,8 @@ class Jbuilder::Schema
       overrides = @schema_overrides&.dig(key)&.to_h || {}
       return unless overrides.any? || @configuration.object
 
-      title = overrides[:title] || @configuration.translate_title(key)
-      description = overrides[:description] || @configuration.translate_description(key)
-      value[:title] ||= title if title
-      value[:description] ||= description if description
+      value[:title] ||= overrides[:title] if overrides&.key?(:title)
+      value[:description] ||= overrides[:description] || @configuration.translate_description(key)
     end
 
     def _set_ref(object, **options)
