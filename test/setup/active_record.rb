@@ -59,7 +59,7 @@ class Article < ActiveRecord::Base
   has_many :ratings
   has_many :comments
 
-  enum status: %w[pending published archived].index_by(&:itself)
+  enum :status, %w[pending published archived].index_with(&:itself)
 
   validates_presence_of :user, :status, :title, :body
 end
