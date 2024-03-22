@@ -52,7 +52,9 @@ class Jbuilder::Schema
           translation = I18n.t(key, scope: @scope ||= object&.class&.name&.underscore&.pluralize, default: nil)
           return translation if translation.present?
         end
-        I18n.t(keys.first, scope: @scope ||= object&.class&.name&.underscore&.pluralize)
+        # FIXME: This produces `addresses/countries` for namespaced models.
+        # Should be probably `addresses.countries`
+        I18n.t(keys.first, scope: @scope ||= object&.class&.model_name&.collection)
       end
 
       def title_keys
@@ -209,7 +211,7 @@ class Jbuilder::Schema
       overrides = @schema_overrides&.dig(key)&.to_h || {}
       return unless overrides.any? || @configuration.object
 
-      value[:title] ||= overrides[:title] if overrides&.key?(:title)
+      value[:title] ||= overrides[:title] if overrides.key?(:title)
       value[:description] ||= overrides[:description] || @configuration.translate_description(key)
     end
 

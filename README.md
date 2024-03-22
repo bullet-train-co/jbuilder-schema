@@ -1,6 +1,6 @@
 # Jbuilder::Schema
 
-Easily Generate JSON Schemas from Jbuilder Templates for OpenAPI 3.1
+Easily Generate OpenAPI 3.1 Schemas from Jbuilder Templates
 
 ## Quick Start
 
@@ -325,9 +325,9 @@ The `title_name` and `description_name` parameters can accept either a single st
 
 ```ruby
 Jbuilder::Schema.configure do |config|
-  config.components_path = "components/schemas"                   # could be "definitions/schemas"
-  config.title_name = "title"                                     # could be "label"
-  config.description_name = ["api_description", "description"]    # could be "heading"
+  config.components_path = "components/schemas" # could be "definitions/schemas"
+  config.title_name = "title" # could be "label", or an array to support fallbacks, like
+  config.description_name = %w[api_description description] # could be just string as well like "heading"
 end
 ```
 
