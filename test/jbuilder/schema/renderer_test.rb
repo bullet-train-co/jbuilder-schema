@@ -91,4 +91,31 @@ class Jbuilder::Schema::RendererTest < ActiveSupport::TestCase
     schema = @renderer.json @article, title: "Article", description: "Article in the blog"
     assert_equal JSON.parse(@article_schema.to_json, symbolize_names: true), JSON.parse(schema, symbolize_names: true)
   end
+
+  test "renders a template with custom translation keys" do
+    original_title_name = Jbuilder::Schema.title_name
+    original_description_name = Jbuilder::Schema.description_name
+
+    Jbuilder::Schema.configure do |config|
+      config.title_name = ["api_title", "title"]
+      config.description_name = ["api_description", "heading"]
+    end
+
+    Dir.chdir("./test/fixtures") do
+      schema = Jbuilder::Schema.render(@user)
+      schema.deep_symbolize_keys!
+
+      # will find title key via a fallback
+      assert_equal "User", schema[:title]
+
+      # will not find any description keys
+      assert_equal "Translation missing: en.users.api_description", schema[:description]
+      assert_equal "Translation missing: en.users.fields.id.api_description", schema[:properties][:id][:description]
+    end
+  ensure
+    Jbuilder::Schema.configure do |config|
+      config.title_name = original_title_name
+      config.description_name = original_description_name
+    end
+  end
 end

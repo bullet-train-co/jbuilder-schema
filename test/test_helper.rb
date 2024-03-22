@@ -4,6 +4,9 @@ require "bundler/setup"
 
 require "rails"
 
+require "active_support"
+require "active_support/core_ext/module/attr_internal"
+
 require "jbuilder"
 Jbuilder::Railtie.run_initializers
 
