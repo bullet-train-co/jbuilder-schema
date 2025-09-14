@@ -273,7 +273,9 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
 
   test "schematize type" do
     json = Jbuilder::Schema::Template.new nil
-    def json._schema(...) = super # We're marking it public on the singleton, but can't use `public` since we're ultimately a BasicObject.
+    def json._schema(...)
+      super # We're marking it public on the singleton, but can't use `public` since we're ultimately a BasicObject.
+    end
 
     assert_equal({type: :integer}, json._schema(nil, 1))
     assert_equal({type: :number}, json._schema(nil, 1.5))
@@ -299,7 +301,9 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
 
   test "one-line text is defined correctly" do
     json = Jbuilder::Schema::Template.new nil
-    def json._one_line?(...) = super
+    def json._one_line?(...)
+      super
+    end
 
     one_line = <<-JBUILDER
       json.articles do
@@ -313,11 +317,11 @@ class Jbuilder::Schema::TemplateTest < ActionView::TestCase
       json.articles do
 
         # ^ Empty line
-                        
+
         # This is comment
             # This is comment with spaces
         json.partial! 'api/v1/articles/article', article: user.article
-                                          
+
         # ^ Line with spaces
       end
     JBUILDER

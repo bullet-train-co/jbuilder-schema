@@ -114,7 +114,9 @@ class Jbuilder::Schema::PartialsTest < ActionView::TestCase
 
   test "one-line text is defined correctly" do
     json = Jbuilder::Schema::Template.new nil
-    def json._one_line?(...) = super
+    def json._one_line?(...)
+      super
+    end
 
     one_line = <<-JBUILDER
       json.articles do
@@ -128,11 +130,11 @@ class Jbuilder::Schema::PartialsTest < ActionView::TestCase
       json.articles do
 
         # ^ Empty line
-                        
+
         # This is comment
             # This is comment with spaces
         json.partial! 'api/v1/articles/article', article: user.article
-                                          
+
         # ^ Line with spaces
       end
     JBUILDER

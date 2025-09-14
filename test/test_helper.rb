@@ -2,6 +2,7 @@
 
 require "bundler/setup"
 
+require "logger"
 require "rails"
 
 require "active_support"

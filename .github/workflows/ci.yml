@@ -12,13 +12,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rails-version:
-          - "7.1"
-          - "6.1"
-          - "main"
-        ruby-version:
-          - "3.1"
-          - "3.2"
+        ruby-version: ["2.7", "3.0", "3.1", "3.2", "3.3", "3.4"]
+        rails-version: ["6.0", "6.1", "7.0", "7.1", "7.2", "8.0", "main"]
+        exclude:
+          # Rails 7.2 requires Ruby >= 3.1
+          - { ruby-version: "2.7", rails-version: "7.2" }
+          - { ruby-version: "3.0", rails-version: "7.2" }
+
+          # Rails 8.0 requires Ruby >= 3.2
+          - { ruby-version: "2.7", rails-version: "8.0" }
+          - { ruby-version: "3.0", rails-version: "8.0" }
+          - { ruby-version: "3.1", rails-version: "8.0" }
+
+          # Rails main requires Ruby >= 3.2
+          - { ruby-version: "2.7", rails-version: "main" }
+          - { ruby-version: "3.0", rails-version: "main" }
+          - { ruby-version: "3.1", rails-version: "main" }
+
+          # Ruby >= 3.4 requires Rails >= 7.1
+          - { ruby-version: "3.4", rails-version: "6.0" }
+          - { ruby-version: "3.4", rails-version: "6.1" }
+          - { ruby-version: "3.4", rails-version: "7.0" }
 
     env:
       RAILS_ENV: test
@@ -28,20 +42,20 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true
-    - name: Run tests
-      run: bundle exec rake test
+      - uses: actions/checkout@v5
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+      - name: Run tests
+        run: bundle exec rake test
 
   standard:
     runs-on: ubuntu-latest
     name: "Standard"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -50,16 +64,28 @@ jobs:
       - name: Run Standard
         run: bundle exec rake standard
 
-  starter_repo:
+  calculate_matrix:
+    name: 🧮 Calculate Dynamic Matrix
     runs-on: ubuntu-latest
-    name: Bullet Train Starter Repo Minitest
+    outputs:
+      matrix: ${{ steps.dynamic-matrix.outputs.matrix }}
+      totalRunners: ${{ steps.dynamic-matrix.outputs.totalRunners }}
+      testRunnersPerNode: ${{ steps.dynamic-matrix.outputs.testRunnersPerNode }}
+    steps:
+      - id: dynamic-matrix
+        uses: bullet-train-co/parallel-test-dynamic-matrix@v1
+        with:
+          numberOfTestNodes: 4
+
+  starter_repo:
+    # Don't run against starter_repo if test, standard, or calculate_matrix fail
+    needs: [test, standard, calculate_matrix]
+    runs-on: ubuntu-latest
+    name: Bullet Train Starter Repo Tests
     strategy:
       fail-fast: false
       matrix:
-        # Set identifiers for parallel jobs. These can be anything.
-        # For instance if you want a Three Amigos themed pipeline you could use:
-        # ci_node_index: [Dusty, Ned, Lucky]
-        ci_node_index: [1,2,3,4]
+        parallel_test_groups: ${{ fromJson(needs.calculate_matrix.outputs.matrix) }}
     services:
       postgres:
         image: postgres:11-alpine
@@ -87,12 +113,13 @@ jobs:
           --health-retries 5
     env:
       RAILS_ENV: test
-      DATABASE_URL: "postgres://rails:password@localhost:5432/rails_test"
+      POSTGRES_USER: rails
+      POSTGRES_PASSWORD: password
       BUNDLE_JOBS: 2
       BUNDLE_RETRY: 3
     steps:
       - name: Checkout This Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Checkout Starter Repo
         uses: bullet-train-co/checkout-repo-with-matching-branch@v1
@@ -112,11 +139,14 @@ jobs:
           working-directory: tmp/starter
           bundler-cache: true
 
+      - name: Enable corepack
+        run: corepack enable
+
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: tmp/starter/.nvmrc
-          cache: 'yarn'
+          cache: "yarn"
           cache-dependency-path: tmp/starter/yarn.lock
 
       - name: Allow adding of this gem
@@ -135,28 +165,33 @@ jobs:
           application_dir: tmp/starter
           core_dir: tmp/core
 
-      - name: Set up database schema
-        run: bin/rails db:schema:load
-        working-directory: ./tmp/starter
+      - name: Set up parallel_tests
+        run: bin/rake parallel:setup[${{ fromJson(needs.calculate_matrix.outputs.testRunnersPerNode) }}]
+        working-directory: tmp/starter
+
+      - name: Touch parallel_tests runtime log
+        run: touch tmp/parallel_runtime_test.log
+        working-directory: tmp/starter
 
       - name: Run Tests
         id: run-tests
         env:
-          # Specifies how many jobs you would like to run in parallel,
-          # used for partitioning
-          CI_NODE_TOTAL: ${{ strategy.job-total }}
-          # Use the index from matrix as an environment variable
-          CI_NODE_INDEX: ${{ strategy.job-index }}
+          AUTH_ENDPOINT: https://no-site.nowhere
+          AWS_REGION: us-east-1
+          PARALLEL_TESTS_RECORD_RUNTIME: true
         continue-on-error: false
-        run : bin/parallel-ci
-        working-directory: ./tmp/starter
+        run: |
+          bundle exec parallel_test test \
+            -n ${{ fromJson(needs.calculate_matrix.outputs.totalRunners) }} \
+            --only-group ${{ matrix.parallel_test_groups }} \
+            --group-by runtime \
+            --allowed-missing 100 \
+            --verbose \
+            --verbose-command
+        working-directory: tmp/starter
 
       - name: Test Summary
         uses: test-summary/action@v2
         with:
           paths: "tmp/starter/test/reports/**/TEST-*.xml"
-          #output: test-summary.md
         if: always()
-
-
-

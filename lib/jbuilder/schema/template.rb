@@ -3,6 +3,7 @@
 require "jbuilder/jbuilder_template"
 require "active_support/inflections"
 require "method_source"
+require "ostruct"
 
 class Jbuilder::Schema
   class Template < ::JbuilderTemplate

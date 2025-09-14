@@ -59,7 +59,12 @@ class Article < ActiveRecord::Base
   has_many :ratings
   has_many :comments
 
-  enum status: %w[pending published archived].index_by(&:itself)
+  # Use hash syntax for Rails 8+, index_by for older versions
+  if Rails.version >= "8.0"
+    enum :status, { pending: "pending", published: "published", archived: "archived" }
+  else
+    enum status: %w[pending published archived].index_by(&:itself)
+  end
 
   validates_presence_of :user, :status, :title, :body
 end
