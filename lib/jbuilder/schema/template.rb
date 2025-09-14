@@ -293,7 +293,9 @@ class Jbuilder::Schema
 
     def _primitive_type(value)
       case value
-      when ::Hash, ::Struct, ::OpenStruct, ::ActiveRecord::Base then :object
+      when ::Hash, ::Struct, ::OpenStruct then :object
+      when ->(v) { defined?(::ActiveRecord::Base) && v.is_a?(::ActiveRecord::Base) } then :object
+      when ->(v) { defined?(::Mongoid::Document) && v.is_a?(::Mongoid::Document) } then :object
       when ::Array then :array
       when ::Float, ::BigDecimal then :number
       when true, false then :boolean
@@ -321,7 +323,16 @@ class Jbuilder::Schema
     end
 
     def _required!(keys)
-      presence_validated_attributes = @configuration.object&.class.try(:validators).to_a.flat_map { _1.attributes if _1.is_a?(::ActiveRecord::Validations::PresenceValidator) } + _required
+      presence_validator_klasses = []
+      presence_validator_klasses << ::ActiveRecord::Validations::PresenceValidator if defined?(::ActiveRecord::Validations::PresenceValidator)
+      presence_validator_klasses << ::ActiveModel::Validations::PresenceValidator if defined?(::ActiveModel::Validations::PresenceValidator)
+      presence_validator_klasses << ::Mongoid::Validatable::PresenceValidator   if defined?(::Mongoid::Validatable::PresenceValidator)
+    
+      presence_validated_attributes =
+      @configuration.object&.class.try(:validators).to_a.flat_map { |v|
+        v.attributes if presence_validator_klasses.any? { |k| v.is_a?(k) }
+      }
+      presence_validated_attributes += _required
       keys & [_key(:id), *presence_validated_attributes.flat_map { [_key(_1), _key("#{_1}_id")] }]
     end
 
